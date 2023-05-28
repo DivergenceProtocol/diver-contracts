@@ -1,0 +1,28 @@
+# Foundry
+cache/
+out/
+
+# JS
+node_modules/
+
+#Hardhat files
+cache_hardhat/
+artifacts/
+
+#Hardhat plugin files
+typechain-types/
+
+log.txt
+.idea/
+all_contracts.json
+.DS_Store
+.VSCodeCounter/
+broadcast/
+
+./contractAddress.txt
+/logs
+
+.env
+script/bash/anvil.sh
+test/invariant/handlers/NextSqrtPriceBySTokenHandler.sol
+test/invariant/NextSqrtPriceBySToken.invariant.t.sol
