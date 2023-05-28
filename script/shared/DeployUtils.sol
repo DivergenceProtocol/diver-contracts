@@ -3,8 +3,8 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Script.sol";
-import "../../src/core/Oracle.sol";
 import "../../src/core/Arena.sol";
+import {OracleForTest as Oracle} from "../../test/oracle/OracleForTest.sol";
 import { WETH9 } from "test/shared/WETH9.sol";
 import { TestERC20 } from "test/shared/TestERC20.sol";
 import { IBattleInitializer } from "../../src/periphery/interfaces/IBattleInitializer.sol";

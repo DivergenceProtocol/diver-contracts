@@ -22,14 +22,14 @@ contract DivergenceInvariant is Test {
 
     function setUp() public virtual {
         // targetContract(manager);
-        handler = new Handler(450, 1500, 1500);
+        handler = new Handler(5, 15, 15);
 
         // handler.getManager();
 
         selectors.push(Handler.addLiq.selector);
         selectors.push(Handler.addLiqBySpear.selector);
         selectors.push(Handler.addLiqByShield.selector);
-        // selectors.push(Handler.addLiq1.selector);
+        selectors.push(Handler.addLiq1.selector);
         selectors.push(Handler.removeLiq.selector);
         selectors.push(Handler.buySpear.selector);
         selectors.push(Handler.buySpear1.selector);
@@ -110,7 +110,7 @@ contract DivergenceInvariant is Test {
         if (handler.withdrawAndExerciseCalled()) {
             // console2.log("withdrawAndExerciseCalled",
             // handler.withdrawAndExerciseCalled());
-            IBattleTrade(battle).collectProtocolFee(address(this));
+            // IBattleTrade(battle).collectProtocolFee(address(this));
             uint256 total = IERC721Enumerable(manager).totalSupply();
             console2.log("total nft: ", total);
             if (outcome == Outcome.SPEAR_WIN) {

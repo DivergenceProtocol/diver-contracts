@@ -18,7 +18,7 @@ import { deploy, DeployAddrs } from "script/shared/DeployUtils.sol";
 import { TestERC20 } from "../../shared/TestERC20.sol";
 import { IERC721 } from "@oz/token/ERC721/IERC721.sol";
 import { IManager } from "../../../src/periphery/interfaces/IManager.sol";
-import { Oracle } from "../../../src/core/Oracle.sol";
+import { OracleForTest as Oracle } from "../../oracle/OracleForTest.sol";
 import { IBattle } from "../../../src/core/interfaces/battle/IBattle.sol";
 import { ISToken } from "../../../src/core/interfaces/ISToken.sol";
 import { IERC20 } from "@oz/token/ERC20/IERC20.sol";

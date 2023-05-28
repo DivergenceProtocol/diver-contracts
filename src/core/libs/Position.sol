@@ -23,27 +23,6 @@ library Position {
         position = self[keccak256(abi.encodePacked(owner, tickLower, tickUpper))];
     }
 
-    // function obligation(PositionInfo storage self) internal view returns
-    // (uint128) {
-    // uint128 spearDiff;
-    // if (self.owed.spearIn < self.owed.spearOut) {
-    //     spearDiff = self.owed.spearOut - self.owed.spearIn;
-    // }
-
-    // uint128 shieldDiff;
-    // if (self.owed.shieldIn < self.owed.shieldOut) {
-    //     shieldDiff = self.owed.shieldOut - self.owed.shieldIn;
-    // }
-
-    // if (spearDiff > shieldDiff) {
-    //     return spearDiff;
-    // } else {
-    //     return shieldDiff;
-    // }
-    // return self.owed.spearOut > self.owed.shieldOut ? self.owed.spearOut :
-    // self.owed.shieldOut;
-    // }
-
     function update(PositionInfo storage self, int128 liquidityDelta, GrowthX128 memory insideLast) internal {
         PositionInfo memory _self = self;
 

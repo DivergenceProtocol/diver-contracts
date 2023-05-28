@@ -24,7 +24,7 @@ import { TradeParams, CreateAndInitBattleParams, AddLiqParams } from "../../src/
 import { TradeType } from "../../src/core/types/enums.sol";
 import { TestERC20 } from "../shared/TestERC20.sol";
 import { console2 } from "@std/console2.sol";
-import { Oracle } from "../../src/core/Oracle.sol";
+import { OracleForTest as Oracle } from "../oracle/OracleForTest.sol";
 import { getTS, Period } from "../shared/utils.sol";
 import { Position, PositionState } from "../../src/periphery/types/common.sol";
 

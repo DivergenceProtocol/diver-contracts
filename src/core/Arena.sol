@@ -81,6 +81,7 @@ contract Arena is IArena, Ownable {
             revert Errors.NotSupported();
         }
 
+        // expiries must at 8am utc
         if ((bk.expiries - 28_800) % 86_400 != 0 || block.timestamp >= bk.expiries) {
             revert Errors.NotSupportedExpiries();
         }

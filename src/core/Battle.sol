@@ -200,11 +200,9 @@ contract Battle is IBattle {
         }
         // check tick
         if (params.liquidityType == LiquidityType.SPEAR && params.tickLower >= slot0.tick) {
-            // require(params.tickUpper < slot0.tick);
             revert Errors.TickInvalid();
         }
         if (params.liquidityType == LiquidityType.SHIELD && params.tickUpper <= slot0.tick) {
-            // require(params.tickLower > slot0.tick);
             revert Errors.TickInvalid();
         }
         if (msg.sender != manager) {

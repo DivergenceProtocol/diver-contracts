@@ -24,8 +24,6 @@ library TradeMath {
             revert NotSupportYet();
         }
         bool isSpear = params.tradeType == TradeType.BUY_SPEAR;
-        // bool priceUp = params.tradeType == TradeType.BUY_SHIELD;
-
         if (isSpear) {
             // buy spear
             uint256 cap = SqrtPriceMath.getAmount0Delta(params.sqrtRatioCurrentX96, params.sqrtRatioTargetX96, params.liquidity, false);
@@ -43,7 +41,6 @@ library TradeMath {
             }
         } else {
             // buy shield
-
             uint256 cap = SqrtPriceMath.getAmount1Delta(params.sqrtRatioCurrentX96, params.sqrtRatioTargetX96, params.liquidity, false);
             if (params.amountRemaining < cap) {
                 sqrtRatioNextX96 =
