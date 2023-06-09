@@ -7,7 +7,8 @@ import { GrowthX128, Owed, LiquidityType } from "../../core/types/common.sol";
 enum PositionState {
     LiquidityAdded,
     LiquidityRemoved,
-    ObligationWithdrawn
+    ObligationWithdrawn,
+    ObligationRedeemed
 }
 
 struct Position {

@@ -26,6 +26,8 @@ interface IManagerLiquidity {
 
     event ObligationWithdrawn(address battle, uint256 tokenId, uint256 amount);
 
+    event ObligationRedeemed(address battle, uint256 tokenId, uint256 amount);
+
     /// @notice add liquidity
     /// @param params The params of add liquidity
     function addLiquidity(AddLiqParams calldata params) external returns (uint256 tokenId, uint128 liquidity, uint256 seed);
@@ -43,6 +45,9 @@ interface IManagerLiquidity {
 
     /// @notice withdraw obligation, it will be call after removeLiquidity
     function withdrawObligation(uint256 tokenId) external;
+
+
+    function redeemObligation(uint256 tokenId) external;
 }
 
 interface IManagerTrade is ITradeCallback {

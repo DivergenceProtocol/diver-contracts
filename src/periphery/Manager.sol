@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 
 import { ERC721Enumerable, ERC721 } from "@oz/token/ERC721/extensions/ERC721Enumerable.sol";
+import { IERC20 } from "@oz/token/ERC20/IERC20.sol";
 import { Multicall } from "@oz/utils/Multicall.sol";
 import { Multicall } from "@oz/utils/Multicall.sol";
 import { SafeCast } from "@oz/utils/math/SafeCast.sol";
@@ -19,7 +20,6 @@ import { TradeType } from "../core/types/enums.sol";
 import { TickMath } from "../core/libs/TickMath.sol";
 import { Errors } from "../core/errors/Errors.sol";
 import { BattleBurnParams } from "../core/params/BattleBurnParams.sol";
-import { IBattleActions } from "../core/interfaces/battle/IBattleActions.sol";
 import { IBattleState } from "../core/interfaces/battle/IBattleState.sol";
 import { PositionInfo, BattleKey, GrowthX128, Owed, LiquidityType, Outcome } from "../core/types/common.sol";
 import { IArenaCreation } from "../core/interfaces/IArena.sol";
@@ -185,6 +185,31 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
         }
         _positions[tokenId].state = PositionState.ObligationWithdrawn;
         emit ObligationWithdrawn(pm.battleAddr, tokenId, toLp);
+    }
+
+    function redeemObligation(uint256 tokenId) external override {
+        Position memory pm = _positions[tokenId];
+        if (pm.state != PositionState.LiquidityRemoved) {
+            revert Errors.LiquidityNotRemoved();
+        }
+        Outcome rr = IBattleState(pm.battleAddr).battleOutcome();
+        if (rr != Outcome.ONGOING) {
+            revert Errors.BattleEnd();
+        }
+        if (pm.spearObligation > pm.shieldObligation) {
+            uint diff = pm.spearObligation - pm.shieldObligation;
+            address spear = IBattleState(pm.battleAddr).spear();
+            IERC20(spear).transferFrom(msg.sender, address(this), diff);
+            IBattleActions(pm.battleAddr).withdrawObligation(_ownerOf(tokenId), pm.shieldObligation);
+            emit ObligationRedeemed(pm.battleAddr, tokenId, pm.shieldObligation);
+        } else if (pm.spearObligation < pm.shieldObligation) {
+            uint diff = pm.shieldObligation - pm.spearObligation;
+            address shield = IBattleState(pm.battleAddr).shield();
+            IERC20(shield).transferFrom(msg.sender, address(this), diff);
+            IBattleActions(pm.battleAddr).withdrawObligation(_ownerOf(tokenId), pm.spearObligation);
+            emit ObligationRedeemed(pm.battleAddr, tokenId, pm.spearObligation);
+        }
+        
     }
 
     function trade(TradeParams calldata p) external override returns (uint256 amountIn, uint256 amountOut) {
