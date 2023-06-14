@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Script.sol";
 import "../../src/core/Arena.sol";
-import {OracleForTest as Oracle} from "../../test/oracle/OracleForTest.sol";
+import { OracleForTest as Oracle } from "../../test/oracle/OracleForTest.sol";
 import { WETH9 } from "test/shared/WETH9.sol";
 import { TestERC20 } from "test/shared/TestERC20.sol";
 import { IBattleInitializer } from "../../src/periphery/interfaces/IBattleInitializer.sol";
@@ -44,11 +44,13 @@ function deploy(DeployAddrs memory das) returns (address managerAddr, address ar
         das.quoter = address(new Quoter(arena));
     }
     managerAddr = address(new Manager(arena, das.wethAddr));
+    Arena(arena).setManager(managerAddr);
     return (managerAddr, arena, oracle, das.collateralToken, das.quoter);
 }
 
 function deployOracle() returns (address) {
     Oracle oracle = new Oracle();
+
     return address(oracle);
 }
 

@@ -95,6 +95,7 @@ contract Battle is IBattle {
         fee = params.fee;
         spear = params.spear;
         shield = params.shield;
+        manager = params.manager;
         arena = address(msg.sender);
     }
 
@@ -105,7 +106,6 @@ contract Battle is IBattle {
         }
         slot0 = Slot0({ sqrtPriceX96: startSqrtPriceX96, tick: TickMath.getTickAtSqrtRatio(startSqrtPriceX96), unlocked: true });
         maxLiquidityPerTick = Tick.tickSpacingToMaxLiquidityPerTick(1);
-        manager = address(msg.sender);
     }
 
     function _updatePosition(UpdatePositionParams memory params) internal returns (PositionInfo storage position) {
@@ -338,10 +338,9 @@ contract Battle is IBattle {
                 ComputeTradeStepParams({
                     tradeType: params.tradeType,
                     sqrtRatioCurrentX96: state.sqrtPriceX96,
-                    sqrtRatioTargetX96: 
-                    (isPriceDown ? step.sqrtPriceNextX96 < params.sqrtPriceLimitX96 : step.sqrtPriceNextX96 > params.sqrtPriceLimitX96)
-                        ? params.sqrtPriceLimitX96
-                        : step.sqrtPriceNextX96,
+                    sqrtRatioTargetX96: (
+                        isPriceDown ? step.sqrtPriceNextX96 < params.sqrtPriceLimitX96 : step.sqrtPriceNextX96 > params.sqrtPriceLimitX96
+                        ) ? params.sqrtPriceLimitX96 : step.sqrtPriceNextX96,
                     liquidity: state.liquidity,
                     amountRemaining: state.amountSpecifiedRemaining
                 })

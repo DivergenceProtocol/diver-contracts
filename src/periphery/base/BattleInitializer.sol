@@ -9,6 +9,7 @@ import { IBattleState } from "../../core/interfaces/battle/IBattleState.sol";
 import { TickMath } from "../../core/libs/TickMath.sol";
 import { CreateAndInitBattleParams } from "../params/Params.sol";
 import { PeripheryImmutableState } from "./PeripheryImmutableState.sol";
+import { Errors } from "../../core/errors/Errors.sol";
 
 abstract contract BattleInitializer is IBattleInitializer, PeripheryImmutableState {
     function createAndInitializeBattle(CreateAndInitBattleParams memory params) external override returns (address battle) {
@@ -17,10 +18,7 @@ abstract contract BattleInitializer is IBattleInitializer, PeripheryImmutableSta
             (battle) = IArenaCreation(arena).createBattle(params.battleKey);
             IBattleInit(battle).init(params.sqrtPriceX96);
         } else {
-            (uint160 sqrtPriceX96,,) = IBattleState(battle).slot0();
-            if (sqrtPriceX96 == 0) {
-                IBattleInit(battle).init(params.sqrtPriceX96);
-            }
+            revert Errors.BattleExisted();
         }
     }
 }

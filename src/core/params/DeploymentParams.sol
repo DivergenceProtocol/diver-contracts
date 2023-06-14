@@ -11,4 +11,5 @@ struct DeploymentParams {
     Fee fee;
     address spear;
     address shield;
+    address manager;
 }

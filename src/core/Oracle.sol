@@ -40,7 +40,6 @@ contract Oracle is Ownable, IOracle {
 
         uint256 decimalDiff = 10 ** (18 - cOracle.decimals());
         (price_, actualTs) = _getPrice(cOracle, roundID, ts, decimalDiff);
-        return (30_000e18, 0);
     }
 
     /// @notice Helper for retrieving prices from an external oracle
