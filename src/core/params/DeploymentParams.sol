@@ -8,6 +8,7 @@ struct DeploymentParams {
     address arenaAddr;
     BattleKey battleKey;
     address oracleAddr;
+    address cOracleAddr;
     Fee fee;
     address spear;
     address shield;

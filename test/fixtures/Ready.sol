@@ -6,6 +6,7 @@ import { BaseTest } from "../shared/Base.t.sol";
 import { deploy, DeployAddrs } from "script/shared/DeployUtils.sol";
 import { console2 } from "@std/console2.sol";
 import { TestERC20 } from "../shared/TestERC20.sol";
+import {OracleForTest} from "../oracle/OracleForTest.sol";
 
 // deploy arena, manager
 contract DeploymentFixture is BaseTest {
@@ -15,6 +16,8 @@ contract DeploymentFixture is BaseTest {
     address public collateral;
     address public quoter;
 
+    
+
     function setUp() public virtual override {
         super.setUp();
         // deploy divergence system
@@ -22,8 +25,9 @@ contract DeploymentFixture is BaseTest {
         address arenaAddr = address(0);
         address collateralToken = address(0);
         address wethAddr = address(0);
+        address oracle = address(new OracleForTest());
         DeployAddrs memory das =
-            DeployAddrs({ owner: owner, arenaAddr: arenaAddr, collateralToken: collateralToken, wethAddr: wethAddr, quoter: quoter });
+            DeployAddrs({ owner: owner, arenaAddr: arenaAddr, collateralToken: collateralToken, wethAddr: wethAddr, quoter: quoter, oracle: oracle});
         // (manager, arena, oracle) = deploy(cuts, baseFacetSelectors,
         // mintBurnFacetSelectors, tradeFacetSelectors,
         // owner, arenaAddr, collateralToken, wethAddr);

@@ -5,17 +5,14 @@ pragma solidity ^0.8.0;
 import { Ownable } from "@oz/access/Ownable.sol";
 import { SafeCast } from "@oz/utils/math/SafeCast.sol";
 import { AggregatorV3Interface } from "chainlink/interfaces/AggregatorV3Interface.sol";
-import { IOracle } from "./interfaces/IOracle.sol";
 import { getAdjustPrice } from "./utils.sol";
 
 /// @title Oracle
 /// @notice Get external price by Oracle
-contract Oracle is Ownable, IOracle {
+contract Oracle is Ownable {
     using SafeCast for int256;
 
-    mapping(string => uint256) public override price;
-    mapping(string symbol => mapping(uint256 ts => uint256)) public override historyPrice;
-    mapping(string => AggregatorV3Interface) public externalOracleOf;
+    mapping(string => address) public externalOracleOf;
 
     /// @notice Defines the underlying asset symbol and oracle address for a
     /// pool.  Only called by the owner.
@@ -24,17 +21,17 @@ contract Oracle is Ownable, IOracle {
     function setExternalOracle(string[] memory symbols, address[] memory _oracles) external onlyOwner {
         require(symbols.length == _oracles.length, "symbols not match oracles");
         for (uint256 i = 0; i < symbols.length; i++) {
-            externalOracleOf[symbols[i]] = AggregatorV3Interface(_oracles[i]);
+            externalOracleOf[symbols[i]] = _oracles[i];
         }
     }
 
     /// @notice Gets and computes price from external oracles
-    /// @param symbol The asset symbol for which to retrieve price feed
+    /// @param cOracleAddr chainlink price contract
     /// @param ts Timestamp for the asset price
     /// @return price_ The retrieved price
-    function getPriceByExternal(string memory symbol, uint256 ts) public view returns (uint256 price_, uint256 actualTs) {
-        AggregatorV3Interface cOracle = externalOracleOf[symbol];
-        require(address(cOracle) != address(0), "external oracle not exist");
+    function getPriceByExternal(address cOracleAddr, uint256 ts) public view virtual returns (uint256 price_, uint256 actualTs) {
+        AggregatorV3Interface cOracle = AggregatorV3Interface(cOracleAddr);
+        require(cOracleAddr != address(0), "external oracle not exist");
 
         (uint80 roundID,,,,) = cOracle.latestRoundData();
 
@@ -72,17 +69,9 @@ contract Oracle is Ownable, IOracle {
         require(p != 0, "price not exist");
     }
 
-    event PriceUpdated(string symbol, uint256 ts, uint256 price, uint256 actualTs);
-
-    /// @inheritdoc IOracle
-    function updatePriceByExternal(string memory symbol, uint256 ts) external override returns (uint256 price_) {
-        if (historyPrice[symbol][ts] != 0) {
-            price_ = historyPrice[symbol][ts];
-        } else {
-            uint256 actualTs;
-            (price_, actualTs) = getPriceByExternal(symbol, ts);
-            historyPrice[symbol][ts] = price_;
-            emit PriceUpdated(symbol, ts, price_, actualTs);
-        }
+    function getCOracle(string memory symbol) external view returns(address) {
+        address cOracle = externalOracleOf[symbol];
+        require(cOracle != address(0), "not exist");
+        return cOracle;
     }
 }

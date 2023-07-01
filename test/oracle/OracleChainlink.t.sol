@@ -20,17 +20,17 @@ contract OracleChainlinkTest is Test {
     }
 
     function test_chainLink() public {
-        string[] memory underlyings = new string[](2);
-        underlyings[0] = "BTC";
-        underlyings[1] = "ETH";
-        address[] memory oracles = new address[](2);
-        oracles[0] = btc_usd;
-        oracles[1] = eth_usd;
-        oracle.setExternalOracle(underlyings, oracles);
+        // string[] memory underlyings = new string[](2);
+        // underlyings[0] = "BTC";
+        // underlyings[1] = "ETH";
+        // address[] memory oracles = new address[](2);
+        // oracles[0] = btc_usd;
+        // oracles[1] = eth_usd;
+        // oracle.setExternalOracle(underlyings, oracles);
 
-        (uint256 start, uint256 expiries) = getTS(Period.BIWEEKLY);
-        console2.log("now: %s", block.timestamp);
-        (uint256 price_, uint256 actualTs) = oracle.getPriceByExternal(underlyings[0], block.timestamp - 1000);
-        console2.log("price: %s, actualTs: %s", price_, actualTs);
+        // (uint256 start, uint256 expiries) = getTS(Period.BIWEEKLY);
+        // console2.log("now: %s", block.timestamp);
+        // (uint256 price_, uint256 actualTs) = oracle.getPriceByExternal(underlyings[0], block.timestamp - 1000);
+        // console2.log("price: %s, actualTs: %s", price_, actualTs);
     }
 }

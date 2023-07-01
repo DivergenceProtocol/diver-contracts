@@ -23,6 +23,9 @@ contract GoerliManagerDeploy is BaseScript {
     address public collateral;
     address public quoter;
 
+    string[] public symbols;
+    address[] public oracles;
+
     function setUp() public override {
         super.setUp();
     }
@@ -33,18 +36,10 @@ contract GoerliManagerDeploy is BaseScript {
         address arenaAddr = address(0);
         address collateralToken = address(0);
         address wethAddr = address(0);
+        address oracle = _deployOracle();
         DeployAddrs memory das =
-            DeployAddrs({ owner: deployer, arenaAddr: arenaAddr, collateralToken: collateralToken, wethAddr: wethAddr, quoter: quoter });
+            DeployAddrs({ owner: deployer, arenaAddr: arenaAddr, collateralToken: collateralToken, wethAddr: wethAddr, quoter: quoter, oracle: oracle});
         (manager, arena, oracle, collateral, quoter) = deploy(das);
-
-        // string[] memory symbols = new string[](2);
-        // symbols[0] = "BTC";
-        // symbols[1] = "ETH";
-        // address[] memory _oracles = new address[](2);
-        // _oracles[0] = address(0x0221B8DB7fABD51762783ebd44EF0aE7172f3Cd7);
-        // _oracles[1] = address(0x0221B8DB7fABD51762783ebd44EF0aE7172f3Cd7);
-        // Oracle(oracle).setExternalOracle(symbols, _oracles);
-        // doBaseThing();
 
         // doBaseThing();
 
@@ -60,6 +55,16 @@ contract GoerliManagerDeploy is BaseScript {
             strikeValue: 25_000_000_000_000_000_000_000
         });
         return bk;
+    }
+
+    function _deployOracle() private returns(address oracle) {
+        Oracle oracle = new Oracle();
+        symbols.push("BTC");
+        symbols.push("ETH");
+        oracles.push(address(0x8bdFc91FB3f89F4c211461B06afDe84Dc55bedc2));
+        oracles.push(address(0x1B8e08a5457b12ae3CbC4233e645AEE2fA809e39));
+        oracle.setExternalOracle(symbols, oracles);
+        return address(oracle);
     }
 
     function createBattle() public virtual returns (address) {
