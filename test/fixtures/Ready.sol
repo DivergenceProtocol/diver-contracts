@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import { BaseTest } from "../shared/Base.t.sol";
-import { deploy, DeployAddrs } from "script/shared/DeployUtils.sol";
+import { deploy, DeployAddrs } from "../../script/shared/DeployUtils.sol";
 import { console2 } from "@std/console2.sol";
 import { TestERC20 } from "../shared/TestERC20.sol";
 import {OracleForTest} from "../oracle/OracleForTest.sol";
@@ -25,9 +25,9 @@ contract DeploymentFixture is BaseTest {
         address arenaAddr = address(0);
         address collateralToken = address(0);
         address wethAddr = address(0);
-        address oracle = address(new OracleForTest());
+        address _oracle = address(new OracleForTest());
         DeployAddrs memory das =
-            DeployAddrs({ owner: owner, arenaAddr: arenaAddr, collateralToken: collateralToken, wethAddr: wethAddr, quoter: quoter, oracle: oracle});
+            DeployAddrs({ owner: owner, arenaAddr: arenaAddr, collateralToken: collateralToken, wethAddr: wethAddr, quoter: quoter, oracle: _oracle});
         // (manager, arena, oracle) = deploy(cuts, baseFacetSelectors,
         // mintBurnFacetSelectors, tradeFacetSelectors,
         // owner, arenaAddr, collateralToken, wethAddr);

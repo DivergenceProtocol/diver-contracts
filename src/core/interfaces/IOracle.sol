@@ -7,11 +7,6 @@ pragma solidity ^0.8.13;
 /// options.
 /// It retrieves asset prices and supplies them to all contracts that use them.
 interface IOracle {
-    // function price(string memory symbol) external view returns (uint256);
-
-    // function historyPrice(string memory symbol, uint256 ts) external view returns (uint256);
-
-    // function updatePriceByExternal(string memory symbol, uint256 ts) external returns (uint256 price_);
 
     function getPriceByExternal(address cOracleAddr, uint256 ts) external view returns (uint256 price_, uint256 actualTs);
 

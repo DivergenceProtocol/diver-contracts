@@ -16,6 +16,7 @@ import { IBattle } from "../src/core/interfaces/battle/IBattle.sol";
 import { IManager } from "../src/periphery/interfaces/IManager.sol";
 import { Multicall } from "@oz/utils/Multicall.sol";
 import { getTS, Period } from "./shared/utils.sol";
+import {Errors} from "../src/core/errors/Errors.sol";
 
 contract CreateAndInit is ReadyFixture {
     BattleKey public defaultBattleKey;
@@ -49,8 +50,8 @@ contract CreateAndInit is ReadyFixture {
 
     function test_SameBattleKeySameBattle() public {
         address battleAddr1 = createBattle(manager, defaultCreateBattleParams);
+        vm.expectRevert(Errors.BattleExisted.selector);
         address battleAddr2 = createBattle(manager, defaultCreateBattleParams);
-        assertEq(battleAddr1, battleAddr2, "same battleKey same battle");
     }
 
     bytes[] public callData;

@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-import { Oracle } from "../../src/core/Oracle.sol";
+import {IOracle} from "../../src/core/interfaces/IOracle.sol";
 
-contract OracleForTest is Oracle {
+contract OracleForTest is IOracle {
     mapping(string => uint) public price;
     mapping (string=>mapping(uint => uint)) public historyPrice;
     function setPrice(string memory symbol, uint256 ts, uint256 _price) public {
@@ -12,8 +12,12 @@ contract OracleForTest is Oracle {
         historyPrice[symbol][ts] = _price;
     }
 
-    function getPriceByExternal(address cOracleAddr, uint256 ts) public view override returns (uint256 price_, uint256 actualTs) { 
+    function getPriceByExternal(address cOracleAddr, uint256 ts) public view returns (uint256 price_, uint256 actualTs) { 
         price_ = price["BTC"];
         actualTs = ts;
+    }
+
+    function getCOracle(string memory symbol) external view returns(address) {
+        return address(1);
     }
 }

@@ -29,7 +29,7 @@ contract Oracle is Ownable {
     /// @param cOracleAddr chainlink price contract
     /// @param ts Timestamp for the asset price
     /// @return price_ The retrieved price
-    function getPriceByExternal(address cOracleAddr, uint256 ts) public view virtual returns (uint256 price_, uint256 actualTs) {
+    function getPriceByExternal(address cOracleAddr, uint256 ts) public view returns (uint256 price_, uint256 actualTs) {
         AggregatorV3Interface cOracle = AggregatorV3Interface(cOracleAddr);
         require(cOracleAddr != address(0), "external oracle not exist");
 

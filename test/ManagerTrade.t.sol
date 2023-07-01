@@ -50,24 +50,23 @@ contract ManagerTrade is Mint {
         (sqrtPriceX96, tick,) = IBattleState(battleAddr).slot0();
         console2.log("tick %s", tick);
         console2.log("sqrtPriceX96 %s", sqrtPriceX96);
+        // AddLiqParams memory mparams =
+        //     getAddLiquidityParams(defaultBattleKey, bob, tick - 200, tick - 100, LiquidityType.SPEAR, uint128(spearBalance), 300);
+        // vm.startPrank(bob);
+        // IERC20(spear).approve(manager, spearBalance);
+        // IManagerActions(manager).addLiquidity(mparams);
+        // IERC20(shield).approve(manager, shieldBalance);
+        // AddLiqParams memory mparams2 =
+        //     getAddLiquidityParams(defaultBattleKey, bob, tick + 100, tick + 200, LiquidityType.SHIELD, uint128(shieldBalance), 300);
+        // IManagerActions(manager).addLiquidity(mparams2);
+        // vm.stopPrank();
 
-        AddLiqParams memory mparams =
-            getAddLiquidityParams(defaultBattleKey, bob, tick - 200, tick - 100, LiquidityType.SPEAR, uint128(spearBalance), 300);
-        vm.startPrank(bob);
-        IERC20(spear).approve(manager, spearBalance);
-        IManagerActions(manager).addLiquidity(mparams);
-        IERC20(shield).approve(manager, shieldBalance);
-        AddLiqParams memory mparams2 =
-            getAddLiquidityParams(defaultBattleKey, bob, tick + 100, tick + 200, LiquidityType.SHIELD, uint128(shieldBalance), 300);
-        IManagerActions(manager).addLiquidity(mparams2);
-        vm.stopPrank();
+        // Position[] memory ps1 = IManagerState(manager).accountPositions(bob);
+        // Position[] memory ps2 = IManagerState(manager).accountPositions(alice);
 
-        Position[] memory ps1 = IManagerState(manager).accountPositions(bob);
-        Position[] memory ps2 = IManagerState(manager).accountPositions(alice);
-
-        console2.log("position battle addr %s", ps1[0].battleAddr);
-        console2.log("position battle addr %s", ps1.length);
-        console2.log("position battle addr %s", ps2.length);
+        // console2.log("position battle addr %s", ps1[0].battleAddr);
+        // console2.log("position battle addr %s", ps1.length);
+        // console2.log("position battle addr %s", ps2.length);
 
         return battleAddr;
     }

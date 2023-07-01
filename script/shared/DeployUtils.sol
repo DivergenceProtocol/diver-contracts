@@ -39,6 +39,7 @@ function deploy(DeployAddrs memory das) returns (address managerAddr, address ar
         }
         // oracle = deployOracle();
         require(das.oracle != address(0), "oracle not exist");
+        oracle = das.oracle;
         arena = deployArena(das.collateralToken, das.oracle, address(battleImpl));
     }
     if (das.quoter == address(0)) {
