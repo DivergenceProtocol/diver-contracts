@@ -7,6 +7,9 @@ import { OracleForTest as Oracle } from "../test/oracle/OracleForTest.sol";
 import { TestERC20 } from "../test/shared/TestERC20.sol";
 
 contract OracleSet is BaseScript {
+    string[] public symbols;
+    address[] public oracles;
+
     function setUp() public virtual override {
         super.setUp();
     }
@@ -17,8 +20,15 @@ contract OracleSet is BaseScript {
     }
 
     function setPriceForTest() public {
-        Oracle oracle = Oracle(address(0x1947457d02Fafa47E39371b99E87951Fb3fb932c));
-        oracle.setPrice("BTC", 1682668800, 29495e18);
+        Oracle oracle = Oracle(address(0xcA4988Dc5002E966E361e7d8A927b2201b955408));
+        address owner = oracle.owner();
+
+        symbols.push("BTC");
+        symbols.push("ETH");
+        oracles.push(address(0x8bdFc91FB3f89F4c211461B06afDe84Dc55bedc2));
+        oracles.push(address(0x1B8e08a5457b12ae3CbC4233e645AEE2fA809e39));
+        oracle.setExternalOracle(symbols, oracles);
+        // oracle.setPrice("BTC", 1682668800, 29495e18);
     }
 
     function mintToken() public {

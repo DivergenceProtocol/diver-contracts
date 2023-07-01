@@ -20,13 +20,13 @@ import { getAdjustPrice } from "./utils.sol";
 /// parameters.
 contract Arena is IArena, Ownable {
     address public oracleAddr;
+    address public managerAddr;
     address[] private battleList;
     address public battleImpl;
     bool public isPermissionless;
     DeploymentParams public deploymentParameters;
     mapping(bytes32 => address) public battles;
     mapping(string => Fee) public fees;
-    // mapping(address => mapping(string => bool)) public isSupported;
 
     mapping(address => bool) public collateralWhitelist;
     mapping(string => bool) public underlyingWhitelist;
@@ -64,7 +64,14 @@ contract Arena is IArena, Ownable {
         emit PermissionlessChanged(isPermissionless);
     }
 
+    function setManager(address _manager) external onlyOwner {
+        managerAddr = _manager;
+    }
+
     function createBattle(BattleKey memory bk) external override returns (address battle) {
+        if (msg.sender != managerAddr) {
+            revert Errors.CallerNotManager();
+        }
         // collaterl address error
         if (bk.collateral == address(0)) {
             revert Errors.ZeroAddress();
@@ -97,7 +104,8 @@ contract Arena is IArena, Ownable {
             oracleAddr: oracleAddr,
             fee: fees[bk.underlying],
             spear: address(0),
-            shield: address(0)
+            shield: address(0),
+            manager: managerAddr
         });
         battle = Clones.cloneDeterministic(battleImpl, battleKeyB32);
         uint8 decimals = IERC20Metadata(bk.collateral).decimals();

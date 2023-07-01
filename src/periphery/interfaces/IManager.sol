@@ -8,8 +8,4 @@ import { IBattleInitializer } from "./IBattleInitializer.sol";
 import { IPeripheryImmutableState } from "./IPeripheryImmutableState.sol";
 import { IPeripheryPayments } from "./IPeripheryPayments.sol";
 
-interface IManager is
-    IBattleInitializer,
-    IManagerActions,
-    IManagerState
-{ }
+interface IManager is IBattleInitializer, IManagerActions, IManagerState { }
