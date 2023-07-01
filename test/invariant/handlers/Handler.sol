@@ -18,7 +18,7 @@ import { deploy, DeployAddrs } from "script/shared/DeployUtils.sol";
 import { TestERC20 } from "../../shared/TestERC20.sol";
 import { IERC721 } from "@oz/token/ERC721/IERC721.sol";
 import { IManager } from "../../../src/periphery/interfaces/IManager.sol";
-import { OracleForTest as Oracle } from "../../oracle/OracleForTest.sol";
+import { OracleForTest  } from "../../oracle/OracleForTest.sol";
 import { IBattle } from "../../../src/core/interfaces/battle/IBattle.sol";
 import { ISToken } from "../../../src/core/interfaces/ISToken.sol";
 import { IERC20 } from "@oz/token/ERC20/IERC20.sol";
@@ -76,8 +76,15 @@ contract Handler is CommonBase, StdCheats, StdUtils {
         address arenaAddr = address(0);
         address collateralToken = address(0);
         address wethAddr = address(0);
-        DeployAddrs memory das =
-            DeployAddrs({ owner: owner, arenaAddr: arenaAddr, collateralToken: collateralToken, wethAddr: wethAddr, quoter: quoter });
+        address oracle = address(new OracleForTest());
+        DeployAddrs memory das = DeployAddrs({
+            owner: owner,
+            arenaAddr: arenaAddr,
+            collateralToken: collateralToken,
+            wethAddr: wethAddr,
+            quoter: quoter,
+            oracle: oracle
+        });
         (manager, arena, oracle, collateral, quoter) = deploy(das);
 
         cAmount = cAmount * 10 ** TestERC20(collateral).decimals();
@@ -305,7 +312,7 @@ contract Handler is CommonBase, StdCheats, StdUtils {
         }
         (, uint256 endTS) = IBattle(battle).startAndEndTS();
         vm.warp(endTS + 1);
-        Oracle(oracle).setPrice("BTC", endTS, 30_000e18);
+        OracleForTest(oracle).setPrice("BTC", endTS, 30_000e18);
         IBattle(battle).settle();
         battleSettled = true;
         calls["settleBattle"] += 1;

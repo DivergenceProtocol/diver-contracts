@@ -6,6 +6,7 @@ import { IERC20 } from "@oz/token/ERC20/IERC20.sol";
 import { Ownable } from "@oz/access/Ownable.sol";
 import { Clones } from "@oz/proxy/Clones.sol";
 import { IERC20Metadata } from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
+import {IOracle} from "./interfaces/IOracle.sol";
 import { Errors } from "./errors/Errors.sol";
 import { IArena, Fee, Outcome, BattleKey, CreateBattleParams } from "./interfaces/IArena.sol";
 import { IBattleInit } from "./interfaces/battle/IBattleInit.sol";
@@ -102,6 +103,7 @@ contract Arena is IArena, Ownable {
             arenaAddr: address(this),
             battleKey: bk,
             oracleAddr: oracleAddr,
+            cOracleAddr: IOracle(oracleAddr).getCOracle(bk.underlying),
             fee: fees[bk.underlying],
             spear: address(0),
             shield: address(0),

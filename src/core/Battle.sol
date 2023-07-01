@@ -58,6 +58,7 @@ contract Battle is IBattle {
     address public oracle;
     address public override spear;
     address public override shield;
+    address public cOracle;
 
     uint256 public startTS;
     uint128 public liquidity;
@@ -91,6 +92,7 @@ contract Battle is IBattle {
         }
         _bk = params.battleKey;
         oracle = params.oracleAddr;
+        cOracle = params.cOracleAddr;
         startTS = block.timestamp;
         fee = params.fee;
         spear = params.spear;
@@ -427,7 +429,7 @@ contract Battle is IBattle {
         if (battleOutcome != Outcome.ONGOING) {
             revert Errors.BattleSettled();
         }
-        uint256 price = IOracle(oracle).updatePriceByExternal(_bk.underlying, _bk.expiries);
+        (uint256 price,) = IOracle(oracle).getPriceByExternal(cOracle, _bk.expiries);
         if (price == 0) {
             revert Errors.OraclePriceError();
         }
