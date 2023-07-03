@@ -16,7 +16,7 @@ import { IBattle } from "../src/core/interfaces/battle/IBattle.sol";
 import { IManager } from "../src/periphery/interfaces/IManager.sol";
 import { Multicall } from "@oz/utils/Multicall.sol";
 import { getTS, Period } from "./shared/utils.sol";
-import {Errors} from "../src/core/errors/Errors.sol";
+import { Errors } from "../src/core/errors/Errors.sol";
 
 contract CreateAndInit is ReadyFixture {
     BattleKey public defaultBattleKey;

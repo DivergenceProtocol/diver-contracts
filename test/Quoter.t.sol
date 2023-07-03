@@ -16,7 +16,7 @@ contract QuoterTest is ManagerTrade {
 
     function test_Quoter() public virtual returns (address) {
         address battleAddr = super.test();
-        Quoter quoter = new Quoter(address(0));
+        Quoter quoter = new Quoter(address(0), address(0));
         TradeParams memory params1 = getTradeParams(defaultBattleKey, TradeType.BUY_SHIELD, 10e18, bob, 0, 0, 300);
         BattleTradeParams memory battleParams = BattleTradeParams({
             recipient: params1.recipient,

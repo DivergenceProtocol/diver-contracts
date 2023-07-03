@@ -7,6 +7,7 @@ import { IManagerActions } from "../src/periphery/interfaces/IManagerActions.sol
 import { AddLiqParams } from "../src/periphery/params/Params.sol";
 import { addLiquidity, getAddLiquidityParams } from "./shared/Actions.sol";
 import { IManagerState } from "../src/periphery/interfaces/IManagerState.sol";
+import { IQuoter } from "../src/periphery/interfaces/IQuoter.sol";
 import { console2 } from "@std/console2.sol";
 import "../src/core/types/common.sol";
 import "../src/core/types/enums.sol";
@@ -30,7 +31,7 @@ contract Mint is CreateAndInit {
         vm.startPrank(alice);
         IManagerActions(manager).addLiquidity(defaultAddLiqParams);
         vm.stopPrank();
-        Position[] memory lis = IManagerState(manager).accountPositions(alice);
+        Position[] memory lis = IQuoter(quoter).accountPositions(alice);
         console2.log("lis %s", lis.length);
         return battleAddr;
     }

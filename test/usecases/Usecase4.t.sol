@@ -46,7 +46,7 @@ contract UseCase4 is ManagerTrade {
         AddLiqParams memory outRangeAddLiqParams = getAddLiquidityParams(defaultBattleKey, dave, -2000, -1500, LiquidityType.COLLATERAL, 1000e18, 300);
         vm.startPrank(dave);
         addLiquidity(dave, manager, outRangeAddLiqParams);
-        position(dave, manager);
+        position(dave, manager, quoter);
         vm.stopPrank();
 
         trade100SpearAnd90Shield(bob);
@@ -78,8 +78,8 @@ contract UseCase4 is ManagerTrade {
         settle(msg.sender, battleAddr);
         exercise(msg.sender, battleAddr);
 
-        withdrawObligation(dave, manager, 1);
-        position(dave, manager);
+        withdrawObligation(dave, manager, 1, quoter);
+        position(dave, manager, quoter);
         console2.log("============>>Usecase4 end<<============");
     }
 }

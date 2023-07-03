@@ -14,17 +14,18 @@ import { console2 } from "@std/console2.sol";
 import { CommonBase } from "forge-std/Base.sol";
 import { StdCheats } from "forge-std/StdCheats.sol";
 import { StdUtils } from "forge-std/StdUtils.sol";
-import { deploy, DeployAddrs } from "script/shared/DeployUtils.sol";
+import { deploy, DeployAddrs } from "../../../script/shared/DeployUtils.sol";
 import { TestERC20 } from "../../shared/TestERC20.sol";
 import { IERC721 } from "@oz/token/ERC721/IERC721.sol";
 import { IManager } from "../../../src/periphery/interfaces/IManager.sol";
-import { OracleForTest  } from "../../oracle/OracleForTest.sol";
+import { OracleForTest } from "../../oracle/OracleForTest.sol";
 import { IBattle } from "../../../src/core/interfaces/battle/IBattle.sol";
 import { ISToken } from "../../../src/core/interfaces/ISToken.sol";
 import { IERC20 } from "@oz/token/ERC20/IERC20.sol";
 import { Multicall } from "@oz/utils/Multicall.sol";
 import { ERC721Enumerable } from "@oz/token/ERC721/extensions/ERC721Enumerable.sol";
-import { Position, PositionState } from "../../../src/periphery/types/common.sol";
+// import { Position, PositionState } from "../../../src/periphery/types/common.sol";
+import { IQuoter, Position, PositionState } from "../../../src/periphery/interfaces/IQuoter.sol";
 import { getTS, Period } from "../../shared/utils.sol";
 
 contract Handler is CommonBase, StdCheats, StdUtils {
@@ -50,6 +51,7 @@ contract Handler is CommonBase, StdCheats, StdUtils {
     uint256 public ghost_collateral;
     uint256 public ghost_tradeAmount;
     bool public battleSettled;
+    bool public ghost_run_end;
 
     address[] public users;
     uint256 public cAmount = 100_000;
@@ -76,15 +78,9 @@ contract Handler is CommonBase, StdCheats, StdUtils {
         address arenaAddr = address(0);
         address collateralToken = address(0);
         address wethAddr = address(0);
-        address oracle = address(new OracleForTest());
-        DeployAddrs memory das = DeployAddrs({
-            owner: owner,
-            arenaAddr: arenaAddr,
-            collateralToken: collateralToken,
-            wethAddr: wethAddr,
-            quoter: quoter,
-            oracle: oracle
-        });
+        address _oracle = address(new OracleForTest());
+        DeployAddrs memory das =
+            DeployAddrs({ owner: owner, arenaAddr: arenaAddr, collateralToken: collateralToken, wethAddr: wethAddr, quoter: quoter, oracle: _oracle });
         (manager, arena, oracle, collateral, quoter) = deploy(das);
 
         cAmount = cAmount * 10 ** TestERC20(collateral).decimals();
@@ -244,7 +240,7 @@ contract Handler is CommonBase, StdCheats, StdUtils {
         deal(collateral, currentActor, amount);
         TestERC20(collateral).approve(manager, type(uint256).max);
         TradeParams memory param = getTradeParams(bk, TradeType.BUY_SPEAR, amount, currentActor, 0, 0, 300);
-        trade(currentActor, manager, param);
+        trade(currentActor, manager, param, quoter);
         ghost_tradeAmount += amount;
         uint256 balance = IERC20(spear).balanceOf(currentActor);
         if (balance > 0) {
@@ -278,7 +274,7 @@ contract Handler is CommonBase, StdCheats, StdUtils {
         deal(collateral, currentActor, amount);
         TestERC20(collateral).approve(manager, type(uint256).max);
         TradeParams memory param = getTradeParams(bk, TradeType.BUY_SHIELD, amount, currentActor, 0, 0, 300);
-        trade(currentActor, manager, param);
+        trade(currentActor, manager, param, quoter);
         ghost_tradeAmount += amount;
         uint256 balance = IERC20(shield).balanceOf(currentActor);
         if (balance > 0) {
@@ -310,8 +306,12 @@ contract Handler is CommonBase, StdCheats, StdUtils {
         if (calls["buyShield"] < minBuyShieldCount) {
             return;
         }
+        if (battleSettled) {
+            return;
+        }
         (, uint256 endTS) = IBattle(battle).startAndEndTS();
         vm.warp(endTS + 1);
+        assert(oracle != address(0));
         OracleForTest(oracle).setPrice("BTC", endTS, 30_000e18);
         IBattle(battle).settle();
         battleSettled = true;
@@ -420,7 +420,7 @@ contract Handler is CommonBase, StdCheats, StdUtils {
         // delete callData;
         // for (uint256 i; i < results.length; i++) {
         for (uint256 i; i < total; i++) {
-            Position memory p = IManager(manager).positions(i);
+            Position memory p = IQuoter(quoter).positions(i);
             // (Position memory p) = abi.decode(results[i], (Position));
             if (p.state == PositionState.LiquidityAdded) {
                 currentActor = IERC721(manager).ownerOf(i);
@@ -465,8 +465,11 @@ contract Handler is CommonBase, StdCheats, StdUtils {
         // exercise
         exerciseAll();
         withdrawAndExerciseCalled = true;
+        ghost_run_end = true;
         calls["withdrawAndExerciseAll"] += 1;
     }
+
+    function reedemObligation() public { }
 
     function callSummary() public view {
         console2.log("Call summary:");
@@ -476,7 +479,7 @@ contract Handler is CommonBase, StdCheats, StdUtils {
         console2.log("removeLiq     :", calls["removeLiq"]);
         console2.log("buySpear      :", calls["buySpear"]);
         console2.log("buyShield     :", calls["buyShield"]);
-        // console2.log("settleBattle", calls["settleBattle"]);
+        console2.log("settleBattle", calls["settleBattle"]);
         // console2.log("withdrawObligation", calls["withdrawObligation"]);
         // console2.log("execriseSpear", calls["execriseSpear"]);
         // console2.log("execriseShield", calls["execriseShield"]);

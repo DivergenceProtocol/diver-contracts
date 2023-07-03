@@ -3,6 +3,10 @@
 pragma solidity ^0.8.14;
 
 import { SafeCast } from "@oz/utils/math/SafeCast.sol";
+import { Multicall } from "@oz/utils/Multicall.sol";
+import { IERC721Enumerable } from "@oz/token/ERC721/extensions/IERC721Enumerable.sol";
+import { FullMath } from "@uniswap/v3-core/contracts/libraries/FullMath.sol";
+import { FixedPoint128 } from "@uniswap/v3-core/contracts/libraries/FixedPoint128.sol";
 import { ITradeCallback } from "../../core/interfaces/callback/ITradeCallback.sol";
 import { IBattleActions } from "../../core/interfaces/battle/IBattleActions.sol";
 import { IBattleState } from "../../core/interfaces/battle/IBattleState.sol";
@@ -15,15 +19,19 @@ import { AddLiqParams } from "../params/Params.sol";
 import { LiquidityType } from "../../core/types/enums.sol";
 import { DiverLiquidityAmounts } from "../libs/DiverLiquidityAmounts.sol";
 import { DiverSqrtPriceMath } from "../../core/libs/DiverSqrtPriceMath.sol";
+import { IQuoter, IManagerState, Position, PositionState } from "../interfaces/IQuoter.sol";
+import { PositionInfo, BattleKey, GrowthX128, Owed, LiquidityType, Outcome } from "../../core/types/common.sol";
 
-contract Quoter is ITradeCallback {
+contract Quoter is Multicall, ITradeCallback, IQuoter {
     using SafeCast for int256;
     using SafeCast for uint256;
 
     address public arena;
+    address public manager;
 
-    constructor(address _arena) {
+    constructor(address _arena, address _manager) {
         arena = _arena;
+        manager = _manager;
     }
 
     function tradeCallback(uint256 cAmount, uint256 sAmount, bytes calldata data) external pure override {
@@ -90,5 +98,33 @@ contract Quoter is ITradeCallback {
         uint160 priceUpper = TickMath.getSqrtRatioAtTick(tickUpper);
         uint128 liquidityAmount = DiverLiquidityAmounts.getLiquidityFromCs(sqrtPriceX96, priceLower, priceUpper, amount);
         return DiverSqrtPriceMath.getSTokenDelta(priceLower, priceUpper, liquidityAmount, false);
+    }
+
+    function positions(uint256 tokenId) external view override returns (Position memory) {
+        return handlePosition(tokenId);
+    }
+
+    function handlePosition(uint256 tokenId) private view returns (Position memory p) {
+        p = IManagerState(manager).positions(tokenId);
+        // p = _positions[tokenId];
+        if (p.state == PositionState.LiquidityAdded) {
+            unchecked {
+                GrowthX128 memory insideLast = IBattleState(p.battleAddr).getInsideLast(p.tickLower, p.tickUpper);
+                p.owed.fee += uint128(FullMath.mulDiv(insideLast.fee - p.insideLast.fee, p.liquidity, FixedPoint128.Q128));
+                p.owed.collateralIn += uint128(FullMath.mulDiv(insideLast.collateralIn - p.insideLast.collateralIn, p.liquidity, FixedPoint128.Q128));
+                p.owed.spearOut += uint128(FullMath.mulDiv(insideLast.spearOut - p.insideLast.spearOut, p.liquidity, FixedPoint128.Q128));
+                p.owed.shieldOut += uint128(FullMath.mulDiv(insideLast.shieldOut - p.insideLast.shieldOut, p.liquidity, FixedPoint128.Q128));
+                p.insideLast = insideLast;
+            }
+        }
+    }
+
+    function accountPositions(address account) external view override returns (Position[] memory) {
+        uint256 balance = IERC721Enumerable(manager).balanceOf(account);
+        Position[] memory p = new Position[](balance);
+        for (uint256 i = 0; i < balance; i++) {
+            p[i] = handlePosition(IERC721Enumerable(manager).tokenOfOwnerByIndex(account, i));
+        }
+        return p;
     }
 }

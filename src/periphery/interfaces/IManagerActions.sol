@@ -46,7 +46,6 @@ interface IManagerLiquidity {
     /// @notice withdraw obligation, it will be call after removeLiquidity
     function withdrawObligation(uint256 tokenId) external;
 
-
     function redeemObligation(uint256 tokenId) external;
 }
 

@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import { BaseScript } from "./shared/Base.s.sol";
-import {Oracle} from "../src/core/Oracle.sol";
+import { Oracle } from "../src/core/Oracle.sol";
 import { TestERC20 } from "../test/shared/TestERC20.sol";
 
 contract OracleSet is BaseScript {

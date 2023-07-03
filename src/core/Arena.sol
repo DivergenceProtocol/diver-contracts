@@ -6,7 +6,7 @@ import { IERC20 } from "@oz/token/ERC20/IERC20.sol";
 import { Ownable } from "@oz/access/Ownable.sol";
 import { Clones } from "@oz/proxy/Clones.sol";
 import { IERC20Metadata } from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
-import {IOracle} from "./interfaces/IOracle.sol";
+import { IOracle } from "./interfaces/IOracle.sol";
 import { Errors } from "./errors/Errors.sol";
 import { IArena, Fee, Outcome, BattleKey, CreateBattleParams } from "./interfaces/IArena.sol";
 import { IBattleInit } from "./interfaces/battle/IBattleInit.sol";
@@ -20,10 +20,10 @@ import { getAdjustPrice } from "./utils.sol";
 /// deployment
 /// parameters.
 contract Arena is IArena, Ownable {
-    address public oracleAddr;
+    address public immutable oracleAddr;
     address public managerAddr;
     address[] private battleList;
-    address public battleImpl;
+    address public immutable battleImpl;
     bool public isPermissionless;
     DeploymentParams public deploymentParameters;
     mapping(bytes32 => address) public battles;

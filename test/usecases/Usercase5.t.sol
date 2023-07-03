@@ -50,13 +50,13 @@ contract UseCase5 is ManagerTrade {
 
         vm.startPrank(bob);
         logSlot0(battleAddr);
-        (uint256 amtIn0, uint256 amtOut0) = trade(bob, manager, params1);
+        (uint256 amtIn0, uint256 amtOut0) = trade(bob, manager, params1, quoter);
         logSpearAndShield(bob, battleAddr);
         logSlot0(battleAddr);
         TradeParams memory params2 = params1;
         params2.tradeType = TradeType.BUY_SHIELD;
         params2.amountSpecified = amtIn0 - amtOut0;
-        trade(bob, manager, params2);
+        trade(bob, manager, params2, quoter);
         logSpearAndShield(bob, battleAddr);
         logSlot0(battleAddr);
         vm.stopPrank();

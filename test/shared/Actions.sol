@@ -10,6 +10,7 @@ import { IBattle } from "../../src/core/interfaces/battle/IBattle.sol";
 import { IBattleBase } from "../../src/core/interfaces/battle/IBattleActions.sol";
 import { BattleKey, LiquidityType, TradeType } from "../../src/core/types/common.sol";
 import { Position } from "../../src/periphery/types/common.sol";
+import { IQuoter } from "../../src/periphery/interfaces/IQuoter.sol";
 import { console2 } from "@std/console2.sol";
 import { ERC721Enumerable } from "@oz/token/ERC721/extensions/ERC721Enumerable.sol";
 
@@ -93,7 +94,7 @@ function getTradeParams(
     });
 }
 
-function trade(address sender, address manager, TradeParams memory params) returns (uint256 amtIn, uint256 amtOut) {
+function trade(address sender, address manager, TradeParams memory params, address quoter) returns (uint256 amtIn, uint256 amtOut) {
     console2.log("log@ =====>begin trade user: %s <======", sender);
 
     (amtIn, amtOut) = IManager(manager).trade(params);
@@ -109,7 +110,7 @@ function trade(address sender, address manager, TradeParams memory params) retur
     console2.log("log@ amountOutMin: %s", params.amountOutMin);
     console2.log("log@ sqrtPriceLimitX96: %s", params.sqrtPriceLimitX96);
     for (uint256 id; id < ERC721Enumerable(manager).totalSupply(); id++) {
-        positionTokenId(id, manager);
+        positionTokenId(id, manager, quoter);
     }
 
     console2.log("log@ =====>end trade user: %s <======", sender);
@@ -131,19 +132,19 @@ function settle(address sender, address battle) {
     console2.log("log@ ");
 }
 
-function withdrawObligation(address sender, address manager, uint256 tokenId) {
+function withdrawObligation(address sender, address manager, uint256 tokenId, address quoter) {
     IManager(manager).withdrawObligation(tokenId);
     console2.log("log@ =====>begin withdrawObligation user: %s <======", sender);
     console2.log("log@ tokenId: %s", tokenId);
     for (uint256 id; id < ERC721Enumerable(manager).totalSupply(); id++) {
-        positionTokenId(id, manager);
+        positionTokenId(id, manager, quoter);
     }
     console2.log("log@ =====>end withdrawObligation user: %s <======", sender);
     console2.log("log@ ");
 }
 
-function position(address sender, address manager) {
-    Position[] memory ps = IManager(manager).accountPositions(sender);
+function position(address sender, address manager, address quoter) {
+    Position[] memory ps = IQuoter(quoter).accountPositions(sender);
     console2.log("log@ =====>begin position user: %s <======", sender);
     for (uint256 i; i < ps.length; i++) {
         Position memory p = ps[i];
@@ -166,8 +167,8 @@ function position(address sender, address manager) {
     console2.log("log@ =====>end position user: %s <======", sender);
 }
 
-function positionTokenId(uint256 tokenId, address manager) {
-    Position memory p = IManager(manager).positions(tokenId);
+function positionTokenId(uint256 tokenId, address manager, address quoter) {
+    Position memory p = IQuoter(quoter).positions(tokenId);
     address sender = ERC721Enumerable(manager).ownerOf(tokenId);
     console2.log("log@ =====>begin position user: %s <======", sender);
     console2.log("log@ position tokenId: %s", p.tokenId);

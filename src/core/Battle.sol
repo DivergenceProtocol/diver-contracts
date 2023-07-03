@@ -85,6 +85,13 @@ contract Battle is IBattle {
         slot0.unlocked = true;
     }
 
+    modifier onlyManager() {
+        if (msg.sender != manager) {
+            revert Errors.CallerNotManager();
+        }
+        _;
+    }
+
     /// @notice init storage state variable, only be caled once
     function initState(DeploymentParams memory params) external override {
         if (_bk.expiries != 0) {
@@ -162,7 +169,7 @@ contract Battle is IBattle {
                         true
                     );
                 } else if (slot0.tick < params.tickUpper) {
-                    // current tick is inside the passedƒ range
+                    // current tick is inside the passed range
                     csp = SqrtPriceMath.getAmount0Delta(
                         slot0.sqrtPriceX96, TickMath.getSqrtRatioAtTick(params.tickUpper), uint128(params.liquidityDelta), false
                     );
@@ -196,7 +203,7 @@ contract Battle is IBattle {
     }
 
     /// @inheritdoc IBattleMintBurn
-    function mint(BattleMintParams memory params) external override lock returns (uint256 seed) {
+    function mint(BattleMintParams memory params) external override lock onlyManager returns (uint256 seed) {
         if (block.timestamp >= _bk.expiries) {
             revert Errors.BattleEnd();
         }
@@ -207,10 +214,6 @@ contract Battle is IBattle {
         if (params.liquidityType == LiquidityType.SHIELD && params.tickUpper <= slot0.tick) {
             revert Errors.TickInvalid();
         }
-        if (msg.sender != manager) {
-            revert Errors.CallerNotManager();
-        }
-
         if (params.amount == 0) {
             revert Errors.ZeroAmount();
         }
@@ -251,10 +254,7 @@ contract Battle is IBattle {
     }
 
     /// @inheritdoc IBattleMintBurn
-    function burn(BattleBurnParams memory params) external override lock {
-        if (msg.sender != manager) {
-            revert Errors.CallerNotManager();
-        }
+    function burn(BattleBurnParams memory params) external override lock onlyManager {
         if (params.tickLower >= params.tickUpper) {
             revert Errors.TickOrderInvalid();
         }
@@ -270,10 +270,7 @@ contract Battle is IBattle {
     }
 
     /// comments see IBattleTrade
-    function collect(address recipient, uint256 cAmount, uint256 spAmount, uint256 shAmount) external override {
-        if (msg.sender != manager) {
-            revert Errors.CallerNotManager();
-        }
+    function collect(address recipient, uint256 cAmount, uint256 spAmount, uint256 shAmount) external override onlyManager {
         if (cAmount > 0) {
             IERC20(_bk.collateral).safeTransfer(recipient, cAmount);
         }
@@ -470,12 +467,9 @@ contract Battle is IBattle {
     }
 
     /// @inheritdoc IBattleBase
-    function withdrawObligation(address recipient, uint256 amount) external override lock {
+    function withdrawObligation(address recipient, uint256 amount) external override onlyManager lock {
         if (battleOutcome == Outcome.ONGOING) {
             revert Errors.BattleNotEnd();
-        }
-        if (msg.sender != manager) {
-            revert Errors.CallerNotManager();
         }
         IERC20(_bk.collateral).safeTransfer(recipient, amount);
         emit ObligationWithdrawed(recipient, amount);

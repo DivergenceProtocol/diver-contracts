@@ -21,6 +21,7 @@ contract Oracle is Ownable {
     function setExternalOracle(string[] memory symbols, address[] memory _oracles) external onlyOwner {
         require(symbols.length == _oracles.length, "symbols not match oracles");
         for (uint256 i = 0; i < symbols.length; i++) {
+            require(_oracles[i] != address(0), "Zero Address");
             externalOracleOf[symbols[i]] = _oracles[i];
         }
     }
@@ -69,7 +70,7 @@ contract Oracle is Ownable {
         require(p != 0, "price not exist");
     }
 
-    function getCOracle(string memory symbol) external view returns(address) {
+    function getCOracle(string memory symbol) external view returns (address) {
         address cOracle = externalOracleOf[symbol];
         require(cOracle != address(0), "not exist");
         return cOracle;

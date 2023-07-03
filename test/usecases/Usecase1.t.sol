@@ -46,14 +46,14 @@ contract Usecase1 is ManagerTrade {
         AddLiqParams memory outRangeAddLiqParams = getAddLiquidityParams(defaultBattleKey, dave, -2000, -1500, LiquidityType.COLLATERAL, 1000e18, 300);
         vm.startPrank(dave);
         addLiquidity(dave, manager, outRangeAddLiqParams);
-        position(dave, manager);
+        position(dave, manager, quoter);
         vm.stopPrank();
 
         trade100SpearAnd90Shield(bob);
 
         vm.startPrank(dave);
         uint256 balance1 = TestERC20(collateral).balanceOf(dave);
-        position(dave, manager);
+        position(dave, manager, quoter);
         removeLiquidity(dave, manager, 1);
 
         vm.stopPrank();
@@ -65,8 +65,8 @@ contract Usecase1 is ManagerTrade {
         exercise(msg.sender, battleAddr);
 
         vm.startPrank(dave);
-        withdrawObligation(dave, manager, 1);
-        position(dave, manager);
+        withdrawObligation(dave, manager, 1, quoter);
+        position(dave, manager, quoter);
         vm.stopPrank();
         console2.log("============>>Usecase1 end<<============");
     }

@@ -9,6 +9,7 @@ library Errors {
     error BattleNotExist();
     error BattleExisted();
     error CallerNotManager();
+    error CallerNotBattle();
     error Deadline();
     error InsufficientCollateral();
     error InsufficientSpear();

@@ -10,14 +10,14 @@ interface IManagerState {
      */
     function positions(uint256 tokenId) external view returns (Position memory);
 
-    struct AccountPosition {
-        address battleAddr;
-        uint256 tokenId;
-        Position position;
-    }
+    // struct AccountPosition {
+    //     address battleAddr;
+    //     uint256 tokenId;
+    //     Position position;
+    // }
     /**
      * @notice Get all positions belong to an account
      */
 
-    function accountPositions(address account) external view returns (Position[] memory);
+    // function accountPositions(address account) external view returns (Position[] memory);
 }

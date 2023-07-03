@@ -42,10 +42,10 @@ function deploy(DeployAddrs memory das) returns (address managerAddr, address ar
         oracle = das.oracle;
         arena = deployArena(das.collateralToken, das.oracle, address(battleImpl));
     }
-    if (das.quoter == address(0)) {
-        das.quoter = address(new Quoter(arena));
-    }
     managerAddr = address(new Manager(arena, das.wethAddr));
+    if (das.quoter == address(0)) {
+        das.quoter = address(new Quoter(arena, managerAddr));
+    }
     Arena(arena).setManager(managerAddr);
     return (managerAddr, arena, oracle, das.collateralToken, das.quoter);
 }

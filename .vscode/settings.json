@@ -1,5 +1,5 @@
 {
-  "solidity.compileUsingRemoteVersion": "latest",
+  "solidity.compileUsingRemoteVersion": "0.8.19",
   "solidity.packageDefaultDependenciesContractsDirectory": "src",
   "solidity.packageDefaultDependenciesDirectory": "lib",
   "cSpell.words": [

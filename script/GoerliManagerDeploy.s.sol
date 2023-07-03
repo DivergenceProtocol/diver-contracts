@@ -37,8 +37,14 @@ contract GoerliManagerDeploy is BaseScript {
         address collateralToken = address(0);
         address wethAddr = address(0);
         address oracle = _deployOracle();
-        DeployAddrs memory das =
-            DeployAddrs({ owner: deployer, arenaAddr: arenaAddr, collateralToken: collateralToken, wethAddr: wethAddr, quoter: quoter, oracle: oracle});
+        DeployAddrs memory das = DeployAddrs({
+            owner: deployer,
+            arenaAddr: arenaAddr,
+            collateralToken: collateralToken,
+            wethAddr: wethAddr,
+            quoter: quoter,
+            oracle: oracle
+        });
         (manager, arena, oracle, collateral, quoter) = deploy(das);
 
         // doBaseThing();
@@ -57,7 +63,7 @@ contract GoerliManagerDeploy is BaseScript {
         return bk;
     }
 
-    function _deployOracle() private returns(address oracle) {
+    function _deployOracle() private returns (address oracle) {
         Oracle oracle = new Oracle();
         symbols.push("BTC");
         symbols.push("ETH");
@@ -82,7 +88,7 @@ contract GoerliManagerDeploy is BaseScript {
     }
 
     function deployQuoter() public {
-        Quoter quoter = new Quoter(address(0xC09619865f6EEAB0C87360D3200da0b6FA4034a1));
+        Quoter quoter = new Quoter(address(0xC09619865f6EEAB0C87360D3200da0b6FA4034a1), address(0));
     }
 
     function doBaseThing() public {

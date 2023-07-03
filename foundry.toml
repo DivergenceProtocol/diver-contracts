@@ -54,15 +54,8 @@
 
 # [fuzz]
 # seed = 1234567843
-# seed = 1234567845
-#  seed = 12345678456
-  # seed = 12345678457 +1
-  #  seed = 12345678459
-    # seed = 123456784590
-    #  seed = 123456784593
-
 
 [invariant]
-runs = 16
-depth = 256
+runs = 1
+depth = 1024
 fail_on_revert = true

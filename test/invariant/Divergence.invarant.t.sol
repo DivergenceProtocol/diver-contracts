@@ -14,6 +14,7 @@ import { console2 } from "@std/console2.sol";
 import { Multicall } from "@oz/utils/Multicall.sol";
 import { Position, PositionState } from "../../src/periphery/types/common.sol";
 import { IBattleTrade } from "../../src/core/interfaces/battle/IBattleActions.sol";
+import { IQuoter } from "../../src/periphery/interfaces/IQuoter.sol";
 
 // contract DivergenceInvariant is DeploymentFixture {
 contract DivergenceInvariant is Test {
@@ -22,7 +23,7 @@ contract DivergenceInvariant is Test {
 
     function setUp() public virtual {
         // targetContract(manager);
-        handler = new Handler(5, 15, 15);
+        handler = new Handler(50, 150, 150);
 
         // handler.getManager();
 
@@ -76,15 +77,21 @@ contract DivergenceInvariant is Test {
     bytes[] public callData;
 
     function invariant_NftCollateral() public {
+        if (!handler.ghost_run_end()) {
+            handler.callSummary();
+            return;
+        }
         handler.callSummary();
+        handler.ghost_run_end();
         address manager = handler.manager();
+        address quoter = handler.quoter();
         // assertGt(uint256(uint160(manager)), 0, "manager zero");
         IERC721Enumerable nft = IERC721Enumerable(address(handler.manager()));
         uint256 total = nft.totalSupply();
         for (uint256 i; i < total; i++) {
-            callData.push(abi.encodeWithSelector(IManagerState(manager).positions.selector, i));
+            callData.push(abi.encodeWithSelector(IQuoter(quoter).positions.selector, i));
         }
-        bytes[] memory results = Multicall(manager).multicall(callData);
+        bytes[] memory results = Multicall(quoter).multicall(callData);
         delete callData;
         for (uint256 i; i < results.length; i++) {
             (Position memory p) = abi.decode(results[i], (Position));

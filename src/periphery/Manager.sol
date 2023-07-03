@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import { ERC721Enumerable, ERC721 } from "@oz/token/ERC721/extensions/ERC721Enumerable.sol";
 import { IERC20 } from "@oz/token/ERC20/IERC20.sol";
-import { Multicall } from "@oz/utils/Multicall.sol";
+import { ERC20Burnable } from "@oz/token/ERC20/extensions/ERC20Burnable.sol";
 import { Multicall } from "@oz/utils/Multicall.sol";
 import { SafeCast } from "@oz/utils/math/SafeCast.sol";
 import { FullMath } from "@uniswap/v3-core/contracts/libraries/FullMath.sol";
@@ -196,20 +196,14 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
         if (rr != Outcome.ONGOING) {
             revert Errors.BattleEnd();
         }
-        if (pm.spearObligation > pm.shieldObligation) {
-            uint diff = pm.spearObligation - pm.shieldObligation;
-            address spear = IBattleState(pm.battleAddr).spear();
-            IERC20(spear).transferFrom(msg.sender, address(this), diff);
-            IBattleActions(pm.battleAddr).withdrawObligation(_ownerOf(tokenId), pm.shieldObligation);
-            emit ObligationRedeemed(pm.battleAddr, tokenId, pm.shieldObligation);
-        } else if (pm.spearObligation < pm.shieldObligation) {
-            uint diff = pm.shieldObligation - pm.spearObligation;
-            address shield = IBattleState(pm.battleAddr).shield();
-            IERC20(shield).transferFrom(msg.sender, address(this), diff);
-            IBattleActions(pm.battleAddr).withdrawObligation(_ownerOf(tokenId), pm.spearObligation);
-            emit ObligationRedeemed(pm.battleAddr, tokenId, pm.spearObligation);
+        if (pm.spearObligation != pm.shieldObligation) {
+            (uint256 diff, address stoken, uint256 obli) = pm.spearObligation > pm.shieldObligation
+                ? (pm.spearObligation - pm.shieldObligation, IBattleState(pm.battleAddr).spear(), pm.shieldObligation)
+                : (pm.shieldObligation - pm.spearObligation, IBattleState(pm.battleAddr).shield(), pm.spearObligation);
+            ERC20Burnable(stoken).burnFrom(msg.sender, diff);
+            IBattleActions(pm.battleAddr).withdrawObligation(_ownerOf(tokenId), obli);
+            emit ObligationRedeemed(pm.battleAddr, tokenId, obli);
         }
-        
     }
 
     function trade(TradeParams calldata p) external override returns (uint256 amountIn, uint256 amountOut) {
@@ -251,7 +245,9 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
         if (battle == address(0)) {
             revert Errors.BattleNotExist();
         }
-        require(msg.sender == battle, "error");
+        if (msg.sender != battle) {
+            revert Errors.CallerNotBattle();
+        }
         pay(data.battleKey.collateral, data.payer, msg.sender, cAmount);
     }
 
@@ -259,30 +255,32 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
 
     /// @inheritdoc IManagerState
     function positions(uint256 tokenId) external view override returns (Position memory) {
-        return handlePosition(tokenId);
+        return _positions[tokenId];
+        // return handlePosition(tokenId);
     }
 
-    function handlePosition(uint256 tokenId) private view returns (Position memory p) {
-        p = _positions[tokenId];
-        if (p.state == PositionState.LiquidityAdded) {
-            unchecked {
-                GrowthX128 memory insideLast = IBattleState(p.battleAddr).getInsideLast(p.tickLower, p.tickUpper);
-                p.owed.fee += uint128(FullMath.mulDiv(insideLast.fee - p.insideLast.fee, p.liquidity, FixedPoint128.Q128));
-                p.owed.collateralIn += uint128(FullMath.mulDiv(insideLast.collateralIn - p.insideLast.collateralIn, p.liquidity, FixedPoint128.Q128));
-                p.owed.spearOut += uint128(FullMath.mulDiv(insideLast.spearOut - p.insideLast.spearOut, p.liquidity, FixedPoint128.Q128));
-                p.owed.shieldOut += uint128(FullMath.mulDiv(insideLast.shieldOut - p.insideLast.shieldOut, p.liquidity, FixedPoint128.Q128));
-                p.insideLast = insideLast;
-            }
-        }
-    }
+    // function handlePosition(uint256 tokenId) private view returns (Position memory p) {
+    //     p = _positions[tokenId];
+    //     if (p.state == PositionState.LiquidityAdded) {
+    //         unchecked {
+    //             GrowthX128 memory insideLast = IBattleState(p.battleAddr).getInsideLast(p.tickLower, p.tickUpper);
+    //             p.owed.fee += uint128(FullMath.mulDiv(insideLast.fee - p.insideLast.fee, p.liquidity, FixedPoint128.Q128));
+    //             p.owed.collateralIn += uint128(FullMath.mulDiv(insideLast.collateralIn - p.insideLast.collateralIn, p.liquidity,
+    // FixedPoint128.Q128));
+    //             p.owed.spearOut += uint128(FullMath.mulDiv(insideLast.spearOut - p.insideLast.spearOut, p.liquidity, FixedPoint128.Q128));
+    //             p.owed.shieldOut += uint128(FullMath.mulDiv(insideLast.shieldOut - p.insideLast.shieldOut, p.liquidity, FixedPoint128.Q128));
+    //             p.insideLast = insideLast;
+    //         }
+    //     }
+    // }
 
     /// @inheritdoc IManagerState
-    function accountPositions(address account) external view override returns (Position[] memory) {
-        uint256 balance = balanceOf(account);
-        Position[] memory p = new Position[](balance);
-        for (uint256 i = 0; i < balance; i++) {
-            p[i] = handlePosition(tokenOfOwnerByIndex(account, i));
-        }
-        return p;
-    }
+    // function accountPositions(address account) external view override returns (Position[] memory) {
+    //     uint256 balance = balanceOf(account);
+    //     Position[] memory p = new Position[](balance);
+    //     for (uint256 i = 0; i < balance; i++) {
+    //         p[i] = handlePosition(tokenOfOwnerByIndex(account, i));
+    //     }
+    //     return p;
+    // }
 }
