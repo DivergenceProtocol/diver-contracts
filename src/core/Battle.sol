@@ -468,9 +468,6 @@ contract Battle is IBattle {
 
     /// @inheritdoc IBattleBase
     function withdrawObligation(address recipient, uint256 amount) external override onlyManager lock {
-        if (battleOutcome == Outcome.ONGOING) {
-            revert Errors.BattleNotEnd();
-        }
         IERC20(_bk.collateral).safeTransfer(recipient, amount);
         emit ObligationWithdrawed(recipient, amount);
     }
