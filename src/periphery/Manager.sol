@@ -197,13 +197,13 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
             revert Errors.BattleEnd();
         }
         if (pm.spearObligation != pm.shieldObligation) {
-            (uint256 diff, address stoken, uint256 obli) = pm.spearObligation > pm.shieldObligation
-                ? (pm.spearObligation - pm.shieldObligation, IBattleState(pm.battleAddr).spear(), pm.shieldObligation)
-                : (pm.shieldObligation - pm.spearObligation, IBattleState(pm.battleAddr).shield(), pm.spearObligation);
+            (uint256 diff, address stoken) = pm.spearObligation > pm.shieldObligation
+                ? (pm.spearObligation - pm.shieldObligation, IBattleState(pm.battleAddr).spear())
+                : (pm.shieldObligation - pm.spearObligation, IBattleState(pm.battleAddr).shield());
             ERC20Burnable(stoken).burnFrom(msg.sender, diff);
-            IBattleActions(pm.battleAddr).withdrawObligation(_ownerOf(tokenId), obli);
+            IBattleActions(pm.battleAddr).withdrawObligation(_ownerOf(tokenId), diff);
             _positions[tokenId].state = PositionState.ObligationRedeemed;
-            emit ObligationRedeemed(pm.battleAddr, tokenId, obli);
+            emit ObligationRedeemed(pm.battleAddr, tokenId, diff);
         }
     }
 
