@@ -55,7 +55,7 @@ contract UseCase5 is ManagerTrade {
         logSlot0(battleAddr);
         TradeParams memory params2 = params1;
         params2.tradeType = TradeType.BUY_SHIELD;
-        params2.amountSpecified = amtIn0 - amtOut0;
+        params2.amountSpecified = int256(amtIn0 - amtOut0);
         trade(bob, manager, params2, quoter);
         logSpearAndShield(bob, battleAddr);
         logSlot0(battleAddr);

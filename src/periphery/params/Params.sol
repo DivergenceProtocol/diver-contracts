@@ -38,10 +38,20 @@ struct AddLiqParams {
 /// @param amountOutMin The minimum amount of spear/shield to receive
 /// @param sqrtPriceLimitX96 The max/min  price when trading end
 /// @param deadline The deadline of the transaction
+// struct TradeParams {
+//     BattleKey battleKey;
+//     TradeType tradeType;
+//     uint256 amountSpecified;
+//     address recipient;
+//     uint256 amountOutMin;
+//     uint160 sqrtPriceLimitX96;
+//     uint256 deadline;
+// }
+
 struct TradeParams {
     BattleKey battleKey;
     TradeType tradeType;
-    uint256 amountSpecified;
+    int256 amountSpecified;
     address recipient;
     uint256 amountOutMin;
     uint160 sqrtPriceLimitX96;

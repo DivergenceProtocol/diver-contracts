@@ -8,9 +8,10 @@ struct TradeCache {
     uint256 feeProtocol;
 }
 
+
 struct TradeState {
-    uint256 amountSpecifiedRemaining;
-    uint256 amountCalculated;
+    int256 amountSpecifiedRemaining;
+    int256 amountCalculated;
     uint160 sqrtPriceX96;
     int24 tick;
     GrowthX128 global;

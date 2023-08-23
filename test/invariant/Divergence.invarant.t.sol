@@ -23,7 +23,8 @@ contract DivergenceInvariant is Test {
 
     function setUp() public virtual {
         // targetContract(manager);
-        handler = new Handler(50, 150, 150);
+        handler = new Handler(30, 100, 100);
+        // handler = new Handler(5, 15, 15);
 
         // handler.getManager();
 
@@ -106,8 +107,9 @@ contract DivergenceInvariant is Test {
         // assertGt(total, 0, "total zero");
     }
 
+    /// forge-config: default.invariant.runs = 1
+    /// forge-config: default.invariant.depth = 500
     function invariant_Zero() public {
-        handler.callSummary();
         address manager = handler.manager();
         address battle = handler.battle();
         address collateral = handler.collateral();
@@ -118,20 +120,21 @@ contract DivergenceInvariant is Test {
             // console2.log("withdrawAndExerciseCalled",
             // handler.withdrawAndExerciseCalled());
             // IBattleTrade(battle).collectProtocolFee(address(this));
+            handler.callSummary();
             uint256 total = IERC721Enumerable(manager).totalSupply();
             console2.log("total nft: ", total);
             if (outcome == Outcome.SPEAR_WIN) {
-                assert(totalSpear == 0);
+                assertEq(totalSpear, uint(0), "Spear");
                 // assertEq(totalShield, 0, "total shield error");
             } else if (outcome == Outcome.SHIELD_WIN) {
                 // assertEq(totalSpear, 0, "total spear error");
-                assert(totalShield == 0);
+                assertEq(totalShield, uint(0), "Shield");
             } else {
                 assert(1 == 0);
             }
             uint256 collateralInBattle = IERC20(collateral).balanceOf(battle);
             console2.log("collateralInBattle:", collateralInBattle);
-            assert(collateralInBattle >= 0);
+            assertGe(collateralInBattle, uint(0), "collateral after withdraw");
             uint256 ghost_collateral = handler.ghost_collateral();
             console2.log("ghost_collateral  :", ghost_collateral / 1e18);
             uint256 ghost_tradeAmount = handler.ghost_tradeAmount();

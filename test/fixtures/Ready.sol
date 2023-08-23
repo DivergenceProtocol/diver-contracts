@@ -49,7 +49,7 @@ contract ReadyFixture is DeploymentFixture {
     address dave = vm.addr(5);
 
     address[] public users = [alice, bob, carol, elf, dave];
-    uint256 public amount = 100_000_000_000;
+    uint256 public amount = 1e12;
 
     function setUp() public virtual override {
         super.setUp();

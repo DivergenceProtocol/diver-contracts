@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import { SafeERC20 } from "@oz/token/ERC20/utils/SafeERC20.sol";
 import { IERC20 } from "@oz/token/ERC20/IERC20.sol";
+import { IERC20Metadata } from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 import { SafeCast } from "@oz/utils/math/SafeCast.sol";
 import { FullMath } from "@uniswap/v3-core/contracts/libraries/FullMath.sol";
 import { TickBitmap } from "@uniswap/v3-core/contracts/libraries/TickBitmap.sol";
@@ -37,6 +38,8 @@ import { TradeCache, TradeState, StepComputations } from "./types/TradeTypes.sol
 import { LiquidityType, BattleKey, Outcome, GrowthX128, TickInfo } from "./types/common.sol";
 import { PositionInfo, Fee, Outcome, GrowthX128, TradeType } from "./types/common.sol";
 
+import { console2 } from "@std/console2.sol";
+
 /// @title Battle
 contract Battle is IBattle {
     using Tick for mapping(int24 => TickInfo);
@@ -60,6 +63,7 @@ contract Battle is IBattle {
     address public override shield;
     address public cOracle;
 
+    uint256 public unit;
     uint256 public startTS;
     uint128 public liquidity;
     uint128 public maxLiquidityPerTick;
@@ -75,6 +79,16 @@ contract Battle is IBattle {
     mapping(int24 => TickInfo) public ticks;
     mapping(int16 => uint256) public tickBitmap;
     mapping(bytes32 => PositionInfo) private _positions;
+
+
+    // just for testing
+    uint160[] public sqrtStarts;
+    uint160[] public sqrtEnds;
+    uint128[] public liquidities;
+
+    function getProcess() external view returns(uint160[] memory, uint160[] memory, uint128[] memory) {
+        return (sqrtStarts, sqrtEnds, liquidities);
+    }
 
     modifier lock() {
         if (!slot0.unlocked) {
@@ -98,6 +112,7 @@ contract Battle is IBattle {
             revert Errors.InitTwice();
         }
         _bk = params.battleKey;
+        unit = 10**IERC20Metadata(_bk.collateral).decimals();
         oracle = params.oracleAddr;
         cOracle = params.cOracleAddr;
         startTS = block.timestamp;
@@ -114,7 +129,7 @@ contract Battle is IBattle {
             revert Errors.InitTwice();
         }
         slot0 = Slot0({ sqrtPriceX96: startSqrtPriceX96, tick: TickMath.getTickAtSqrtRatio(startSqrtPriceX96), unlocked: true });
-        maxLiquidityPerTick = Tick.tickSpacingToMaxLiquidityPerTick(1);
+        maxLiquidityPerTick = Tick.tickSpacingToMaxLiquidityPerTick(30);
     }
 
     function _updatePosition(UpdatePositionParams memory params) internal returns (PositionInfo storage position) {
@@ -129,10 +144,10 @@ contract Battle is IBattle {
             flippedUpper = ticks.update(params.mpParams.tickUpper, params.tick, params.mpParams.liquidityDelta, _global, maxLiquidityPerTick, true);
 
             if (flippedLower) {
-                tickBitmap.flipTick(params.mpParams.tickLower, 1);
+                tickBitmap.flipTick(params.mpParams.tickLower, 30);
             }
             if (flippedUpper) {
-                tickBitmap.flipTick(params.mpParams.tickUpper, 1);
+                tickBitmap.flipTick(params.mpParams.tickUpper, 30);
             }
         }
         GrowthX128 memory insideLast = ticks.getGrowthInside(params.mpParams.tickLower, params.mpParams.tickUpper, params.tick, _global);
@@ -283,7 +298,143 @@ contract Battle is IBattle {
     }
 
     /// comments see IBattleTrade
+    // function trade(BattleTradeParams memory params) external returns (uint256 cAmount, uint256 sAmount) {
+    //     if (block.timestamp >= _bk.expiries) {
+    //         revert Errors.BattleEnd();
+    //     }
+    //     // manager or quoter need call this function
+    //     // if (msg.sender != s.manager) {
+    //     //     revert Errors.CallerNotManager();
+    //     // }
+    //     if (params.amountSpecified == 0) {
+    //         revert Errors.ZeroAmount();
+    //     }
+
+    //     Slot0 memory slot0Start = slot0;
+
+    //     if (!slot0Start.unlocked) {
+    //         revert Errors.Locked();
+    //     }
+
+    //     bool isPriceDown = params.tradeType == TradeType.BUY_SPEAR;
+    //     require(
+    //         isPriceDown
+    //             ? params.sqrtPriceLimitX96 < slot0Start.sqrtPriceX96 && params.sqrtPriceLimitX96 > TickMath.MIN_SQRT_RATIO
+    //             : params.sqrtPriceLimitX96 > slot0Start.sqrtPriceX96 && params.sqrtPriceLimitX96 < TickMath.MAX_SQRT_RATIO,
+    //         "PriceInvalid"
+    //     );
+    //     slot0.unlocked = false;
+
+    //     TradeCache memory cache = TradeCache({ feeProtocol: fee.protocolFee });
+    //     TradeState memory state = TradeState({
+    //         amountSpecifiedRemaining: params.amountSpecified,
+    //         amountCalculated: 0,
+    //         sqrtPriceX96: slot0Start.sqrtPriceX96,
+    //         tick: slot0Start.tick,
+    //         global: global,
+    //         protocolFee: 0,
+    //         liquidity: liquidity,
+    //         transactionFee: 0
+    //     });
+    //     while (state.amountSpecifiedRemaining != 0 && state.sqrtPriceX96 != params.sqrtPriceLimitX96) {
+    //         StepComputations memory step;
+    //         step.sqrtPriceStartX96 = state.sqrtPriceX96;
+
+    //         (step.tickNext, step.initialized) = tickBitmap.nextInitializedTickWithinOneWord(state.tick, 1, isPriceDown);
+    //         if (step.tickNext < TickMath.MIN_TICK) {
+    //             step.tickNext = TickMath.MIN_TICK;
+    //         }
+    //         if (step.tickNext > TickMath.MAX_TICK) {
+    //             step.tickNext = TickMath.MAX_TICK;
+    //         }
+    //         step.sqrtPriceNextX96 = TickMath.getSqrtRatioAtTick(step.tickNext);
+    //         (state.sqrtPriceX96, step.amountIn, step.amountOut) = TradeMath.computeTradeStep(
+    //             ComputeTradeStepParams({
+    //                 tradeType: params.tradeType,
+    //                 sqrtRatioCurrentX96: state.sqrtPriceX96,
+    //                 sqrtRatioTargetX96: (
+    //                     isPriceDown ? step.sqrtPriceNextX96 < params.sqrtPriceLimitX96 : step.sqrtPriceNextX96 > params.sqrtPriceLimitX96
+    //                     ) ? params.sqrtPriceLimitX96 : step.sqrtPriceNextX96,
+    //                 liquidity: state.liquidity,
+    //                 amountRemaining: state.amountSpecifiedRemaining
+    //             })
+    //         );
+
+    //         state.amountSpecifiedRemaining -= step.amountIn;
+    //         state.amountCalculated += step.amountOut;
+
+    //         step.feeAmount = FullMath.mulDiv(step.amountOut, fee.transactionFee, 1e6);
+    //         if (cache.feeProtocol > 0) {
+    //             uint256 delta = FullMath.mulDiv(step.feeAmount, cache.feeProtocol, 1e6);
+    //             step.feeAmount -= delta;
+    //             state.protocolFee += uint128(delta);
+    //         }
+
+    //         if (state.liquidity > 0) {
+    //             unchecked {
+    //                 state.global.fee += FullMath.mulDiv(step.feeAmount, FixedPoint128.Q128, state.liquidity);
+    //                 state.transactionFee += step.feeAmount;
+    //                 state.global.collateralIn += FullMath.mulDiv(step.amountIn, FixedPoint128.Q128, state.liquidity);
+
+    //                 if (params.tradeType == TradeType.BUY_SPEAR) {
+    //                     // buy spear => spearBought and shieldBankOut need be
+    //                     // considered
+    //                     // spear bought
+    //                     state.global.spearOut += FullMath.mulDiv(step.amountOut, FixedPoint128.Q128, state.liquidity);
+    //                 } else {
+    //                     // buy shield => shieldBought and spearBankOut need be
+    //                     // considered
+    //                     state.global.shieldOut += FullMath.mulDiv(step.amountOut, FixedPoint128.Q128, state.liquidity);
+    //                 }
+    //             }
+    //         }
+
+    //         if (state.sqrtPriceX96 == step.sqrtPriceNextX96) {
+    //             if (step.initialized) {
+    //                 int128 liquidityNet = ticks.cross(step.tickNext, state.global);
+    //                 if (isPriceDown) {
+    //                     liquidityNet = -liquidityNet;
+    //                 }
+    //                 state.liquidity = liquidityNet < 0 ? state.liquidity - uint128(-liquidityNet) : state.liquidity + uint128(liquidityNet);
+    //             }
+    //             state.tick = isPriceDown ? step.tickNext - 1 : step.tickNext;
+    //         } else if (state.sqrtPriceX96 != step.sqrtPriceStartX96) {
+    //             state.tick = TickMath.getTickAtSqrtRatio(state.sqrtPriceX96);
+    //         }
+    //     }
+
+    //     if (state.tick != slot0Start.tick) {
+    //         (slot0.sqrtPriceX96, slot0.tick) = (state.sqrtPriceX96, state.tick);
+    //     } else {
+    //         slot0.sqrtPriceX96 = state.sqrtPriceX96;
+    //     }
+    //     liquidity = state.liquidity;
+    //     global = state.global;
+    //     cAmount = params.amountSpecified - state.amountSpecifiedRemaining + state.transactionFee + state.protocolFee;
+    //     sAmount = state.amountCalculated;
+    //     if (state.protocolFee > 0) {
+    //         protocolFeeAmount += state.protocolFee;
+    //     }
+
+    //     uint256 colBalanceBefore = collateralBalance();
+    //     ITradeCallback(msg.sender).tradeCallback(cAmount, sAmount, params.data);
+    //     if (colBalanceBefore + cAmount > collateralBalance()) {
+    //         revert Errors.InsufficientCollateral();
+    //     }
+
+    //     if (params.tradeType == TradeType.BUY_SPEAR) {
+    //         // mint spear to user
+    //         ISToken(spear).mint(params.recipient, sAmount);
+    //     } else {
+    //         // mint shield to user
+    //         ISToken(shield).mint(params.recipient, sAmount);
+    //     }
+    //     emit Traded(params.recipient, state.liquidity, cAmount, sAmount, params.tradeType, state.sqrtPriceX96, state.tick);
+    //     slot0.unlocked = true;
+    // }
+
     function trade(BattleTradeParams memory params) external returns (uint256 cAmount, uint256 sAmount) {
+        uint index;
         if (block.timestamp >= _bk.expiries) {
             revert Errors.BattleEnd();
         }
@@ -302,6 +453,7 @@ contract Battle is IBattle {
         }
 
         bool isPriceDown = params.tradeType == TradeType.BUY_SPEAR;
+        bool exactIn = params.amountSpecified > 0;
         require(
             isPriceDown
                 ? params.sqrtPriceLimitX96 < slot0Start.sqrtPriceX96 && params.sqrtPriceLimitX96 > TickMath.MIN_SQRT_RATIO
@@ -322,16 +474,24 @@ contract Battle is IBattle {
             transactionFee: 0
         });
         while (state.amountSpecifiedRemaining != 0 && state.sqrtPriceX96 != params.sqrtPriceLimitX96) {
+            console2.log("index: %s", index++);
+            console2.log("remain: %s", state.amountSpecifiedRemaining);
+            if (index >= 200) {
+                revert("escape loop");
+            }
             StepComputations memory step;
             step.sqrtPriceStartX96 = state.sqrtPriceX96;
 
-            (step.tickNext, step.initialized) = tickBitmap.nextInitializedTickWithinOneWord(state.tick, 1, isPriceDown);
+            (step.tickNext, step.initialized) = tickBitmap.nextInitializedTickWithinOneWord(state.tick, 30, isPriceDown);
+            console2.log("next tick: %s", step.tickNext);
             if (step.tickNext < TickMath.MIN_TICK) {
                 step.tickNext = TickMath.MIN_TICK;
             }
             if (step.tickNext > TickMath.MAX_TICK) {
                 step.tickNext = TickMath.MAX_TICK;
             }
+            sqrtStarts.push(state.sqrtPriceX96);
+            liquidities.push(state.liquidity);
             step.sqrtPriceNextX96 = TickMath.getSqrtRatioAtTick(step.tickNext);
             (state.sqrtPriceX96, step.amountIn, step.amountOut) = TradeMath.computeTradeStep(
                 ComputeTradeStepParams({
@@ -341,12 +501,20 @@ contract Battle is IBattle {
                         isPriceDown ? step.sqrtPriceNextX96 < params.sqrtPriceLimitX96 : step.sqrtPriceNextX96 > params.sqrtPriceLimitX96
                         ) ? params.sqrtPriceLimitX96 : step.sqrtPriceNextX96,
                     liquidity: state.liquidity,
-                    amountRemaining: state.amountSpecifiedRemaining
+                    amountRemaining: state.amountSpecifiedRemaining,
+                    unit: unit
                 })
             );
-
-            state.amountSpecifiedRemaining -= step.amountIn;
-            state.amountCalculated += step.amountOut;
+            sqrtEnds.push(state.sqrtPriceX96);
+            console2.log("step.amountIn  %s", step.amountIn);
+            console2.log("step.amountOut %s", step.amountOut);
+            if (exactIn) {
+                state.amountSpecifiedRemaining -= (step.amountIn).toInt256();
+                state.amountCalculated += (step.amountOut).toInt256();
+            } else {
+                state.amountSpecifiedRemaining += (step.amountOut).toInt256();
+                state.amountCalculated += (step.amountIn).toInt256();
+            }
 
             step.feeAmount = FullMath.mulDiv(step.amountOut, fee.transactionFee, 1e6);
             if (cache.feeProtocol > 0) {
@@ -395,8 +563,13 @@ contract Battle is IBattle {
         }
         liquidity = state.liquidity;
         global = state.global;
-        cAmount = params.amountSpecified - state.amountSpecifiedRemaining + state.transactionFee + state.protocolFee;
-        sAmount = state.amountCalculated;
+        if (exactIn) {
+            cAmount = uint(params.amountSpecified) - uint(state.amountSpecifiedRemaining) + state.transactionFee + state.protocolFee;
+            sAmount = uint(state.amountCalculated);
+        } else {
+            cAmount = uint(state.amountCalculated) + state.transactionFee + state.protocolFee;
+            sAmount = uint(-(params.amountSpecified - state.amountSpecifiedRemaining));
+        }
         if (state.protocolFee > 0) {
             protocolFeeAmount += state.protocolFee;
         }
@@ -414,6 +587,8 @@ contract Battle is IBattle {
             // mint shield to user
             ISToken(shield).mint(params.recipient, sAmount);
         }
+        console2.log("cAmount %s.%s", cAmount/unit, cAmount%unit);
+        console2.log("sAmount %s.%s", sAmount/unit, sAmount%unit);
         emit Traded(params.recipient, state.liquidity, cAmount, sAmount, params.tradeType, state.sqrtPriceX96, state.tick);
         slot0.unlocked = true;
     }

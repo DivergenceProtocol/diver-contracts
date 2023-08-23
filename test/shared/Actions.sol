@@ -74,7 +74,7 @@ function removeLiquidity(address sender, address manager, uint256 tokenId) {
 function getTradeParams(
     BattleKey memory bk,
     TradeType ta,
-    uint256 amount,
+    int256 amount,
     address recipient,
     uint256 amountOutMin,
     uint160 sqrtPriceLimitX96,
@@ -98,7 +98,7 @@ function trade(address sender, address manager, TradeParams memory params, addre
     console2.log("log@ =====>begin trade user: %s <======", sender);
 
     (amtIn, amtOut) = IManager(manager).trade(params);
-    console2.log("log@ amtIn: %s", params.amountSpecified);
+    console2.log("log@ amtIn: %s", amtIn);
     console2.log("log@ amtOut: %s", amtOut);
     console2.log("log@ battleKey collateral: %s", params.battleKey.collateral);
     console2.log("log@ battleKey underlying: %s", params.battleKey.underlying);
@@ -115,7 +115,7 @@ function trade(address sender, address manager, TradeParams memory params, addre
 
     console2.log("log@ =====>end trade user: %s <======", sender);
     console2.log("log@ ");
-    return (params.amountSpecified, amtOut);
+    return (amtIn, amtOut);
 }
 
 function exercise(address sender, address battle) {

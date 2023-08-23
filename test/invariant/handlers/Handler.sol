@@ -53,8 +53,10 @@ contract Handler is CommonBase, StdCheats, StdUtils {
     bool public battleSettled;
     bool public ghost_run_end;
 
+    bool public end;
+
     address[] public users;
-    uint256 public cAmount = 100_000;
+    // uint256 public cAmount = 100_000;
 
     EnumerableSet.UintSet private _tokenIds;
     EnumerableSet.UintSet private _liquidityRemovedTokenIds;
@@ -64,6 +66,8 @@ contract Handler is CommonBase, StdCheats, StdUtils {
     uint256 public minAddLiqCount = 5;
     uint256 public minBuySpearCount = 5;
     uint256 public minBuyShieldCount = 5;
+
+    uint public ghost_depth;
 
     constructor(uint256 minAddLiqCount_, uint256 minBuySpearCount_, uint256 minBuyShieldCount_) {
         minAddLiqCount = minAddLiqCount_;
@@ -83,9 +87,9 @@ contract Handler is CommonBase, StdCheats, StdUtils {
             DeployAddrs({ owner: owner, arenaAddr: arenaAddr, collateralToken: collateralToken, wethAddr: wethAddr, quoter: quoter, oracle: _oracle });
         (manager, arena, oracle, collateral, quoter) = deploy(das);
 
-        cAmount = cAmount * 10 ** TestERC20(collateral).decimals();
+        // cAmount = cAmount * 10 ** TestERC20(collateral).decimals();
         for (uint256 i; i < users.length; i++) {
-            deal(collateral, users[i], cAmount);
+            deal(collateral, users[i], type(uint256).max);
             vm.prank(users[i]);
             TestERC20(collateral).approve(manager, type(uint256).max);
         }
@@ -96,6 +100,11 @@ contract Handler is CommonBase, StdCheats, StdUtils {
         battle = createBattle(manager, params);
         spear = IBattle(battle).spear();
         shield = IBattle(battle).shield();
+        for (uint256 i; i < users.length; i++) {
+            vm.prank(users[i]);
+            TestERC20(spear).approve(manager, type(uint256).max);
+            TestERC20(shield).approve(manager, type(uint256).max);
+        }
     }
 
     modifier notSettled() {
@@ -111,6 +120,12 @@ contract Handler is CommonBase, StdCheats, StdUtils {
         vm.startPrank(currentActor);
         _;
         vm.stopPrank();
+    }
+
+    function getActor(uint256 actorIndexSeed) internal returns(address) {
+        currentActor = users[bound(actorIndexSeed, 0, users.length - 1)];
+        vm.startPrank(currentActor);
+        return currentActor;
     }
 
     modifier addActor(uint256 actorIndexSeed) {
@@ -129,22 +144,60 @@ contract Handler is CommonBase, StdCheats, StdUtils {
         vm.stopPrank();
     }
 
+    function adjustTickForTickSpacing(int24 tick, int24 _tickSpacing) internal pure returns(int24){
+
+        return (tick / _tickSpacing) * _tickSpacing;
+    }
+
+    function adjustTickForAddLiquidity(int24 tickLower, int24 tickUpper) internal view returns(int24 tl, int24 tu) {
+        tl = adjustTickForTickSpacing(tickLower, tickSpacing);
+        tu = adjustTickForTickSpacing(tickUpper, tickSpacing);
+        int24 maxTick = TickMath.MAX_TICK / tickSpacing * tickSpacing;
+        int24 minTick = TickMath.MIN_TICK / tickSpacing * tickSpacing;
+        if (tl == maxTick) {
+           tl = maxTick - tickSpacing; 
+           tu = maxTick;
+        }
+        if (tu == minTick) {
+            tl = minTick;
+            tu = minTick + tickSpacing;
+        }
+        if (tl == tu) {
+            tu += tickSpacing;
+        }
+    }
+
+    int24 public tickSpacing = 30;
+
     function addLiq(uint256 actorIndexSeed, int24 tickLower, int24 tickUpper, uint128 amount) public notSettled addActor(actorIndexSeed) {
+        console2.log("Action: Add Liquidity by Col");
         tickLower = int24(bound(tickLower, TickMath.MIN_TICK, TickMath.MAX_TICK - 1));
         tickUpper = int24(bound(tickUpper, tickLower + 1, TickMath.MAX_TICK));
+        (tickLower, tickUpper) = adjustTickForAddLiquidity(tickLower, tickUpper);
         amount = uint128(bound(uint256(amount), 1000e18, 1_000_000e18));
-        deal(collateral, currentActor, amount);
-
-        TestERC20(collateral).approve(manager, type(uint256).max);
+        console2.log("user col balance %s", TestERC20(collateral).balanceOf(currentActor));
         AddLiqParams memory param = getAddLiquidityParams(bk, currentActor, tickLower, tickUpper, LiquidityType.COLLATERAL, amount, 300);
         (uint256 tokenId,,) = IManager(manager).addLiquidity(param);
         ghost_collateral += amount;
         _tokenIds.add(tokenId);
         ghost_nft_count++;
         calls["addLiq"] += 1;
+        ghost_depth += 1;
     }
 
     function addLiq1(uint256 actorIndexSeed, int24 tickLower, int24 tickUpper, uint128 amount) public {
+        addLiq(actorIndexSeed, tickLower, tickUpper, amount);
+    }
+
+    function addLiq2(uint256 actorIndexSeed, int24 tickLower, int24 tickUpper, uint128 amount) public {
+        addLiq(actorIndexSeed, tickLower, tickUpper, amount);
+    }
+
+    function addLiq3(uint256 actorIndexSeed, int24 tickLower, int24 tickUpper, uint128 amount) public {
+        addLiq(actorIndexSeed, tickLower, tickUpper, amount);
+    }
+
+    function addLiq4(uint256 actorIndexSeed, int24 tickLower, int24 tickUpper, uint128 amount) public {
         addLiq(actorIndexSeed, tickLower, tickUpper, amount);
     }
 
@@ -160,6 +213,7 @@ contract Handler is CommonBase, StdCheats, StdUtils {
         // bound tickLower and tickUpper
         tickUpper = int24(bound(tickUpper, TickMath.MIN_TICK + 1, tick - 1));
         tickLower = int24(bound(tickLower, TickMath.MIN_TICK, tickUpper - 1));
+        (tickLower, tickUpper) = adjustTickForAddLiquidity(tickLower, tickUpper);
         // bound amount
         currentActor = _spearUsers.at(bound(actorIndexSeed, 0, _spearUsers.length() - 1));
         vm.startPrank(currentActor);
@@ -168,8 +222,6 @@ contract Handler is CommonBase, StdCheats, StdUtils {
         //     return;
         // }
         console2.log("addLiqBySpear", currentActor, amount);
-        // approve spear
-        IERC20(spear).approve(manager, type(uint256).max);
         // compose params
         AddLiqParams memory param = getAddLiquidityParams(bk, currentActor, tickLower, tickUpper, LiquidityType.SPEAR, amount, 300);
         // call addLiquidity
@@ -179,6 +231,7 @@ contract Handler is CommonBase, StdCheats, StdUtils {
         ghost_nft_count++;
         calls["addLiqBySpear"] += 1;
         vm.stopPrank();
+
     }
 
     function addLiqByShield(uint256 actorIndexSeed, int24 tickLower, int24 tickUpper, uint128 amount) public notSettled {
@@ -193,6 +246,7 @@ contract Handler is CommonBase, StdCheats, StdUtils {
         // bound tickLower and tickUpper
         tickLower = int24(bound(tickLower, tick + 1, TickMath.MAX_TICK - 1));
         tickUpper = int24(bound(tickUpper, tickLower + 1, TickMath.MAX_TICK));
+        (tickLower, tickUpper) = adjustTickForAddLiquidity(tickLower, tickUpper);
         // bound amount
         currentActor = _shieldUsers.at(bound(actorIndexSeed, 0, _shieldUsers.length() - 1));
         vm.startPrank(currentActor);
@@ -228,73 +282,164 @@ contract Handler is CommonBase, StdCheats, StdUtils {
         calls["removeLiq"] += 1;
     }
 
-    function buySpear(uint256 actorIndexSeed, uint256 amount) public notSettled useActor(actorIndexSeed) {
-        if (ghost_nft_count == 0) {
+    uint256 public ghost_total_camount;
+    uint256 public ghost_total_samount_spear;
+    uint256 public ghost_total_samount_shield;
+
+    function adjustAmount(int256 amount) internal view returns (int256) {
+        if (amount < 0) {
+            return bound(amount, -1e6 * 1e18, -1 * 1e6);
+        } else {
+            return bound(amount, 1e6, 1e6 * 1e18);
+        }
+    }
+
+    function buySpear(
+        uint256 actorIndexSeed,
+        int256 amount,
+        int24 tickLower,
+        int24 tickUpper,
+        uint128 amountColLiqui
+    )
+        public
+        notSettled
+    {
+        if (ghost_nft_count <= 5) {
+            addLiq(actorIndexSeed, tickLower, tickUpper, amountColLiqui);
             return;
         }
+        getActor(actorIndexSeed);
+        console2.log("Action: Buy Spear");
         (uint160 p,,) = IBattle(battle).slot0();
         if (p == TickMath.MIN_SQRT_RATIO + 1) {
             return;
         }
-        amount = bound(amount, 100e18, 100_000e18);
-        deal(collateral, currentActor, amount);
-        TestERC20(collateral).approve(manager, type(uint256).max);
+        amount = adjustAmount(amount);
+
         TradeParams memory param = getTradeParams(bk, TradeType.BUY_SPEAR, amount, currentActor, 0, 0, 300);
-        trade(currentActor, manager, param, quoter);
-        ghost_tradeAmount += amount;
+        (uint256 amountIn, uint256 amountOut) = trade(currentActor, manager, param, quoter);
+        ghost_tradeAmount += amountIn;
+        ghost_total_camount += amountIn;
+        ghost_total_samount_spear += amountOut;
         uint256 balance = IERC20(spear).balanceOf(currentActor);
         if (balance > 0) {
             _spearUsers.add(currentActor);
         }
         calls["buySpear"] += 1;
         checkBalance();
+        vm.stopPrank();
+        ghost_depth += 1;
     }
 
-    function buySpear1(uint256 actorIndexSeed, uint256 amount) public {
-        buySpear(actorIndexSeed, amount);
+
+    function buySpear1(
+        uint256 actorIndexSeed,
+        int256 amount,
+        int24 tickLower,
+        int24 tickUpper,
+        uint128 amountColLiqui
+    )
+        public
+    {
+        buySpear(actorIndexSeed, amount, tickLower, tickUpper, amountColLiqui);
     }
 
-    function buySpear2(uint256 actorIndexSeed, uint256 amount) public {
-        buySpear(actorIndexSeed, amount);
+
+    function buySpear2(
+        uint256 actorIndexSeed,
+        int256 amount,
+        int24 tickLower,
+        int24 tickUpper,
+        uint128 amountColLiqui
+    )
+        public
+    {
+        buySpear(actorIndexSeed, amount, tickLower, tickUpper, amountColLiqui);
     }
 
-    function buySpear3(uint256 actorIndexSeed, uint256 amount) public {
-        buySpear(actorIndexSeed, amount);
+    function buySpear3(
+        uint256 actorIndexSeed,
+        int256 amount,
+        int24 tickLower,
+        int24 tickUpper,
+        uint128 amountColLiqui
+    )
+        public
+    {
+        buySpear(actorIndexSeed, amount, tickLower, tickUpper, amountColLiqui);
     }
 
-    function buyShield(uint256 actorIndexSeed, uint256 amount) public notSettled useActor(actorIndexSeed) {
-        if (ghost_nft_count == 0) {
+    function buyShield(
+        uint256 actorIndexSeed,
+        int256 amount,
+        int24 tickLower,
+        int24 tickUpper,
+        uint128 amountColLiqui
+    )
+        public
+        notSettled
+    {
+        if (ghost_nft_count <= 5) {
+            addLiq(actorIndexSeed, tickLower, tickUpper, amountColLiqui);
             return;
         }
+        console2.log("Action: Buy Shield");
+        getActor(actorIndexSeed);
         (uint160 p,,) = IBattle(battle).slot0();
         if (p == TickMath.MAX_SQRT_RATIO - 1) {
             return;
         }
-        amount = bound(amount, 100e18, 100_000e18);
-        deal(collateral, currentActor, amount);
-        TestERC20(collateral).approve(manager, type(uint256).max);
+        amount = adjustAmount(amount);
+        console2.log("user collateral balance: %s", TestERC20(collateral).balanceOf(currentActor));
         TradeParams memory param = getTradeParams(bk, TradeType.BUY_SHIELD, amount, currentActor, 0, 0, 300);
-        trade(currentActor, manager, param, quoter);
-        ghost_tradeAmount += amount;
+        (uint256 amountIn, uint256 amountOut) = trade(currentActor, manager, param, quoter);
+        ghost_tradeAmount += amountIn;
+        ghost_total_camount += amountIn;
+        ghost_total_samount_shield += amountOut;
         uint256 balance = IERC20(shield).balanceOf(currentActor);
         if (balance > 0) {
             _shieldUsers.add(currentActor);
         }
         calls["buyShield"] += 1;
         checkBalance();
+        vm.stopPrank();
+
+        ghost_depth += 1;
     }
 
-    function buyShield1(uint256 actorIndexSeed, uint256 amount) public {
-        buyShield(actorIndexSeed, amount);
+
+    function buyShield1(
+        uint256 actorIndexSeed,
+        int256 amount,
+        int24 tickLower,
+        int24 tickUpper,
+        uint128 amountColLiqui
+    ) public {
+        buyShield(actorIndexSeed, amount, tickLower, tickUpper, amountColLiqui);
     }
 
-    function buyShield2(uint256 actorIndexSeed, uint256 amount) public {
-        buyShield(actorIndexSeed, amount);
+
+    function buyShield2(
+        uint256 actorIndexSeed,
+        int256 amount,
+        int24 tickLower,
+        int24 tickUpper,
+        uint128 amountColLiqui
+    ) public {
+        buyShield(actorIndexSeed, amount, tickLower, tickUpper, amountColLiqui);
     }
 
-    function buyShield3(uint256 actorIndexSeed, uint256 amount) public {
-        buyShield(actorIndexSeed, amount);
+    function buyShield3(
+        uint256 actorIndexSeed,
+        int256 amount,
+        int24 tickLower,
+        int24 tickUpper,
+        uint128 amountColLiqui
+    ) public {
+        buyShield(actorIndexSeed, amount, tickLower, tickUpper, amountColLiqui);
     }
+
+
 
     function settleBattle(uint256 actorIndexSeed) public notSettled useActor(actorIndexSeed) {
         if (calls["addLiq"] < minAddLiqCount) {
@@ -384,10 +529,6 @@ contract Handler is CommonBase, StdCheats, StdUtils {
         if (!battleSettled) {
             return;
         }
-        // vm.startPrank(currentActor);
-        // deal(collateral, currentActor, 500);
-        // IERC20(collateral).transfer(battle, 500);
-        // vm.stopPrank();
         for (uint256 i; i < users.length; i++) {
             if (IERC20(spear).balanceOf(users[i]) != 0 || IERC20(shield).balanceOf(users[i]) != 0) {
                 currentActor = users[i];
@@ -473,6 +614,7 @@ contract Handler is CommonBase, StdCheats, StdUtils {
 
     function callSummary() public view {
         console2.log("Call summary:");
+        console2.log("depth: %s", ghost_depth);
         console2.log("addLiq        :", calls["addLiq"]);
         console2.log("addLiqBySpear :", calls["addLiqBySpear"]);
         console2.log("addLiqByShield:", calls["addLiqByShield"]);
