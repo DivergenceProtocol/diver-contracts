@@ -1,0 +1,14 @@
+{
+  "solidity.compileUsingRemoteVersion": "0.8.19",
+  "solidity.packageDefaultDependenciesContractsDirectory": "src",
+  "solidity.packageDefaultDependenciesDirectory": "lib",
+  "cSpell.words": [
+    "solidstate",
+    "strutil"
+  ],
+  "editor.formatOnSave": true,
+  "[solidity]": {
+    "editor.defaultFormatter": "JuanBlanco.solidity"
+  },
+  "solidity.formatter": "forge",
+}

@@ -1,0 +1,9 @@
+@std/=lib/forge-std/src/
+@oz/=lib/openzeppelin-contracts/contracts/
+@solmate/=lib/solmate/src/
+@diamond/=lib/diamond-3-hardhat/contracts/
+@solid/=lib/solidstate-solidity/contracts/
+@weth/=lib/canonical-weth/contracts/
+chainlink/=lib/chainlink/contracts/src/v0.8/
+@uniswap/=lib/
+@openzeppelin/=lib/openzeppelin-contracts/
