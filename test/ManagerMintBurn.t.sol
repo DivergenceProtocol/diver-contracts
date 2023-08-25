@@ -36,7 +36,7 @@ contract Mint is CreateAndInit {
         return battleAddr;
     }
 
-    function addMultiLiquidity() public virtual returns(address) {
+    function addMultiLiquidity() public virtual returns (address) {
         address battleAddr = super.test();
         assertGt(uint160(battleAddr), 0);
         vm.startPrank(alice);

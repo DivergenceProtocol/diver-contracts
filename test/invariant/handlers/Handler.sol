@@ -67,7 +67,7 @@ contract Handler is CommonBase, StdCheats, StdUtils {
     uint256 public minBuySpearCount = 5;
     uint256 public minBuyShieldCount = 5;
 
-    uint public ghost_depth;
+    uint256 public ghost_depth;
 
     constructor(uint256 minAddLiqCount_, uint256 minBuySpearCount_, uint256 minBuyShieldCount_) {
         minAddLiqCount = minAddLiqCount_;
@@ -122,7 +122,7 @@ contract Handler is CommonBase, StdCheats, StdUtils {
         vm.stopPrank();
     }
 
-    function getActor(uint256 actorIndexSeed) internal returns(address) {
+    function getActor(uint256 actorIndexSeed) internal returns (address) {
         currentActor = users[bound(actorIndexSeed, 0, users.length - 1)];
         vm.startPrank(currentActor);
         return currentActor;
@@ -144,19 +144,18 @@ contract Handler is CommonBase, StdCheats, StdUtils {
         vm.stopPrank();
     }
 
-    function adjustTickForTickSpacing(int24 tick, int24 _tickSpacing) internal pure returns(int24){
-
+    function adjustTickForTickSpacing(int24 tick, int24 _tickSpacing) internal pure returns (int24) {
         return (tick / _tickSpacing) * _tickSpacing;
     }
 
-    function adjustTickForAddLiquidity(int24 tickLower, int24 tickUpper) internal view returns(int24 tl, int24 tu) {
+    function adjustTickForAddLiquidity(int24 tickLower, int24 tickUpper) internal view returns (int24 tl, int24 tu) {
         tl = adjustTickForTickSpacing(tickLower, tickSpacing);
         tu = adjustTickForTickSpacing(tickUpper, tickSpacing);
         int24 maxTick = TickMath.MAX_TICK / tickSpacing * tickSpacing;
         int24 minTick = TickMath.MIN_TICK / tickSpacing * tickSpacing;
         if (tl == maxTick) {
-           tl = maxTick - tickSpacing; 
-           tu = maxTick;
+            tl = maxTick - tickSpacing;
+            tu = maxTick;
         }
         if (tu == minTick) {
             tl = minTick;
@@ -231,7 +230,6 @@ contract Handler is CommonBase, StdCheats, StdUtils {
         ghost_nft_count++;
         calls["addLiqBySpear"] += 1;
         vm.stopPrank();
-
     }
 
     function addLiqByShield(uint256 actorIndexSeed, int24 tickLower, int24 tickUpper, uint128 amount) public notSettled {
@@ -294,16 +292,7 @@ contract Handler is CommonBase, StdCheats, StdUtils {
         }
     }
 
-    function buySpear(
-        uint256 actorIndexSeed,
-        int256 amount,
-        int24 tickLower,
-        int24 tickUpper,
-        uint128 amountColLiqui
-    )
-        public
-        notSettled
-    {
+    function buySpear(uint256 actorIndexSeed, int256 amount, int24 tickLower, int24 tickUpper, uint128 amountColLiqui) public notSettled {
         if (ghost_nft_count <= 5) {
             addLiq(actorIndexSeed, tickLower, tickUpper, amountColLiqui);
             return;
@@ -312,6 +301,7 @@ contract Handler is CommonBase, StdCheats, StdUtils {
         console2.log("Action: Buy Spear");
         (uint160 p,,) = IBattle(battle).slot0();
         if (p == TickMath.MIN_SQRT_RATIO + 1) {
+            vm.stopPrank();
             return;
         }
         amount = adjustAmount(amount);
@@ -331,54 +321,19 @@ contract Handler is CommonBase, StdCheats, StdUtils {
         ghost_depth += 1;
     }
 
-
-    function buySpear1(
-        uint256 actorIndexSeed,
-        int256 amount,
-        int24 tickLower,
-        int24 tickUpper,
-        uint128 amountColLiqui
-    )
-        public
-    {
+    function buySpear1(uint256 actorIndexSeed, int256 amount, int24 tickLower, int24 tickUpper, uint128 amountColLiqui) public {
         buySpear(actorIndexSeed, amount, tickLower, tickUpper, amountColLiqui);
     }
 
-
-    function buySpear2(
-        uint256 actorIndexSeed,
-        int256 amount,
-        int24 tickLower,
-        int24 tickUpper,
-        uint128 amountColLiqui
-    )
-        public
-    {
+    function buySpear2(uint256 actorIndexSeed, int256 amount, int24 tickLower, int24 tickUpper, uint128 amountColLiqui) public {
         buySpear(actorIndexSeed, amount, tickLower, tickUpper, amountColLiqui);
     }
 
-    function buySpear3(
-        uint256 actorIndexSeed,
-        int256 amount,
-        int24 tickLower,
-        int24 tickUpper,
-        uint128 amountColLiqui
-    )
-        public
-    {
+    function buySpear3(uint256 actorIndexSeed, int256 amount, int24 tickLower, int24 tickUpper, uint128 amountColLiqui) public {
         buySpear(actorIndexSeed, amount, tickLower, tickUpper, amountColLiqui);
     }
 
-    function buyShield(
-        uint256 actorIndexSeed,
-        int256 amount,
-        int24 tickLower,
-        int24 tickUpper,
-        uint128 amountColLiqui
-    )
-        public
-        notSettled
-    {
+    function buyShield(uint256 actorIndexSeed, int256 amount, int24 tickLower, int24 tickUpper, uint128 amountColLiqui) public notSettled {
         if (ghost_nft_count <= 5) {
             addLiq(actorIndexSeed, tickLower, tickUpper, amountColLiqui);
             return;
@@ -407,39 +362,17 @@ contract Handler is CommonBase, StdCheats, StdUtils {
         ghost_depth += 1;
     }
 
-
-    function buyShield1(
-        uint256 actorIndexSeed,
-        int256 amount,
-        int24 tickLower,
-        int24 tickUpper,
-        uint128 amountColLiqui
-    ) public {
+    function buyShield1(uint256 actorIndexSeed, int256 amount, int24 tickLower, int24 tickUpper, uint128 amountColLiqui) public {
         buyShield(actorIndexSeed, amount, tickLower, tickUpper, amountColLiqui);
     }
 
-
-    function buyShield2(
-        uint256 actorIndexSeed,
-        int256 amount,
-        int24 tickLower,
-        int24 tickUpper,
-        uint128 amountColLiqui
-    ) public {
+    function buyShield2(uint256 actorIndexSeed, int256 amount, int24 tickLower, int24 tickUpper, uint128 amountColLiqui) public {
         buyShield(actorIndexSeed, amount, tickLower, tickUpper, amountColLiqui);
     }
 
-    function buyShield3(
-        uint256 actorIndexSeed,
-        int256 amount,
-        int24 tickLower,
-        int24 tickUpper,
-        uint128 amountColLiqui
-    ) public {
+    function buyShield3(uint256 actorIndexSeed, int256 amount, int24 tickLower, int24 tickUpper, uint128 amountColLiqui) public {
         buyShield(actorIndexSeed, amount, tickLower, tickUpper, amountColLiqui);
     }
-
-
 
     function settleBattle(uint256 actorIndexSeed) public notSettled useActor(actorIndexSeed) {
         if (calls["addLiq"] < minAddLiqCount) {
@@ -610,7 +543,49 @@ contract Handler is CommonBase, StdCheats, StdUtils {
         calls["withdrawAndExerciseAll"] += 1;
     }
 
-    function reedemObligation() public { }
+    function reedemObligation() public {
+        if (!battleSettled) {
+            return;
+        }
+
+        // remove liquidity
+        console2.log("tokenIds length: ", _tokenIds.length());
+
+        // get all token and their state by multicall
+        uint256 total = ERC721Enumerable(manager).totalSupply();
+        for (uint256 i; i < total; i++) {
+            if (i % 2 == 0) {
+                continue;
+            }
+            Position memory p = IQuoter(quoter).positions(i);
+            // (Position memory p) = abi.decode(results[i], (Position));
+            if (p.state == PositionState.LiquidityAdded) {
+                currentActor = IERC721(manager).ownerOf(i);
+                vm.startPrank(currentActor);
+                // remove liquidity
+                // multicall
+                bytes[] memory data = new bytes[](2);
+                callData.push(abi.encodeWithSelector(IManager(manager).removeLiquidity.selector, i));
+                callData.push(abi.encodeWithSelector(IManager(manager).redeemObligation.selector, i));
+                Multicall(manager).multicall(callData);
+                delete callData;
+                // single call
+                // removeLiquidity(manager, i);
+                // // withdraw obligation
+                // IManager(manager).withdrawObligation(i);
+                vm.stopPrank();
+            } else if (p.state == PositionState.LiquidityRemoved) {
+                // withdraw collateral
+                currentActor = IERC721(manager).ownerOf(i);
+                vm.startPrank(currentActor);
+                IManager(manager).redeemObligation(i);
+                vm.stopPrank();
+            }
+            _tokenIds.remove(i);
+            _liquidityRemovedTokenIds.remove(i);
+        }
+        calls["reedemAll"] += 1;
+    }
 
     function callSummary() public view {
         console2.log("Call summary:");
@@ -622,6 +597,7 @@ contract Handler is CommonBase, StdCheats, StdUtils {
         console2.log("buySpear      :", calls["buySpear"]);
         console2.log("buyShield     :", calls["buyShield"]);
         console2.log("settleBattle", calls["settleBattle"]);
+        console2.log("reedemAll", calls["reedemAll"]);
         // console2.log("withdrawObligation", calls["withdrawObligation"]);
         // console2.log("execriseSpear", calls["execriseSpear"]);
         // console2.log("execriseShield", calls["execriseShield"]);

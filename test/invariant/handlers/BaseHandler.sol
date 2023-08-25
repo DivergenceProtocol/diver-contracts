@@ -162,9 +162,10 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
 
     // function buySpearExactIn() public virtual { }
 
-    uint public ghost_cAmount;
-    uint public ghost_spearAmount;
-    uint public ghost_shieldAmount;
+    uint256 public ghost_cAmount;
+    uint256 public ghost_spearAmount;
+    uint256 public ghost_shieldAmount;
+
     function buySpear(uint256 actorIndexSeed, int256 amount) public useActor(actorIndexSeed) {
         if (ghost_nft_count == 0) {
             return;
@@ -173,11 +174,11 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
         if (p == TickMath.MIN_SQRT_RATIO + 1) {
             return;
         }
-        amount = bound(amount, -1e6*1e18, 1e6*1e18);
+        amount = bound(amount, -1e6 * 1e18, 1e6 * 1e18);
         // deal(collateral, currentActor, amount);
         // TestERC20(collateral).approve(manager, type(uint256).max);
         TradeParams memory param = getTradeParams(bk, TradeType.BUY_SPEAR, amount, currentActor, 0, 0, 300);
-        (uint cAmount, uint sAmount) = trade(currentActor, manager, param, quoter);
+        (uint256 cAmount, uint256 sAmount) = trade(currentActor, manager, param, quoter);
         ghost_cAmount += cAmount;
         ghost_spearAmount += sAmount;
         // ghost_tradeAmount += amount;

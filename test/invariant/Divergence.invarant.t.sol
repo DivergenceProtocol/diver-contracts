@@ -41,6 +41,7 @@ contract DivergenceInvariant is Test {
         selectors.push(Handler.buyShield3.selector);
         selectors.push(Handler.settleBattle.selector);
         selectors.push(Handler.withdrawAndExercise.selector);
+        selectors.push(Handler.reedemObligation.selector);
 
         // selectors.push(Handler.withdraw.selector);
         // selectors.push(Handler.execriseSpear.selector);
@@ -118,23 +119,23 @@ contract DivergenceInvariant is Test {
         Outcome outcome = IBattleState(battle).battleOutcome();
         if (handler.withdrawAndExerciseCalled()) {
             // console2.log("withdrawAndExerciseCalled",
-            // handler.withdrawAndExerciseCalled());
+            //
             // IBattleTrade(battle).collectProtocolFee(address(this));
             handler.callSummary();
             uint256 total = IERC721Enumerable(manager).totalSupply();
             console2.log("total nft: ", total);
             if (outcome == Outcome.SPEAR_WIN) {
-                assertEq(totalSpear, uint(0), "Spear");
+                assertEq(totalSpear, uint256(0), "Spear");
                 // assertEq(totalShield, 0, "total shield error");
             } else if (outcome == Outcome.SHIELD_WIN) {
                 // assertEq(totalSpear, 0, "total spear error");
-                assertEq(totalShield, uint(0), "Shield");
+                assertEq(totalShield, uint256(0), "Shield");
             } else {
                 assert(1 == 0);
             }
             uint256 collateralInBattle = IERC20(collateral).balanceOf(battle);
             console2.log("collateralInBattle:", collateralInBattle);
-            assertGe(collateralInBattle, uint(0), "collateral after withdraw");
+            assertGe(collateralInBattle, uint256(0), "collateral after withdraw");
             uint256 ghost_collateral = handler.ghost_collateral();
             console2.log("ghost_collateral  :", ghost_collateral / 1e18);
             uint256 ghost_tradeAmount = handler.ghost_tradeAmount();

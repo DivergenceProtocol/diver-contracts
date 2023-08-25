@@ -14,7 +14,7 @@ import { Multicall } from "@oz/utils/Multicall.sol";
 import { Position, PositionState } from "../../src/periphery/types/common.sol";
 import { IBattleTrade } from "../../src/core/interfaces/battle/IBattleActions.sol";
 import { IQuoter } from "../../src/periphery/interfaces/IQuoter.sol";
-import {BaseHandler} from "./handlers/BaseHandler.sol";
+import { BaseHandler } from "./handlers/BaseHandler.sol";
 
 // It focuses on four types of trades.
 contract DivergenceLiquidityInvariant is Test {
@@ -27,7 +27,6 @@ contract DivergenceLiquidityInvariant is Test {
 
         // handler.getManager();
         selectors.push(BaseHandler.addLiquidityByCol.selector);
-
 
         targetSelector(FuzzSelector({ addr: address(handler), selectors: selectors }));
 

@@ -42,8 +42,8 @@ contract DiverSqrtPriceMathTest is Test {
         console2.log("tick: %s", tick);
     }
 
-    function testFuzz_GetNextSqrtPriceFromSpear(int24 tickLower, int24 tickUpper, uint spearAmount) public {
-        uint decimal = 18;
+    function testFuzz_GetNextSqrtPriceFromSpear(int24 tickLower, int24 tickUpper, uint256 spearAmount) public {
+        uint256 decimal = 18;
         // vm.assume(decimal <=18 );
 
         //  ticks diff
@@ -70,30 +70,29 @@ contract DiverSqrtPriceMathTest is Test {
         console2.log("spearAmount %s", spearAmount);
         uint160 lowerPrice = TickMath.getSqrtRatioAtTick(tickLower);
         console2.log("lowerPrice: %s", lowerPrice);
-        console2.log("Q96:        %s", uint(2**96));
+        console2.log("Q96:        %s", uint256(2 ** 96));
         uint160 upperPrice = TickMath.getSqrtRatioAtTick(tickUpper);
         console2.log("upperPrice: %s", upperPrice);
         uint128 liquidity = DiverLiquidityAmounts.getLiquidityFromSToken(lowerPrice, upperPrice, spearAmount);
         console2.log("liquidity   %s", liquidity);
         console2.log("spearAmount %s", spearAmount);
         console2.log("upper price %s", upperPrice);
-        uint160 nextPrice = DiverSqrtPriceMath.getNextSqrtPriceFromSpear(upperPrice, liquidity, spearAmount, 10**decimal);
+        uint160 nextPrice = DiverSqrtPriceMath.getNextSqrtPriceFromSpear(upperPrice, liquidity, spearAmount, 10 ** decimal);
         console2.log("lowerPrice %s", lowerPrice);
         console2.log("nextPrice  %s", nextPrice);
         int24 nextTick = TickMath.getTickAtSqrtRatio(nextPrice);
         console2.log("lower tick %s", tickLower);
         console2.log("next tick  %s", nextTick);
         assert(tickLower - nextTick <= 1 && tickLower >= nextTick);
-
     }
 
-    function testFuzz_GetNextSqrtPriceFromShield(int24 tickLower, int24 tickUpper, uint shieldAmount) public {
-        uint decimal = 18;
+    function testFuzz_GetNextSqrtPriceFromShield(int24 tickLower, int24 tickUpper, uint256 shieldAmount) public {
+        uint256 decimal = 18;
         // vm.assume(decimal <=18 );
 
         //  ticks diff
         tickLower = int24(bound(tickLower, TickMath.MIN_TICK, TickMath.MAX_TICK - 1));
-        tickUpper = int24(bound(tickUpper, tickLower + 1, TickMath.MAX_TICK-1));
+        tickUpper = int24(bound(tickUpper, tickLower + 1, TickMath.MAX_TICK - 1));
         shieldAmount = (bound(shieldAmount, 1e6, 6e27));
 
         // tickLower = TickMath.MIN_TICK;
@@ -115,7 +114,7 @@ contract DiverSqrtPriceMathTest is Test {
         console2.log("shieldAmount %s", shieldAmount);
         uint160 lowerPrice = TickMath.getSqrtRatioAtTick(tickLower);
         console2.log("lowerPrice: %s", lowerPrice);
-        console2.log("Q96:        %s", uint(2**96));
+        console2.log("Q96:        %s", uint256(2 ** 96));
         uint160 upperPrice = TickMath.getSqrtRatioAtTick(tickUpper);
         console2.log("upperPrice: %s", upperPrice);
         uint128 liquidity = DiverLiquidityAmounts.getLiquidityFromSToken(lowerPrice, upperPrice, shieldAmount);
@@ -123,7 +122,7 @@ contract DiverSqrtPriceMathTest is Test {
         console2.log("liquidity   %s", liquidity);
         console2.log("shieldAmount %s", shieldAmount);
         console2.log("upper price %s", upperPrice);
-        uint160 nextPrice = DiverSqrtPriceMath.getNextSqrtPriceFromShield(lowerPrice, liquidity, shieldAmount, 10**decimal);
+        uint160 nextPrice = DiverSqrtPriceMath.getNextSqrtPriceFromShield(lowerPrice, liquidity, shieldAmount, 10 ** decimal);
         // console2.log("lowerPrice  %s", lowerPrice);
         console2.log("nextPrice   %s", nextPrice);
         int24 nextTick = TickMath.getTickAtSqrtRatio(nextPrice);
@@ -131,8 +130,5 @@ contract DiverSqrtPriceMathTest is Test {
         console2.log("upper tick %s", tickUpper);
         console2.log("next tick  %s", nextTick);
         assert(tickUpper - nextTick <= 1 && tickUpper >= nextTick);
-
     }
-
-
 }

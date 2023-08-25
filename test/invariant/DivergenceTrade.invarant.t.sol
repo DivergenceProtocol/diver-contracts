@@ -65,13 +65,12 @@ contract DivergenceTradeInvariant is Test {
         uint256 totalSpear = IERC20(handler.spear()).totalSupply();
         uint256 totalShield = IERC20(handler.shield()).totalSupply();
         // It will check something to prove trades are ok.
-        uint cAmount = handler.ghost_total_camount();
-        uint spearAmount = handler.ghost_total_samount_spear();
-        uint shieldAmount = handler.ghost_total_samount_shield();
-        uint col = handler.ghost_collateral();
-        uint sAmount = spearAmount > shieldAmount ? spearAmount : shieldAmount;
-        assertGe(cAmount+col, sAmount);
+        uint256 cAmount = handler.ghost_total_camount();
+        uint256 spearAmount = handler.ghost_total_samount_spear();
+        uint256 shieldAmount = handler.ghost_total_samount_shield();
+        uint256 col = handler.ghost_collateral();
+        uint256 sAmount = spearAmount > shieldAmount ? spearAmount : shieldAmount;
+        assertGe(cAmount + col, sAmount);
         console2.log("**************************");
     }
-
 }

@@ -15,8 +15,5 @@ import { ComputeTradeStepParams } from "../src/core/params/ComputeTradeStepParam
 import { TradeType } from "../src/core/types/enums.sol";
 
 contract TradeMathTest is Test {
-
-    function testComputeTradeStep1() public {
-
-    }
+    function testComputeTradeStep1() public { }
 }
