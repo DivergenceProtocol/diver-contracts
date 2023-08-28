@@ -89,7 +89,7 @@ contract Handler is CommonBase, StdCheats, StdUtils {
 
         // cAmount = cAmount * 10 ** TestERC20(collateral).decimals();
         for (uint256 i; i < users.length; i++) {
-            deal(collateral, users[i], type(uint256).max);
+            deal(collateral, users[i], 1e11*1e18);
             vm.prank(users[i]);
             TestERC20(collateral).approve(manager, type(uint256).max);
         }

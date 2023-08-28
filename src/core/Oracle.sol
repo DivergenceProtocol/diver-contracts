@@ -7,12 +7,18 @@ import { SafeCast } from "@oz/utils/math/SafeCast.sol";
 import { AggregatorV3Interface } from "chainlink/interfaces/AggregatorV3Interface.sol";
 import { getAdjustPrice } from "./utils.sol";
 
+import { console2 } from "@std/console2.sol";
+
 /// @title Oracle
 /// @notice Get external price by Oracle
 contract Oracle is Ownable {
     using SafeCast for int256;
 
     mapping(string => address) public externalOracleOf;
+    mapping(uint80 => uint80) public startRoundId;
+    mapping(uint80 => uint80) public endRoundId;
+    mapping(address => mapping(uint256 => uint256)) public fixPrices;
+    uint80 public latestPhase;
 
     /// @notice Defines the underlying asset symbol and oracle address for a
     /// pool.  Only called by the owner.
@@ -31,13 +37,26 @@ contract Oracle is Ownable {
     /// @param ts Timestamp for the asset price
     /// @return price_ The retrieved price
     function getPriceByExternal(address cOracleAddr, uint256 ts) public view returns (uint256 price_, uint256 actualTs) {
-        AggregatorV3Interface cOracle = AggregatorV3Interface(cOracleAddr);
-        require(cOracleAddr != address(0), "external oracle not exist");
+        require(block.timestamp >= ts);
+        if (block.timestamp - ts > 1 hours) {
+            // get price from setting
+            require(fixPrices[cOracleAddr][ts] != 0, "setting price");
+            price_ = fixPrices[cOracleAddr][ts];
+            actualTs = ts;
+        } else {
+            AggregatorV3Interface cOracle = AggregatorV3Interface(cOracleAddr);
+            require(cOracleAddr != address(0), "external oracle not exist");
 
-        (uint80 roundID,,,,) = cOracle.latestRoundData();
+            (uint80 roundID,,,,) = cOracle.latestRoundData();
 
-        uint256 decimalDiff = 10 ** (18 - cOracle.decimals());
-        (price_, actualTs) = _getPrice(cOracle, roundID, ts, decimalDiff);
+            uint256 decimalDiff = 10 ** (18 - cOracle.decimals());
+            (price_, actualTs) = _getPrice(cOracle, roundID, ts, decimalDiff);
+        }
+    }
+
+    function setFixPrice(string memory symbol, uint256 ts, uint256 price) external onlyOwner {
+        require(externalOracleOf[symbol] != address(0));
+        fixPrices[externalOracleOf[symbol]][ts] = price;
     }
 
     /// @notice Helper for retrieving prices from an external oracle
@@ -57,22 +76,92 @@ contract Oracle is Ownable {
         returns (uint256 p, uint256 actualTs)
     {
         // get next price after 8am utc
-        for (uint80 i = id; i > 0; i--) {
+        uint80 phaseId = getPhaseIdFromRoundId(id);
+
+        for (uint80 i = phaseId; i >= 1; i--) {
+            (p, actualTs) = getPriceInPhase(cOracle, getStartRoundId(i), i == phaseId ? id : getEndRoundId(i), ts);
+            if (p != 0) {
+                p *= decimalDiff;
+                break;
+            }
+        }
+    }
+
+    function getCOracle(string memory symbol) public view returns (address) {
+        address cOracle = externalOracleOf[symbol];
+        require(cOracle != address(0), "not exist");
+        return cOracle;
+    }
+
+    function updatePhase(uint80 roundId, string memory symbol) public {
+        try AggregatorV3Interface(getCOracle(symbol)).getRoundData(roundId) returns (
+            uint80 roundIdF, int256 answerF, uint256 startedAtF, uint256 updatedAtF, uint80 answeredInRoundF
+        ) {
+            if (answerF == 0 && startedAtF == 0) {
+                revert("invalid roundId");
+            }
+            uint80 phaseId = getPhaseIdFromRoundId(roundId);
+            if (startRoundId[phaseId] == 0) {
+                startRoundId[phaseId] = getStartRoundId(phaseId);
+            }
+            roundId++;
+            while (true) {
+                try AggregatorV3Interface(getCOracle(symbol)).getRoundData(roundId) returns (
+                    uint80 roundIdNew, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
+                ) {
+                    if (answer == 0 && updatedAt == 0) {
+                        endRoundId[phaseId] = (roundId - 1);
+                        if (phaseId > latestPhase) {
+                            latestPhase = phaseId;
+                        }
+                        break;
+                    }
+                    roundId++;
+                } catch {
+                    endRoundId[phaseId] = (roundId - 1);
+                    if (phaseId > latestPhase) {
+                        latestPhase = phaseId;
+                    }
+                    break;
+                }
+            }
+        } catch {
+            revert("invalid roundId");
+        }
+    }
+
+    function getPhaseIdFromRoundId(uint80 roundId) internal view returns (uint80) {
+        return roundId >> 64;
+    }
+
+    function getStartRoundId(uint80 phaseId) internal view returns (uint80) {
+        return (phaseId << 64) | 1;
+    }
+
+    function getEndRoundId(uint80 phaseId) internal view returns (uint80) {
+        require(endRoundId[phaseId] != 0);
+        return endRoundId[phaseId];
+    }
+
+    function getPriceInPhase(
+        AggregatorV3Interface cOracle,
+        uint80 start,
+        uint80 end,
+        uint256 ts
+    )
+        internal
+        view
+        returns (uint256 p, uint256 actualTs)
+    {
+        for (uint80 i = end; i >= start; i--) {
             (, int256 answer, uint256 startedAt,,) = cOracle.getRoundData(i);
             if (startedAt < ts) {
                 break;
             }
-            if (startedAt >= ts) {
-                p = decimalDiff * answer.toUint256();
+            if (startedAt >= ts && startedAt - ts <= 1 hours) {
+                p = answer.toUint256();
                 actualTs = startedAt;
             }
         }
-        require(p != 0, "price not exist");
-    }
-
-    function getCOracle(string memory symbol) external view returns (address) {
-        address cOracle = externalOracleOf[symbol];
-        require(cOracle != address(0), "not exist");
-        return cOracle;
     }
 }
