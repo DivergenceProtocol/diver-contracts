@@ -7,7 +7,6 @@ import { SafeCast } from "@oz/utils/math/SafeCast.sol";
 import { AggregatorV3Interface } from "chainlink/interfaces/AggregatorV3Interface.sol";
 import { getAdjustPrice } from "./utils.sol";
 
-import { console2 } from "@std/console2.sol";
 
 /// @title Oracle
 /// @notice Get external price by Oracle

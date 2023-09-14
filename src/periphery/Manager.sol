@@ -29,7 +29,6 @@ import { TradeParams } from "./params/Params.sol";
 import { PositionState, Position } from "./types/common.sol";
 import { CallbackValidation } from "./libs/CallbackValidation.sol";
 
-import { console2 } from "@std/console2.sol";
 
 /// @title Manager
 contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableState, BattleInitializer, LiquidityManagement {
@@ -133,9 +132,6 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
             uint256 obligation = spearObligation > shieldObligation ? spearObligation : shieldObligation;
             // minus 1 to avoid rounding error, insure the collateral is enough
             // to pay the obligation
-            console2.log("collateralIn %s", pm.owed.collateralIn);
-            console2.log("obligation   %s", obligation);
-            console2.log("pm.seed      %s", pm.seed);
             collateral = pm.owed.collateralIn + pm.seed == obligation ? 0 : pm.owed.collateralIn + pm.seed - obligation - 1;
         } else if (pm.liquidityType == LiquidityType.SPEAR) {
             spearObligation = pm.owed.spearOut > pm.seed ? pm.owed.spearOut - pm.seed : 0;
@@ -143,8 +139,6 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
             uint256 obligation = spearObligation > shieldObligation ? spearObligation : shieldObligation;
             // minus 1 to avoid rounding error, insure the collateral is enough
             // to pay the obligation
-            console2.log("collateralIn %s", pm.owed.collateralIn);
-            console2.log("obligation   %s", obligation);
             collateral = pm.owed.collateralIn == obligation ? 0 : pm.owed.collateralIn - obligation - 1;
             if (pm.seed > pm.owed.spearOut) {
                 spear = pm.seed - pm.owed.spearOut;
@@ -155,8 +149,6 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
             uint256 obligation = spearObligation > shieldObligation ? spearObligation : shieldObligation;
             // minus 1 to avoid rounding error, insure the collateral is enough
             // to pay the obligation
-            console2.log("collateralIn %s", pm.owed.collateralIn);
-            console2.log("obligation   %s", obligation);
             collateral = pm.owed.collateralIn == obligation ? 0 : pm.owed.collateralIn - obligation - 1;
             if (pm.seed > pm.owed.shieldOut) {
                 shield = pm.seed - pm.owed.shieldOut;
