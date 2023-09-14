@@ -33,12 +33,15 @@ abstract contract LiquidityManagement is IMintCallback, PeripheryImmutableState,
         }
     }
 
-    function _addLiquidity(AddLiqParams memory params) internal returns (uint128 liquidityAmount, uint256 seed, address battleAddr) {
+    function _addLiquidity(AddLiqParams memory params) internal returns (uint128 liquidityAmount, address battleAddr) {
         battleAddr = IArenaCreation(arena).getBattle(params.battleKey);
         if (battleAddr == address(0)) {
             revert Errors.BattleNotExist();
         }
         (uint160 sqrtPriceX96,,) = IBattleState(battleAddr).slot0();
+        if (sqrtPriceX96 < params.minSqrtPriceX96 || sqrtPriceX96 > params.maxSqrtPriceX96) {
+            revert Errors.Slippage();
+        }
         if (params.liquidityType == LiquidityType.COLLATERAL) {
             liquidityAmount = DiverLiquidityAmounts.getLiquidityFromCs(
                 sqrtPriceX96, TickMath.getSqrtRatioAtTick(params.tickLower), TickMath.getSqrtRatioAtTick(params.tickUpper), params.amount
@@ -49,23 +52,25 @@ abstract contract LiquidityManagement is IMintCallback, PeripheryImmutableState,
             );
         }
 
-        (address spear, address shield) = IBattleState(battleAddr).spearAndShield();
         address token;
         if (params.liquidityType == LiquidityType.COLLATERAL) {
             token = params.battleKey.collateral;
         } else if (params.liquidityType == LiquidityType.SPEAR) {
+            (address spear,) = IBattleState(battleAddr).spearAndShield();
             token = spear;
         } else {
+            (, address shield) = IBattleState(battleAddr).spearAndShield();
             token = shield;
         }
 
-        seed = IBattleActions(battleAddr).mint(
+        IBattleActions(battleAddr).mint(
             BattleMintParams({
                 recipient: params.recipient,
                 tickLower: params.tickLower,
                 tickUpper: params.tickUpper,
                 liquidityType: params.liquidityType,
                 amount: liquidityAmount,
+                seed: params.amount,
                 data: abi.encode(MintCallbackData({ battleKey: params.battleKey, token: token, payer: msg.sender }))
             })
         );

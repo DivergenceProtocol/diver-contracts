@@ -2,12 +2,6 @@
 
 pragma solidity ^0.8.0;
 
-// import { PositionInfo } from "../../types/common.sol";
-// import { Position } from "../../libs/Position.sol";
-// import { Outcome } from "../../types/enums.sol";
-// import { BattleKey } from "../../types/common.sol";
-// import { BaseInfo } from "../../types/comddmon.sol/BaseInfo.sol";
-// import { GrowthX128 } from "../../types/common.sol";
 import "../../types/common.sol";
 
 interface IBattleState {
@@ -42,4 +36,6 @@ interface IBattleState {
     function shield() external view returns (address);
 
     function getInsideLast(int24 tickLower, int24 tickUpper) external view returns (GrowthX128 memory);
+
+    function fee() external view returns(uint, uint , uint);
 }

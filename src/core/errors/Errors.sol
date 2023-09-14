@@ -20,7 +20,6 @@ library Errors {
     error LiquidityNotAdded();
     error Locked();
     error NotSupported();
-    error NotNeedChange();
     error NotSupportedExpiries();
     error NotWETH9();
     error OnlyOwner();

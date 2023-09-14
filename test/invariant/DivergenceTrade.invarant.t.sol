@@ -23,7 +23,7 @@ contract DivergenceTradeInvariant is Test {
 
     function setUp() public virtual {
         // targetContract(manager);
-        handler = new Handler(50, 150, 150);
+        handler = new Handler(18, 50, 150, 150);
 
         // handler.getManager();
 

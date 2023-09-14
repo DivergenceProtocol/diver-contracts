@@ -15,7 +15,7 @@ library DiverSqrtPriceMath {
     using SafeCast for int128;
 
     /**
-     * todo formula
+     * formula
      * amount = liquidity * (sqrtRatioBX96 - sqrtRatioAX96) * (1 + 1 /
      * (sqrtRatioAX96 * sqrtRatioBX96));
      *

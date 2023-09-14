@@ -58,7 +58,7 @@ contract Quoter is Multicall, ITradeCallback, IQuoter {
         return abi.decode(reason, (uint256, uint256));
     }
 
-    function quoteExactInput(BattleTradeParams memory params, address battleAddr) public returns (uint256 spend, uint256 get) {
+    function quoteExactInput(BattleTradeParams memory params, address battleAddr) public override returns (uint256 spend, uint256 get) {
         (uint160 p,,) = IBattleState(battleAddr).slot0();
         if (params.tradeType == TradeType.BUY_SPEAR && p == TickMath.MIN_SQRT_RATIO + 1) {
             return (0, 0);

@@ -14,7 +14,7 @@ import { console2 } from "@std/console2.sol";
 contract Oracle is Ownable {
     using SafeCast for int256;
 
-    mapping(string => address) public externalOracleOf;
+    mapping(string => address) private externalOracleOf;
     mapping(uint80 => uint80) public startRoundId;
     mapping(uint80 => uint80) public endRoundId;
     mapping(address => mapping(uint256 => uint256)) public fixPrices;
@@ -24,7 +24,7 @@ contract Oracle is Ownable {
     /// pool.  Only called by the owner.
     /// @param symbols The asset symbol for which to retrieve price feed
     /// @param _oracles The external oracle address
-    function setExternalOracle(string[] memory symbols, address[] memory _oracles) external onlyOwner {
+    function setExternalOracle(string[] calldata symbols, address[] calldata _oracles) external onlyOwner {
         require(symbols.length == _oracles.length, "symbols not match oracles");
         for (uint256 i = 0; i < symbols.length; i++) {
             require(_oracles[i] != address(0), "Zero Address");

@@ -35,8 +35,7 @@ import { BattleTradeParams } from "./params/BattleTradeParams.sol";
 import { ComputeTradeStepParams } from "./params/ComputeTradeStepParams.sol";
 import { DeploymentParams } from "./params/DeploymentParams.sol";
 import { TradeCache, TradeState, StepComputations } from "./types/TradeTypes.sol";
-import { LiquidityType, BattleKey, Outcome, GrowthX128, TickInfo } from "./types/common.sol";
-import { PositionInfo, Fee, Outcome, GrowthX128, TradeType } from "./types/common.sol";
+import { LiquidityType, BattleKey, Outcome, GrowthX128, TickInfo, PositionInfo, Fee, TradeType } from "./types/common.sol";
 
 import { console2 } from "@std/console2.sol";
 
@@ -69,7 +68,7 @@ contract Battle is IBattle {
     uint128 public maxLiquidityPerTick;
     uint128 public protocolFeeAmount;
 
-    Fee public fee;
+    Fee public override fee;
 
     BattleKey private _bk;
     GrowthX128 public global;
@@ -80,13 +79,12 @@ contract Battle is IBattle {
     mapping(int16 => uint256) public tickBitmap;
     mapping(bytes32 => PositionInfo) private _positions;
 
-
     // just for testing
     uint160[] public sqrtStarts;
     uint160[] public sqrtEnds;
     uint128[] public liquidities;
 
-    function getProcess() external view returns(uint160[] memory, uint160[] memory, uint128[] memory) {
+    function getProcess() external view returns (uint160[] memory, uint160[] memory, uint128[] memory) {
         return (sqrtStarts, sqrtEnds, liquidities);
     }
 
@@ -107,12 +105,15 @@ contract Battle is IBattle {
     }
 
     /// @notice init storage state variable, only be caled once
-    function initState(DeploymentParams memory params) external override {
+    function init(DeploymentParams memory params) external override {
         if (_bk.expiries != 0) {
             revert Errors.InitTwice();
         }
+        if (slot0.sqrtPriceX96 != 0) {
+            revert Errors.InitTwice();
+        }
         _bk = params.battleKey;
-        unit = 10**IERC20Metadata(_bk.collateral).decimals();
+        unit = 10 ** IERC20Metadata(_bk.collateral).decimals();
         oracle = params.oracleAddr;
         cOracle = params.cOracleAddr;
         startTS = block.timestamp;
@@ -121,14 +122,7 @@ contract Battle is IBattle {
         shield = params.shield;
         manager = params.manager;
         arena = address(msg.sender);
-    }
-
-    /// @notice init sqrtPriceX96, it will be called once
-    function init(uint160 startSqrtPriceX96) external override {
-        if (slot0.sqrtPriceX96 != 0) {
-            revert Errors.InitTwice();
-        }
-        slot0 = Slot0({ sqrtPriceX96: startSqrtPriceX96, tick: TickMath.getTickAtSqrtRatio(startSqrtPriceX96), unlocked: true });
+        slot0 = Slot0({ sqrtPriceX96: params.sqrtPriceX96, tick: TickMath.getTickAtSqrtRatio(params.sqrtPriceX96), unlocked: true });
         maxLiquidityPerTick = Tick.tickSpacingToMaxLiquidityPerTick(30);
     }
 
@@ -168,47 +162,12 @@ contract Battle is IBattle {
         if (tickUpper > TickMath.MAX_TICK) revert Errors.TickInvalid();
     }
 
-    function _modifyPosition(ModifyPositionParams memory params) internal returns (PositionInfo storage position, uint256 seed) {
+    function _modifyPosition(ModifyPositionParams memory params) internal returns (PositionInfo storage position) {
         checkTicks(params.tickLower, params.tickUpper);
         position = _updatePosition(UpdatePositionParams(params, slot0.tick));
-        uint256 csp;
-        uint256 csh;
-        //
         if (params.liquidityDelta > 0) {
-            if (params.liquidityType == LiquidityType.COLLATERAL) {
-                if (slot0.tick < params.tickLower) {
-                    csp = SqrtPriceMath.getAmount0Delta(
-                        TickMath.getSqrtRatioAtTick(params.tickLower),
-                        TickMath.getSqrtRatioAtTick(params.tickUpper),
-                        uint128(params.liquidityDelta),
-                        true
-                    );
-                } else if (slot0.tick < params.tickUpper) {
-                    // current tick is inside the passed range
-                    csp = SqrtPriceMath.getAmount0Delta(
-                        slot0.sqrtPriceX96, TickMath.getSqrtRatioAtTick(params.tickUpper), uint128(params.liquidityDelta), false
-                    );
-                    csh = SqrtPriceMath.getAmount1Delta(
-                        TickMath.getSqrtRatioAtTick(params.tickLower), slot0.sqrtPriceX96, uint128(params.liquidityDelta), false
-                    );
-                    liquidity += uint128(params.liquidityDelta);
-                } else {
-                    csh = SqrtPriceMath.getAmount1Delta(
-                        TickMath.getSqrtRatioAtTick(params.tickLower),
-                        TickMath.getSqrtRatioAtTick(params.tickUpper),
-                        uint128(params.liquidityDelta),
-                        true
-                    );
-                }
-                seed = csp + csh;
-            } else if (params.liquidityType == LiquidityType.SPEAR) {
-                seed = DiverSqrtPriceMath.getSTokenDelta(
-                    TickMath.getSqrtRatioAtTick(params.tickLower), TickMath.getSqrtRatioAtTick(params.tickUpper), params.liquidityDelta
-                ).toUint256();
-            } else {
-                seed = DiverSqrtPriceMath.getSTokenDelta(
-                    TickMath.getSqrtRatioAtTick(params.tickLower), TickMath.getSqrtRatioAtTick(params.tickUpper), params.liquidityDelta
-                ).toUint256();
+            if (slot0.tick >= params.tickLower && slot0.tick < params.tickUpper) {
+                liquidity += uint128(params.liquidityDelta);
             }
         } else if (params.liquidityDelta < 0) {
             if (slot0.tick >= params.tickLower && slot0.tick < params.tickUpper) {
@@ -218,15 +177,16 @@ contract Battle is IBattle {
     }
 
     /// @inheritdoc IBattleMintBurn
-    function mint(BattleMintParams memory params) external override lock onlyManager returns (uint256 seed) {
+    function mint(BattleMintParams memory params) external override lock onlyManager {
         if (block.timestamp >= _bk.expiries) {
             revert Errors.BattleEnd();
         }
-        // check tick
-        if (params.liquidityType == LiquidityType.SPEAR && params.tickLower >= slot0.tick) {
+
+        if (params.liquidityType == LiquidityType.SPEAR && !(slot0.tick > params.tickUpper)) {
             revert Errors.TickInvalid();
         }
-        if (params.liquidityType == LiquidityType.SHIELD && params.tickUpper <= slot0.tick) {
+
+        if (params.liquidityType == LiquidityType.SHIELD && !(slot0.tick < params.tickLower)) {
             revert Errors.TickInvalid();
         }
         if (params.amount == 0) {
@@ -234,7 +194,7 @@ contract Battle is IBattle {
         }
 
         PositionInfo storage positionInfo;
-        (positionInfo, seed) = _modifyPosition(
+        positionInfo = _modifyPosition(
             ModifyPositionParams({
                 tickLower: params.tickLower,
                 tickUpper: params.tickUpper,
@@ -245,27 +205,27 @@ contract Battle is IBattle {
 
         if (params.liquidityType == LiquidityType.COLLATERAL) {
             uint256 balanceBefore = IERC20(_bk.collateral).balanceOf(address(this));
-            IMintCallback(msg.sender).mintCallback(seed, params.data);
-            if (IERC20(_bk.collateral).balanceOf(address(this)) < balanceBefore + seed) {
+            IMintCallback(msg.sender).mintCallback(params.seed, params.data);
+            if (IERC20(_bk.collateral).balanceOf(address(this)) < balanceBefore + params.seed) {
                 revert Errors.InsufficientCollateral();
             }
         } else if (params.liquidityType == LiquidityType.SPEAR) {
             uint256 balanceBefore = IERC20(spear).balanceOf(address(this));
-            IMintCallback(msg.sender).mintCallback(seed, params.data);
-            if (IERC20(spear).balanceOf(address(this)) < balanceBefore + seed) {
+            IMintCallback(msg.sender).mintCallback(params.seed, params.data);
+            if (IERC20(spear).balanceOf(address(this)) < balanceBefore + params.seed) {
                 revert Errors.InsufficientSpear();
             }
-            ISToken(spear).burn(address(this), seed);
+            ISToken(spear).burn(address(this), params.seed);
         } else {
             uint256 balanceBefore = IERC20(shield).balanceOf(address(this));
-            IMintCallback(msg.sender).mintCallback(seed, params.data);
-            if (IERC20(shield).balanceOf(address(this)) < balanceBefore + seed) {
+            IMintCallback(msg.sender).mintCallback(params.seed, params.data);
+            if (IERC20(shield).balanceOf(address(this)) < balanceBefore + params.seed) {
                 revert Errors.InsufficientShield();
             }
-            ISToken(shield).burn(address(this), seed);
+            ISToken(shield).burn(address(this), params.seed);
         }
 
-        emit Minted(msg.sender, params.liquidityType, params.tickLower, params.tickUpper, params.amount, seed);
+        emit Minted(msg.sender, params.liquidityType, params.tickLower, params.tickUpper, params.amount, params.seed);
     }
 
     /// @inheritdoc IBattleMintBurn
@@ -281,7 +241,7 @@ contract Battle is IBattle {
                 liquidityDelta: -int128(params.liquidityAmount)
             })
         );
-        emit Burned(params.recipient, params.tickLower, params.tickUpper, params.liquidityType, params.liquidityAmount);
+        emit Burned(params.tickLower, params.tickUpper, params.liquidityType, params.liquidityAmount);
     }
 
     /// comments see IBattleTrade
@@ -297,144 +257,9 @@ contract Battle is IBattle {
         }
     }
 
-    /// comments see IBattleTrade
-    // function trade(BattleTradeParams memory params) external returns (uint256 cAmount, uint256 sAmount) {
-    //     if (block.timestamp >= _bk.expiries) {
-    //         revert Errors.BattleEnd();
-    //     }
-    //     // manager or quoter need call this function
-    //     // if (msg.sender != s.manager) {
-    //     //     revert Errors.CallerNotManager();
-    //     // }
-    //     if (params.amountSpecified == 0) {
-    //         revert Errors.ZeroAmount();
-    //     }
-
-    //     Slot0 memory slot0Start = slot0;
-
-    //     if (!slot0Start.unlocked) {
-    //         revert Errors.Locked();
-    //     }
-
-    //     bool isPriceDown = params.tradeType == TradeType.BUY_SPEAR;
-    //     require(
-    //         isPriceDown
-    //             ? params.sqrtPriceLimitX96 < slot0Start.sqrtPriceX96 && params.sqrtPriceLimitX96 > TickMath.MIN_SQRT_RATIO
-    //             : params.sqrtPriceLimitX96 > slot0Start.sqrtPriceX96 && params.sqrtPriceLimitX96 < TickMath.MAX_SQRT_RATIO,
-    //         "PriceInvalid"
-    //     );
-    //     slot0.unlocked = false;
-
-    //     TradeCache memory cache = TradeCache({ feeProtocol: fee.protocolFee });
-    //     TradeState memory state = TradeState({
-    //         amountSpecifiedRemaining: params.amountSpecified,
-    //         amountCalculated: 0,
-    //         sqrtPriceX96: slot0Start.sqrtPriceX96,
-    //         tick: slot0Start.tick,
-    //         global: global,
-    //         protocolFee: 0,
-    //         liquidity: liquidity,
-    //         transactionFee: 0
-    //     });
-    //     while (state.amountSpecifiedRemaining != 0 && state.sqrtPriceX96 != params.sqrtPriceLimitX96) {
-    //         StepComputations memory step;
-    //         step.sqrtPriceStartX96 = state.sqrtPriceX96;
-
-    //         (step.tickNext, step.initialized) = tickBitmap.nextInitializedTickWithinOneWord(state.tick, 1, isPriceDown);
-    //         if (step.tickNext < TickMath.MIN_TICK) {
-    //             step.tickNext = TickMath.MIN_TICK;
-    //         }
-    //         if (step.tickNext > TickMath.MAX_TICK) {
-    //             step.tickNext = TickMath.MAX_TICK;
-    //         }
-    //         step.sqrtPriceNextX96 = TickMath.getSqrtRatioAtTick(step.tickNext);
-    //         (state.sqrtPriceX96, step.amountIn, step.amountOut) = TradeMath.computeTradeStep(
-    //             ComputeTradeStepParams({
-    //                 tradeType: params.tradeType,
-    //                 sqrtRatioCurrentX96: state.sqrtPriceX96,
-    //                 sqrtRatioTargetX96: (
-    //                     isPriceDown ? step.sqrtPriceNextX96 < params.sqrtPriceLimitX96 : step.sqrtPriceNextX96 > params.sqrtPriceLimitX96
-    //                     ) ? params.sqrtPriceLimitX96 : step.sqrtPriceNextX96,
-    //                 liquidity: state.liquidity,
-    //                 amountRemaining: state.amountSpecifiedRemaining
-    //             })
-    //         );
-
-    //         state.amountSpecifiedRemaining -= step.amountIn;
-    //         state.amountCalculated += step.amountOut;
-
-    //         step.feeAmount = FullMath.mulDiv(step.amountOut, fee.transactionFee, 1e6);
-    //         if (cache.feeProtocol > 0) {
-    //             uint256 delta = FullMath.mulDiv(step.feeAmount, cache.feeProtocol, 1e6);
-    //             step.feeAmount -= delta;
-    //             state.protocolFee += uint128(delta);
-    //         }
-
-    //         if (state.liquidity > 0) {
-    //             unchecked {
-    //                 state.global.fee += FullMath.mulDiv(step.feeAmount, FixedPoint128.Q128, state.liquidity);
-    //                 state.transactionFee += step.feeAmount;
-    //                 state.global.collateralIn += FullMath.mulDiv(step.amountIn, FixedPoint128.Q128, state.liquidity);
-
-    //                 if (params.tradeType == TradeType.BUY_SPEAR) {
-    //                     // buy spear => spearBought and shieldBankOut need be
-    //                     // considered
-    //                     // spear bought
-    //                     state.global.spearOut += FullMath.mulDiv(step.amountOut, FixedPoint128.Q128, state.liquidity);
-    //                 } else {
-    //                     // buy shield => shieldBought and spearBankOut need be
-    //                     // considered
-    //                     state.global.shieldOut += FullMath.mulDiv(step.amountOut, FixedPoint128.Q128, state.liquidity);
-    //                 }
-    //             }
-    //         }
-
-    //         if (state.sqrtPriceX96 == step.sqrtPriceNextX96) {
-    //             if (step.initialized) {
-    //                 int128 liquidityNet = ticks.cross(step.tickNext, state.global);
-    //                 if (isPriceDown) {
-    //                     liquidityNet = -liquidityNet;
-    //                 }
-    //                 state.liquidity = liquidityNet < 0 ? state.liquidity - uint128(-liquidityNet) : state.liquidity + uint128(liquidityNet);
-    //             }
-    //             state.tick = isPriceDown ? step.tickNext - 1 : step.tickNext;
-    //         } else if (state.sqrtPriceX96 != step.sqrtPriceStartX96) {
-    //             state.tick = TickMath.getTickAtSqrtRatio(state.sqrtPriceX96);
-    //         }
-    //     }
-
-    //     if (state.tick != slot0Start.tick) {
-    //         (slot0.sqrtPriceX96, slot0.tick) = (state.sqrtPriceX96, state.tick);
-    //     } else {
-    //         slot0.sqrtPriceX96 = state.sqrtPriceX96;
-    //     }
-    //     liquidity = state.liquidity;
-    //     global = state.global;
-    //     cAmount = params.amountSpecified - state.amountSpecifiedRemaining + state.transactionFee + state.protocolFee;
-    //     sAmount = state.amountCalculated;
-    //     if (state.protocolFee > 0) {
-    //         protocolFeeAmount += state.protocolFee;
-    //     }
-
-    //     uint256 colBalanceBefore = collateralBalance();
-    //     ITradeCallback(msg.sender).tradeCallback(cAmount, sAmount, params.data);
-    //     if (colBalanceBefore + cAmount > collateralBalance()) {
-    //         revert Errors.InsufficientCollateral();
-    //     }
-
-    //     if (params.tradeType == TradeType.BUY_SPEAR) {
-    //         // mint spear to user
-    //         ISToken(spear).mint(params.recipient, sAmount);
-    //     } else {
-    //         // mint shield to user
-    //         ISToken(shield).mint(params.recipient, sAmount);
-    //     }
-    //     emit Traded(params.recipient, state.liquidity, cAmount, sAmount, params.tradeType, state.sqrtPriceX96, state.tick);
-    //     slot0.unlocked = true;
-    // }
 
     function trade(BattleTradeParams memory params) external returns (uint256 cAmount, uint256 sAmount) {
-        uint index;
+        uint256 index;
         if (block.timestamp >= _bk.expiries) {
             revert Errors.BattleEnd();
         }
@@ -476,9 +301,9 @@ contract Battle is IBattle {
         while (state.amountSpecifiedRemaining != 0 && state.sqrtPriceX96 != params.sqrtPriceLimitX96) {
             console2.log("index: %s", index++);
             console2.log("remain: %s", state.amountSpecifiedRemaining);
-            if (index >= 200) {
-                revert("escape loop");
-            }
+            // if (index >= 100) {
+            //     revert("escape loop");
+            // }
             StepComputations memory step;
             step.sqrtPriceStartX96 = state.sqrtPriceX96;
 
@@ -548,6 +373,8 @@ contract Battle is IBattle {
                     if (isPriceDown) {
                         liquidityNet = -liquidityNet;
                     }
+                    console2.log("liquidityNet %s   ", liquidityNet);
+                    console2.log("state.liquidity %s", state.liquidity);
                     state.liquidity = liquidityNet < 0 ? state.liquidity - uint128(-liquidityNet) : state.liquidity + uint128(liquidityNet);
                 }
                 state.tick = isPriceDown ? step.tickNext - 1 : step.tickNext;
@@ -564,11 +391,11 @@ contract Battle is IBattle {
         liquidity = state.liquidity;
         global = state.global;
         if (exactIn) {
-            cAmount = uint(params.amountSpecified) - uint(state.amountSpecifiedRemaining) + state.transactionFee + state.protocolFee;
-            sAmount = uint(state.amountCalculated);
+            cAmount = uint256(params.amountSpecified) - uint256(state.amountSpecifiedRemaining) + state.transactionFee + state.protocolFee;
+            sAmount = uint256(state.amountCalculated);
         } else {
-            cAmount = uint(state.amountCalculated) + state.transactionFee + state.protocolFee;
-            sAmount = uint(-(params.amountSpecified - state.amountSpecifiedRemaining));
+            cAmount = uint256(state.amountCalculated) + state.transactionFee + state.protocolFee;
+            sAmount = uint256(-(params.amountSpecified - state.amountSpecifiedRemaining));
         }
         if (state.protocolFee > 0) {
             protocolFeeAmount += state.protocolFee;
@@ -587,8 +414,8 @@ contract Battle is IBattle {
             // mint shield to user
             ISToken(shield).mint(params.recipient, sAmount);
         }
-        console2.log("cAmount %s.%s", cAmount/unit, cAmount%unit);
-        console2.log("sAmount %s.%s", sAmount/unit, sAmount%unit);
+        console2.log("cAmount %s.%s", cAmount / unit, cAmount % unit);
+        console2.log("sAmount %s.%s", sAmount / unit, sAmount % unit);
         emit Traded(params.recipient, state.liquidity, cAmount, sAmount, params.tradeType, state.sqrtPriceX96, state.tick);
         slot0.unlocked = true;
     }

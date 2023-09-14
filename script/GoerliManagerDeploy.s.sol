@@ -43,7 +43,8 @@ contract GoerliManagerDeploy is BaseScript {
             collateralToken: collateralToken,
             wethAddr: wethAddr,
             quoter: quoter,
-            oracle: oracle
+            oracle: oracle,
+            decimal: 18
         });
         (manager, arena, oracle, collateral, quoter) = deploy(das);
 
@@ -79,7 +80,7 @@ contract GoerliManagerDeploy is BaseScript {
         // uint160 sqrtPriceX96 = TickMath.getSqrtRatioAtTick(22);
         uint160 sqrtPriceX96 = 79_228_162_514_264_337_593_543_950_336;
         CreateAndInitBattleParams memory params =
-            CreateAndInitBattleParams({ oracle: address(0x1947457d02Fafa47E39371b99E87951Fb3fb932c), battleKey: bk, sqrtPriceX96: sqrtPriceX96 });
+            CreateAndInitBattleParams({ bk: bk, sqrtPriceX96: sqrtPriceX96 });
         address battleAddr = IBattleInitializer(address(0xc35717a122b664Fc784De66cF9C27A2cc8cfb62d)).createAndInitializeBattle(params);
         address spear = IBattle(battleAddr).spear();
         address shield = IBattle(battleAddr).shield();

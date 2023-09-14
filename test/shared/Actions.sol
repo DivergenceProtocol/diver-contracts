@@ -11,6 +11,7 @@ import { IBattleBase } from "../../src/core/interfaces/battle/IBattleActions.sol
 import { BattleKey, LiquidityType, TradeType } from "../../src/core/types/common.sol";
 import { Position } from "../../src/periphery/types/common.sol";
 import { IQuoter } from "../../src/periphery/interfaces/IQuoter.sol";
+import {TickMath} from "../../src/core/libs/TickMath.sol";
 import { console2 } from "@std/console2.sol";
 import { ERC721Enumerable } from "@oz/token/ERC721/extensions/ERC721Enumerable.sol";
 
@@ -19,7 +20,7 @@ function getBattleKey(address collateral, string memory underlying, uint256 expi
 }
 
 function getCreateBattleParams(BattleKey memory bk, address oracle, uint160 startSqrtPriceX96) pure returns (CreateAndInitBattleParams memory) {
-    return CreateAndInitBattleParams({ oracle: oracle, battleKey: bk, sqrtPriceX96: startSqrtPriceX96 });
+    return CreateAndInitBattleParams({ bk: bk, sqrtPriceX96: startSqrtPriceX96 });
 }
 
 function createBattle(address manager, CreateAndInitBattleParams memory params) returns (address battle) {
@@ -43,14 +44,16 @@ function getAddLiquidityParams(
         recipient: recipient,
         tickLower: tickLower,
         tickUpper: tickUpper,
+        minSqrtPriceX96: TickMath.MIN_SQRT_RATIO,
+        maxSqrtPriceX96: TickMath.MAX_SQRT_RATIO,
         liquidityType: liquidityType,
         amount: amount,
         deadline: block.timestamp + deadPeriod
     });
 }
 
-function addLiquidity(address sender, address manager, AddLiqParams memory params) {
-    IManager(manager).addLiquidity(params);
+function addLiquidity(address sender, address manager, AddLiqParams memory params, address quoter) returns(uint tokenId) {
+    (tokenId, ,) = IManager(manager).addLiquidity(params);
     console2.log("log@ =====>begin addLiquidity user: %s <======", sender);
     console2.log("log@ battleKey collateral: %s", params.battleKey.collateral);
     console2.log("log@ battleKey underlying: %s", params.battleKey.underlying);
@@ -61,7 +64,9 @@ function addLiquidity(address sender, address manager, AddLiqParams memory param
     console2.log("log@ tickUpper: %s", params.tickUpper);
     console2.log("log@ liquidityType: %s", uint256(params.liquidityType));
     console2.log("log@ amount: %s", params.amount);
+    positionTokenId(tokenId, manager, quoter);
     console2.log("log@ =====>end addLiquidity user: %s <======", sender);
+
 }
 
 function removeLiquidity(address sender, address manager, uint256 tokenId) {
@@ -69,6 +74,12 @@ function removeLiquidity(address sender, address manager, uint256 tokenId) {
     console2.log("log@ =====>begin removeLiquidity user: %s <======", sender);
     console2.log("log@ tokenId: %s", tokenId);
     console2.log("log@ =====>end removeLiquidity user: %s <======", sender);
+}
+
+function redeemObligation(address sender, address manager, uint tokenId) {
+    
+    IManager(manager).redeemObligation(tokenId);
+
 }
 
 function getTradeParams(
@@ -109,9 +120,9 @@ function trade(address sender, address manager, TradeParams memory params, addre
     console2.log("log@ recipient: %s", params.recipient);
     console2.log("log@ amountOutMin: %s", params.amountOutMin);
     console2.log("log@ sqrtPriceLimitX96: %s", params.sqrtPriceLimitX96);
-    for (uint256 id; id < ERC721Enumerable(manager).totalSupply(); id++) {
-        positionTokenId(id, manager, quoter);
-    }
+    // for (uint256 id; id < ERC721Enumerable(manager).totalSupply(); id++) {
+    //     positionTokenId(id, manager, quoter);
+    // }
 
     console2.log("log@ =====>end trade user: %s <======", sender);
     console2.log("log@ ");
@@ -136,9 +147,9 @@ function withdrawObligation(address sender, address manager, uint256 tokenId, ad
     IManager(manager).withdrawObligation(tokenId);
     console2.log("log@ =====>begin withdrawObligation user: %s <======", sender);
     console2.log("log@ tokenId: %s", tokenId);
-    for (uint256 id; id < ERC721Enumerable(manager).totalSupply(); id++) {
-        positionTokenId(id, manager, quoter);
-    }
+    // for (uint256 id; id < ERC721Enumerable(manager).totalSupply(); id++) {
+    //     positionTokenId(id, manager, quoter);
+    // }
     console2.log("log@ =====>end withdrawObligation user: %s <======", sender);
     console2.log("log@ ");
 }

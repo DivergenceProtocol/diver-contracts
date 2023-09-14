@@ -58,9 +58,9 @@ contract CreateAndInit is ReadyFixture {
 
     function test_CreateBattleByMulticall() public {
         CreateAndInitBattleParams memory params0 = defaultCreateBattleParams;
-        params0.battleKey.strikeValue = 10_000e18;
+        params0.bk.strikeValue = 10_000e18;
         CreateAndInitBattleParams memory params1 = defaultCreateBattleParams;
-        params1.battleKey.strikeValue = 30_000e18;
+        params1.bk.strikeValue = 30_000e18;
         bytes memory data0 = abi.encodeWithSelector(IBattleInitializer.createAndInitializeBattle.selector, params0);
         bytes memory data1 = abi.encodeWithSelector(IBattleInitializer.createAndInitializeBattle.selector, params1);
         callData.push(data0);

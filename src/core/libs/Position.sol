@@ -25,52 +25,10 @@ library Position {
 
     function update(PositionInfo storage self, int128 liquidityDelta, GrowthX128 memory insideLast) internal {
         PositionInfo memory _self = self;
-
-        uint128 liquidityNext;
-        if (liquidityDelta == 0) {
-            require(_self.liquidity > 0, "disallow pokes for 0 liquidity"); // disallow
-                // pokes for 0 liquidity Positions
-            liquidityNext = _self.liquidity;
-        } else {
-            liquidityNext = liquidityDelta < 0 ? _self.liquidity - uint128(-liquidityDelta) : _self.liquidity + uint128(liquidityDelta);
+        uint128 liquidityNext = liquidityDelta < 0 ? _self.liquidity - uint128(-liquidityDelta) : _self.liquidity + uint128(liquidityDelta);
+        if (liquidityDelta != 0) {
+            self.liquidity = liquidityNext;
         }
-        Owed memory tempOwed;
-        unchecked {
-            tempOwed.fee =
-                _self.liquidity == 0 ? 0 : FullMath.mulDiv(insideLast.fee - _self.insideLast.fee, _self.liquidity, FixedPoint128.Q128).toUint128();
-            tempOwed.collateralIn = _self.liquidity == 0
-                ? 0
-                : FullMath.mulDiv(insideLast.collateralIn - _self.insideLast.collateralIn, _self.liquidity, FixedPoint128.Q128).toUint128();
-            tempOwed.spearOut = _self.liquidity == 0
-                ? 0
-                : FullMath.mulDiv(insideLast.spearOut - _self.insideLast.spearOut, _self.liquidity, FixedPoint128.Q128).toUint128();
-
-            tempOwed.shieldOut = _self.liquidity == 0
-                ? 0
-                : FullMath.mulDiv(insideLast.shieldOut - _self.insideLast.shieldOut, _self.liquidity, FixedPoint128.Q128).toUint128();
-
-            // update the Position
-            if (liquidityDelta != 0) {
-                self.liquidity = liquidityNext;
-            }
-
-            self.insideLast = insideLast;
-
-            if (tempOwed.fee > 0) {
-                self.owed.fee += tempOwed.fee;
-            }
-
-            if (tempOwed.collateralIn > 0) {
-                self.owed.collateralIn += tempOwed.collateralIn;
-            }
-
-            if (tempOwed.spearOut > 0) {
-                self.owed.spearOut += tempOwed.spearOut;
-            }
-
-            if (tempOwed.shieldOut > 0) {
-                self.owed.shieldOut += tempOwed.shieldOut;
-            }
-        }
+        self.insideLast = insideLast;
     }
 }

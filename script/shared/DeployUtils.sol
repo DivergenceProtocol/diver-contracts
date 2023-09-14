@@ -20,6 +20,7 @@ struct DeployAddrs {
     address wethAddr;
     address quoter;
     address oracle;
+    uint8 decimal;
 }
 
 interface IMulticall {
@@ -34,7 +35,7 @@ function deploy(DeployAddrs memory das) returns (address managerAddr, address ar
     if (das.arenaAddr == address(0)) {
         Battle battleImpl = new Battle();
         if (das.collateralToken == address(0)) {
-            das.collateralToken = address(new TestERC20("DAI", "DAI", uint8(18)));
+            das.collateralToken = address(new TestERC20("DAI", "DAI", das.decimal));
             collateral = das.collateralToken;
         }
         // oracle = deployOracle();

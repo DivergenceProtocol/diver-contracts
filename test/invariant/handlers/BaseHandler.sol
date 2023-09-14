@@ -80,7 +80,7 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
         address wethAddr = address(0);
         address _oracle = address(new OracleForTest());
         DeployAddrs memory das =
-            DeployAddrs({ owner: owner, arenaAddr: arenaAddr, collateralToken: collateralToken, wethAddr: wethAddr, quoter: quoter, oracle: _oracle });
+            DeployAddrs({ owner: owner, arenaAddr: arenaAddr, collateralToken: collateralToken, wethAddr: wethAddr, quoter: quoter, oracle: _oracle, decimal: 18});
         (manager, arena, oracle, collateral, quoter) = deploy(das);
 
         cAmount = cAmount * 10 ** TestERC20(collateral).decimals();

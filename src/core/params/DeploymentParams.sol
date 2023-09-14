@@ -13,4 +13,5 @@ struct DeploymentParams {
     address spear;
     address shield;
     address manager;
+    uint160 sqrtPriceX96;
 }

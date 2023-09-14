@@ -17,6 +17,12 @@ import { TradeType } from "../src/core/types/enums.sol";
 contract TradeMathTest is Test {
 
     function testComputeTradeStep1() public {
-
+        uint a = 23;
+        uint b = 24;
+        uint c = 0;
+        unchecked {
+            c = a - b;
+        }
+        // c = a - b;
     }
 }

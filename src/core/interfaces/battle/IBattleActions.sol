@@ -16,17 +16,15 @@ interface IBattleMintBurn {
     /// @param seedAmount The amount of collateral/spear/shield(according to liquidityType) spent
     event Minted(address indexed sender, LiquidityType liquidityType, int24 tickLower, int24 tickUpper, uint128 liquidity, uint256 seedAmount);
 
-    /// @param sender The address who burned the liquidity
     /// @param tickLower The lower tick of the position
     /// @param tickUpper The upper tick of the position
     /// @param liquidityType The type of liquidity burned
     /// @param liquidityAmount The amount of liquidity burned
-    event Burned(address indexed sender, int24 tickLower, int24 tickUpper, LiquidityType liquidityType, uint128 liquidityAmount);
+    event Burned(int24 tickLower, int24 tickUpper, LiquidityType liquidityType, uint128 liquidityAmount);
 
     /// @notice Mint liquidity
     /// @param mp The params of mint
-    /// @return seed The amount of collateral/spear/shield(according to liquidityType) spent
-    function mint(BattleMintParams memory mp) external returns (uint256 seed);
+    function mint(BattleMintParams memory mp) external;
 
     // / @notice Burn liquidity for a slot
     // / @dev

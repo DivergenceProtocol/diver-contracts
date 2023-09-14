@@ -15,50 +15,6 @@ import { console2 } from "@std/console2.sol";
 library TradeMath {
     using SafeCast for int256;
 
-    error NotSupportYet();
-
-    // function computeTradeStep(ComputeTradeStepParams memory params)
-    //     internal
-    //     pure
-    //     returns (uint160 sqrtRatioNextX96, uint256 amountIn, uint256 amountOut)
-    // {
-    //     if (params.amountRemaining < 0) {
-    //         revert NotSupportYet();
-    //     }
-    //     bool isSpear = params.tradeType == TradeType.BUY_SPEAR;
-    //     if (isSpear) {
-    //         // buy spear
-    //         uint256 cap = SqrtPriceMath.getAmount0Delta(params.sqrtRatioCurrentX96, params.sqrtRatioTargetX96, params.liquidity, false);
-    //         if (params.amountRemaining < cap) {
-    //             sqrtRatioNextX96 = SqrtPriceMath.getNextSqrtPriceFromInput(params.sqrtRatioCurrentX96, params.liquidity, params.amountRemaining, true);
-    //             amountOut = DiverSqrtPriceMath.getSTokenDelta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, false);
-
-    //             // values.amountIn = params.amountRemaining;
-    //             amountIn = SqrtPriceMath.getAmount0Delta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, true);
-    //         } else {
-    //             sqrtRatioNextX96 = params.sqrtRatioTargetX96;
-    //             amountOut = DiverSqrtPriceMath.getSTokenDelta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, false);
-
-    //             amountIn = SqrtPriceMath.getAmount0Delta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, true);
-    //         }
-    //     } else {
-    //         // buy shield
-    //         uint256 cap = SqrtPriceMath.getAmount1Delta(params.sqrtRatioCurrentX96, params.sqrtRatioTargetX96, params.liquidity, false);
-    //         if (params.amountRemaining < cap) {
-    //             sqrtRatioNextX96 =
-    //                 SqrtPriceMath.getNextSqrtPriceFromInput(params.sqrtRatioCurrentX96, params.liquidity, params.amountRemaining, false);
-    //             amountOut = DiverSqrtPriceMath.getSTokenDelta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, false);
-
-    //             amountIn = SqrtPriceMath.getAmount1Delta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, true);
-    //         } else {
-    //             sqrtRatioNextX96 = params.sqrtRatioTargetX96;
-    //             amountOut = DiverSqrtPriceMath.getSTokenDelta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, false);
-
-    //             amountIn = SqrtPriceMath.getAmount1Delta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, true);
-    //         }
-    //     }
-    // }
-
     function computeTradeStep(ComputeTradeStepParams memory params)
         internal
         view
@@ -82,12 +38,14 @@ library TradeMath {
             console2.log("cap amountIn:  %s", amountIn);
             if (amount >= amountIn) {
                 sqrtRatioNextX96 = params.sqrtRatioTargetX96;
-                // sqrtRatioNextX96Up = params.sqrtRatioTargetX96;
-                // sqrtRatioNextX96Down = params.sqrtRatioTargetX96;
             } else {
                 sqrtRatioNextX96 = SqrtPriceMath.getNextSqrtPriceFromInput(params.sqrtRatioCurrentX96, params.liquidity, amount, isSpear);
-                // sqrtRatioNextX96Up = SqrtPriceMath.getNextSqrtPriceFromInput(params.sqrtRatioCurrentX96, params.liquidity, amount, true);
-                // sqrtRatioNextX96Down = SqrtPriceMath.getNextSqrtPriceFromInput(params.sqrtRatioCurrentX96, params.liquidity, amount, false);
+                amountIn = amount;
+            }
+            if (isSpear) {
+                amountOut = SqrtPriceMath.getAmount0Delta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, true);
+            } else {
+                amountOut = SqrtPriceMath.getAmount1Delta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, true);
             }
         } else {
             amountOut = DiverSqrtPriceMath.getSTokenDelta(params.sqrtRatioCurrentX96, params.sqrtRatioTargetX96, params.liquidity, false);
@@ -106,123 +64,16 @@ library TradeMath {
                     );
                 sqrtRatioNextX96Up = sqrtRatioNextX96 + 1;
                 sqrtRatioNextX96Down = sqrtRatioNextX96;
+                amountOut = amount;
             }
-        }
-        bool max = params.sqrtRatioTargetX96 == sqrtRatioNextX96;
-
-        if (isSpear) {
-
-            // if (max && exactIn) {
-                
-            // } else if (max && !exactIn) {
-            //     amountIn = SqrtPriceMath.getAmount0Delta(params.sqrtRatioCurrentX96, sqrtRatioNextX96Down, params.liquidity, true);
-            // } else if (!max && exactIn) {
-            //     // amountIn = SqrtPriceMath.getAmount0Delta(params.sqrtRatioCurrentX96, sqrtRatioNextX96Down, params.liquidity, true);
-            //     amountIn = uint(params.amountRemaining);
-            // } else if (!max && !exactIn) {
-            //     amountIn = SqrtPriceMath.getAmount0Delta(params.sqrtRatioCurrentX96, sqrtRatioNextX96Down, params.liquidity, true);
-            // }
-
-            // amountIn = max && exactIn
-            //     ? amountIn
-            //     : SqrtPriceMath.getAmount0Delta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, true);
-            amountIn = max && exactIn
-                ? amountIn
-                // ? SqrtPriceMath.getAmount0Delta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, true)
-                : SqrtPriceMath.getAmount0Delta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, true);
-
-
-            // if (max && !exactIn) {
-
-            // } else if (max && exactIn) {
-            //     amountOut = DiverSqrtPriceMath.getSTokenDelta(params.sqrtRatioCurrentX96, sqrtRatioNextX96Up, params.liquidity, false);
-            // } else if (!max && exactIn) {
-            //     amountOut = DiverSqrtPriceMath.getSTokenDelta(params.sqrtRatioCurrentX96, sqrtRatioNextX96Up, params.liquidity, false);
-            // } else if (!max && !exactIn) {
-            //     amountOut = DiverSqrtPriceMath.getSTokenDelta(params.sqrtRatioCurrentX96, sqrtRatioNextX96Up, params.liquidity, false);
-            // }
-            amountOut = max && !exactIn
-                ? amountOut
-                : DiverSqrtPriceMath.getSTokenDelta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, false);
-
-            // if (max && !exactIn) {
-
-            // } else if (max && exactIn) {
-            //     amountOut = DiverSqrtPriceMath.getSTokenDelta(params.sqrtRatioCurrentX96, sqrtRatioNextX96Down, params.liquidity, false);
-            // } else if (!max && !exactIn) {
-            //     amountOut = uint(-params.amountRemaining);
-            // } else if (!max && exactIn) {
-            //     amountOut = DiverSqrtPriceMath.getSTokenDelta(params.sqrtRatioCurrentX96, sqrtRatioNextX96Down, params.liquidity, false);
-            // }
-        } else {
-            amountIn = max && exactIn
-                ? amountIn
-                // ? SqrtPriceMath.getAmount1Delta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, true)
-                : SqrtPriceMath.getAmount1Delta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, true);
-
-            // if (max && exactIn) {
-
-            // } else if (max && !exactIn) {
-            //     amountIn = SqrtPriceMath.getAmount1Delta(params.sqrtRatioCurrentX96, sqrtRatioNextX96Down, params.liquidity, true);
-            // } else if (!max && exactIn) {
-            //     amountIn = uint(params.amountRemaining);
-            // } else if (!max && !exactIn) {
-            //     amountIn = SqrtPriceMath.getAmount1Delta(params.sqrtRatioCurrentX96, sqrtRatioNextX96Down, params.liquidity, true);
-            // }
-
-
-
-            // if (max && !exactIn) {
-            //     amountOut = amountOut;
-            // } else if (max && exactIn) {
-            //     amountOut = DiverSqrtPriceMath.getSTokenDelta(params.sqrtRatioCurrentX96, sqrtRatioNextX96Up, params.liquidity, false);
-            // } else if (!max && !exactIn) {
-            //     amountOut = uint(-params.amountRemaining);
-            //     // amountOut = DiverSqrtPriceMath.getSTokenDelta(params.sqrtRatioCurrentX96, sqrtRatioNextX96Up, params.liquidity, true);
-            // } else if (!max && exactIn) {
-            //     amountOut = DiverSqrtPriceMath.getSTokenDelta(params.sqrtRatioCurrentX96, sqrtRatioNextX96Up, params.liquidity, false);
-            // }
-
-            amountOut = max && !exactIn
-                ? amountOut 
-                : DiverSqrtPriceMath.getSTokenDelta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, exactIn ? false : true);
-                // : DiverSqrtPriceMath.getSTokenDelta(params.sqrtRatioCurrentX96, sqrtRatioNextX96Up, params.liquidity, false);
+            if (isSpear) {
+                amountIn = SqrtPriceMath.getAmount0Delta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, true);
+            } else {
+                amountIn = SqrtPriceMath.getAmount1Delta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, true);
+            }
         }
         console2.log("reamin in TradeMath    %s", params.amountRemaining);
         console2.log("amountIn in TradeMath  %s", amountIn);
         console2.log("amountOut in TradeMath %s", amountOut);
     }
-
-    //  if (isSpear) {
-    //         // buy spear
-    //         uint256 cap = SqrtPriceMath.getAmount0Delta(params.sqrtRatioCurrentX96, params.sqrtRatioTargetX96, params.liquidity, false);
-    //         if (params.amountRemaining < int(cap)) {
-    //             sqrtRatioNextX96 = SqrtPriceMath.getNextSqrtPriceFromInput(params.sqrtRatioCurrentX96, params.liquidity, uint(params.amountRemaining), true);
-    //             amountOut = DiverSqrtPriceMath.getSTokenDelta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, false);
-
-    //             // values.amountIn = params.amountRemaining;
-    //             amountIn = SqrtPriceMath.getAmount0Delta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, true);
-    //         } else {
-    //             sqrtRatioNextX96 = params.sqrtRatioTargetX96;
-    //             amountOut = DiverSqrtPriceMath.getSTokenDelta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, false);
-
-    //             amountIn = SqrtPriceMath.getAmount0Delta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, true);
-    //         }
-    //     } else {
-    //         // buy shield
-    //         uint256 cap = SqrtPriceMath.getAmount1Delta(params.sqrtRatioCurrentX96, params.sqrtRatioTargetX96, params.liquidity, false);
-    //         if (params.amountRemaining < int256(cap)) {
-    //             sqrtRatioNextX96 =
-    //                 SqrtPriceMath.getNextSqrtPriceFromInput(params.sqrtRatioCurrentX96, params.liquidity, uint(params.amountRemaining), false);
-    //             amountOut = DiverSqrtPriceMath.getSTokenDelta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, false);
-
-    //             amountIn = SqrtPriceMath.getAmount1Delta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, true);
-    //         } else {
-    //             sqrtRatioNextX96 = params.sqrtRatioTargetX96;
-    //             amountOut = DiverSqrtPriceMath.getSTokenDelta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, false);
-
-    //             amountIn = SqrtPriceMath.getAmount1Delta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, true);
-    //         }
-    //     }
-    // }
 }

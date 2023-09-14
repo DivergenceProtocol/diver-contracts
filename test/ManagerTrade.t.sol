@@ -420,6 +420,7 @@ contract ManagerTrade is Mint {
         //191757530477355301479181766273477  uni max liquidity
         //3702464087838124010830237168352445 diver max liquidity
         //520422035044106720910931892293     infinite loop liquidity
+        //83786623848089659850796924986
     }
 
 }

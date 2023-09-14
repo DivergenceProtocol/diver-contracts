@@ -40,12 +40,12 @@ contract Usecase1 is ManagerTrade {
         addLiqParams.amount = 1000e18;
 
         vm.startPrank(alice);
-        addLiquidity(alice, manager, addLiqParams);
+        addLiquidity(alice, manager, addLiqParams, quoter);
         vm.stopPrank();
 
         AddLiqParams memory outRangeAddLiqParams = getAddLiquidityParams(defaultBattleKey, dave, -2000, -1500, LiquidityType.COLLATERAL, 1000e18, 300);
         vm.startPrank(dave);
-        addLiquidity(dave, manager, outRangeAddLiqParams);
+        addLiquidity(dave, manager, outRangeAddLiqParams, quoter);
         position(dave, manager, quoter);
         vm.stopPrank();
 
@@ -60,7 +60,7 @@ contract Usecase1 is ManagerTrade {
 
         (, uint256 expiries) = getTS(Period.BIWEEKLY);
         skip(expiries + 1);
-        Oracle(oracle).setPrice(defaultCreateBattleParams.battleKey.underlying, expiries, 21_000e18);
+        Oracle(oracle).setPrice(defaultCreateBattleParams.bk.underlying, expiries, 21_000e18);
         settle(msg.sender, battleAddr);
         exercise(msg.sender, battleAddr);
 

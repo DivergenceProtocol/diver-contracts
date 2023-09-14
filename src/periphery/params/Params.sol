@@ -4,12 +4,10 @@ pragma solidity ^0.8.0;
 
 import { BattleKey, LiquidityType, TradeType } from "../../core/types/common.sol";
 
-/// @param oracle The address of the oracle
-/// @param battleKey The battle key
+/// @param bk The battle key
 /// @param sqrtPriceX96 The start sqrt price of the battle
 struct CreateAndInitBattleParams {
-    address oracle;
-    BattleKey battleKey;
+    BattleKey bk;
     uint160 sqrtPriceX96;
 }
 
@@ -26,6 +24,8 @@ struct AddLiqParams {
     address recipient;
     int24 tickLower;
     int24 tickUpper;
+    uint160 minSqrtPriceX96;
+    uint160 maxSqrtPriceX96;
     LiquidityType liquidityType;
     uint128 amount;
     uint256 deadline;
