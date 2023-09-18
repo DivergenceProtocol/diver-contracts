@@ -142,6 +142,13 @@ contract DivergenceInvariant is Test {
             // uint256 collateralInBattle = IERC20(collateral).balanceOf(battle);
             // console2.log("collateralInBattle", collateralInBattle);
         }
+        if (!handler.battleSettled()) {
+            (uint spearTotal, uint shieldTotal, ) = handler.checkBalance();
+            uint total = spearTotal > shieldTotal ? spearTotal : shieldTotal;
+            uint seedCollateral = handler.ghost_seed_collateral();
+            uint collateralIn = handler.ghost_collatealIn();
+            assertGe(seedCollateral+collateralIn, total, "collateral should greater than/equal stoken");
+        }
     }
 
     function invariant_CallSummary() public {

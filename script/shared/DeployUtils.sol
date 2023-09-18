@@ -62,8 +62,8 @@ function deployArena(address token, address oracle, address battleImpl) returns 
 
 function _initArena(Arena arena, address token) {
     arena.setCollateralWhitelist(token, true);
-    // arena.setUnderlyingWhitelist("BTC", true, Fee(0.003e6, 0.3e6, 0.0015e6));
-    // arena.setUnderlyingWhitelist("ETH", true, Fee(0.003e6, 0.3e6, 0.0015e6));
-    arena.setUnderlyingWhitelist("BTC", true, Fee(0, 0, 0));
-    arena.setUnderlyingWhitelist("ETH", true, Fee(0, 0, 0));
+    arena.setUnderlyingWhitelist("BTC", true, Fee(0.003e6, 0.3e6, 0.0015e6));
+    arena.setUnderlyingWhitelist("ETH", true, Fee(0.003e6, 0.3e6, 0.0015e6));
+    // arena.setUnderlyingWhitelist("BTC", true, Fee(0, 0, 0));
+    // arena.setUnderlyingWhitelist("ETH", true, Fee(0, 0, 0));
 }

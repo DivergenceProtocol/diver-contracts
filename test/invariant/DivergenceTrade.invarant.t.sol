@@ -68,7 +68,7 @@ contract DivergenceTradeInvariant is Test {
         uint cAmount = handler.ghost_total_camount();
         uint spearAmount = handler.ghost_total_samount_spear();
         uint shieldAmount = handler.ghost_total_samount_shield();
-        uint col = handler.ghost_collateral();
+        uint col = handler.ghost_seed_collateral();
         uint sAmount = spearAmount > shieldAmount ? spearAmount : shieldAmount;
         assertGe(cAmount+col, sAmount);
         console2.log("**************************");
