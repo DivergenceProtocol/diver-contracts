@@ -52,9 +52,14 @@ contract Handler is CommonBase, StdCheats, StdUtils, StdAssertions {
     uint256 public ghost_seed_collateral;
     uint256 public ghost_collatealIn;
     uint256 public ghost_tradeAmount;
+    uint256 public ghost_totalAmountIn;
+    uint256 public ghost_totalAmountOut;
     uint256 public ghost_totalFee;
     bool public battleSettled;
     bool public ghost_run_end;
+    uint256 public ghost_total_camount;
+    uint256 public ghost_total_samount_spear;
+    uint256 public ghost_total_samount_shield;
 
     bool public end;
 
@@ -377,9 +382,6 @@ contract Handler is CommonBase, StdCheats, StdUtils, StdAssertions {
         vm.stopPrank();
     }
 
-    uint256 public ghost_total_camount;
-    uint256 public ghost_total_samount_spear;
-    uint256 public ghost_total_samount_shield;
 
     function adjustAmount(int256 amount) internal view returns (int256) {
         if (amount < 0) {
@@ -714,6 +716,12 @@ contract Handler is CommonBase, StdCheats, StdUtils, StdAssertions {
         console2.log("ghost_seed_collateral   %s", ghost_seed_collateral);
         console2.log("ghost_tradeAmount:      %s", ghost_tradeAmount);
         console2.log("ghost_totalFee:         %s", ghost_totalFee);
+        console2.log("ghost_total_camount:         %s", ghost_total_camount);
+        console2.log("ghost_total_samount:         %s", ghost_total_samount_spear+ghost_total_samount_spear);
+        // uint256 public ghost_total_camount;
+        // uint256 public ghost_total_samount_spear;
+        // uint256 public ghost_total_samount_shield;
+
 
     }
 
