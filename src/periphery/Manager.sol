@@ -247,14 +247,7 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
 
     function tradeCallback(uint256 cAmount, uint256 sAmount, bytes calldata _data) external override {
         TradeCallbackData memory data = abi.decode(_data, (TradeCallbackData));
-        // address battle = IArenaCreation(arena).getBattle(data.battleKey);
         CallbackValidation.verifyCallback(arena, data.battleKey);
-        // if (battle == address(0)) {
-        //     revert Errors.BattleNotExist();
-        // }
-        // if (msg.sender != battle) {
-        //     revert Errors.CallerNotBattle();
-        // }
         pay(data.battleKey.collateral, data.payer, msg.sender, cAmount);
     }
 
@@ -263,31 +256,6 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
     /// @inheritdoc IManagerState
     function positions(uint256 tokenId) external view override returns (Position memory) {
         return _positions[tokenId];
-        // return handlePosition(tokenId);
     }
 
-    // function handlePosition(uint256 tokenId) private view returns (Position memory p) {
-    //     p = _positions[tokenId];
-    //     if (p.state == PositionState.LiquidityAdded) {
-    //         unchecked {
-    //             GrowthX128 memory insideLast = IBattleState(p.battleAddr).getInsideLast(p.tickLower, p.tickUpper);
-    //             p.owed.fee += uint128(FullMath.mulDiv(insideLast.fee - p.insideLast.fee, p.liquidity, FixedPoint128.Q128));
-    //             p.owed.collateralIn += uint128(FullMath.mulDiv(insideLast.collateralIn - p.insideLast.collateralIn, p.liquidity,
-    // FixedPoint128.Q128));
-    //             p.owed.spearOut += uint128(FullMath.mulDiv(insideLast.spearOut - p.insideLast.spearOut, p.liquidity, FixedPoint128.Q128));
-    //             p.owed.shieldOut += uint128(FullMath.mulDiv(insideLast.shieldOut - p.insideLast.shieldOut, p.liquidity, FixedPoint128.Q128));
-    //             p.insideLast = insideLast;
-    //         }
-    //     }
-    // }
-
-    /// @inheritdoc IManagerState
-    // function accountPositions(address account) external view override returns (Position[] memory) {
-    //     uint256 balance = balanceOf(account);
-    //     Position[] memory p = new Position[](balance);
-    //     for (uint256 i = 0; i < balance; i++) {
-    //         p[i] = handlePosition(tokenOfOwnerByIndex(account, i));
-    //     }
-    //     return p;
-    // }
 }

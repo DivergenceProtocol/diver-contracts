@@ -106,7 +106,9 @@ contract Handler is CommonBase, StdCheats, StdUtils, StdAssertions {
             decimal: decimal,
             hasFee: hasFee
         });
+        vm.startPrank(users[0]);
         (manager, arena, oracle, collateral, quoter) = deploy(das);
+        vm.stopPrank();
 
         // cAmount = cAmount * 10 ** TestERC20(collateral).decimals();
         for (uint256 i; i < users.length; i++) {
@@ -690,6 +692,11 @@ contract Handler is CommonBase, StdCheats, StdUtils, StdAssertions {
         withdrawAll();
         // exercise
         exerciseAll();
+        // get protocol fee
+        vm.startPrank(users[0]);
+        IBattle(battle).collectProtocolFee(users[0]);
+        vm.stopPrank();
+
         withdrawAndExerciseCalled = true;
         ghost_run_end = true;
         calls["withdrawAndExerciseAll"] += 1;
