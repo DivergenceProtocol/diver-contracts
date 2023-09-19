@@ -10,7 +10,6 @@ import { ComputeTradeStepParams } from "../params/ComputeTradeStepParams.sol";
 import { TickMath } from "./TickMath.sol";
 import { TradeType } from "../types/enums.sol";
 
-
 library TradeMath {
     using SafeCast for int256;
 
@@ -23,8 +22,6 @@ library TradeMath {
         bool exactIn = params.amountRemaining >= 0;
 
         // calculate next price
-        uint160 sqrtRatioNextX96Down;
-        uint160 sqrtRatioNextX96Up;
         if (exactIn) {
             amountIn = isSpear
                 ? SqrtPriceMath.getAmount0Delta(params.sqrtRatioCurrentX96, params.sqrtRatioTargetX96, params.liquidity, true)
@@ -36,18 +33,12 @@ library TradeMath {
                 sqrtRatioNextX96 = SqrtPriceMath.getNextSqrtPriceFromInput(params.sqrtRatioCurrentX96, params.liquidity, amount, isSpear);
                 amountIn = amount;
             }
-            if (isSpear) {
-                amountOut = SqrtPriceMath.getAmount0Delta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, true);
-            } else {
-                amountOut = SqrtPriceMath.getAmount1Delta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, true);
-            }
+            amountOut = DiverSqrtPriceMath.getSTokenDelta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, false);
         } else {
             amountOut = DiverSqrtPriceMath.getSTokenDelta(params.sqrtRatioCurrentX96, params.sqrtRatioTargetX96, params.liquidity, false);
             uint256 amount = uint256(-params.amountRemaining);
             if (amount >= amountOut) {
                 sqrtRatioNextX96 = params.sqrtRatioTargetX96;
-                sqrtRatioNextX96Up = sqrtRatioNextX96;
-                sqrtRatioNextX96Down = sqrtRatioNextX96;
             } else {
                 sqrtRatioNextX96 = isSpear
                     ? DiverSqrtPriceMath.getNextSqrtPriceFromSpear(
@@ -56,8 +47,6 @@ library TradeMath {
                     : DiverSqrtPriceMath.getNextSqrtPriceFromShield(
                         params.sqrtRatioCurrentX96, params.liquidity, uint256(-params.amountRemaining), params.unit
                     );
-                sqrtRatioNextX96Up = sqrtRatioNextX96 + 1;
-                sqrtRatioNextX96Down = sqrtRatioNextX96;
                 amountOut = amount;
             }
             if (isSpear) {

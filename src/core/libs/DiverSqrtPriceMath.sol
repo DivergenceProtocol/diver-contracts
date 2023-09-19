@@ -8,7 +8,6 @@ import { UnsafeMath } from "@uniswap/v3-core/contracts/libraries/UnsafeMath.sol"
 import { FixedPoint96 } from "@uniswap/v3-core/contracts/libraries/FixedPoint96.sol";
 import { Math } from "@oz/utils/math/Math.sol";
 
-
 library DiverSqrtPriceMath {
     using SafeCast for uint256;
     using SafeCast for int128;

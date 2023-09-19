@@ -44,7 +44,8 @@ contract GoerliManagerDeploy is BaseScript {
             wethAddr: wethAddr,
             quoter: quoter,
             oracle: oracle,
-            decimal: 18
+            decimal: 18,
+            hasFee: true
         });
         (manager, arena, oracle, collateral, quoter) = deploy(das);
 

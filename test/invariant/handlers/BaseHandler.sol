@@ -65,7 +65,7 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
     uint256 public minBuySpearCount = 5;
     uint256 public minBuyShieldCount = 5;
 
-    constructor(uint256 minAddLiqCount_, uint256 minBuySpearCount_, uint256 minBuyShieldCount_) {
+    constructor(uint256 minAddLiqCount_, uint256 minBuySpearCount_, uint256 minBuyShieldCount_, bool hasFee) {
         minAddLiqCount = minAddLiqCount_;
         minBuySpearCount = minBuySpearCount_;
         minBuyShieldCount = minBuyShieldCount_;
@@ -80,7 +80,7 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
         address wethAddr = address(0);
         address _oracle = address(new OracleForTest());
         DeployAddrs memory das =
-            DeployAddrs({ owner: owner, arenaAddr: arenaAddr, collateralToken: collateralToken, wethAddr: wethAddr, quoter: quoter, oracle: _oracle, decimal: 18});
+            DeployAddrs({ owner: owner, arenaAddr: arenaAddr, collateralToken: collateralToken, wethAddr: wethAddr, quoter: quoter, oracle: _oracle, decimal: 18, hasFee: hasFee});
         (manager, arena, oracle, collateral, quoter) = deploy(das);
 
         cAmount = cAmount * 10 ** TestERC20(collateral).decimals();
@@ -177,7 +177,7 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
         // deal(collateral, currentActor, amount);
         // TestERC20(collateral).approve(manager, type(uint256).max);
         TradeParams memory param = getTradeParams(bk, TradeType.BUY_SPEAR, amount, currentActor, 0, 0, 300);
-        (uint cAmount, uint sAmount) = trade(currentActor, manager, param, quoter);
+        (uint cAmount, uint sAmount, uint fAmount) = trade(currentActor, manager, param, quoter);
         ghost_cAmount += cAmount;
         ghost_spearAmount += sAmount;
         // ghost_tradeAmount += amount;

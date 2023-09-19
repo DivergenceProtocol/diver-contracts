@@ -24,7 +24,7 @@ contract DivergenceInvariant is Test {
     function setUp() public virtual {
         // targetContract(manager);
         // handler = new Handler(6, 6000, 6000, 6000);
-        handler = new Handler(6,600, 600, 600);
+        handler = new Handler(6,600, 600, 600, true);
         // handler = new Handler(5, 15, 15);
 
         // handler.getManager();
@@ -141,6 +141,13 @@ contract DivergenceInvariant is Test {
         } else {
             // uint256 collateralInBattle = IERC20(collateral).balanceOf(battle);
             // console2.log("collateralInBattle", collateralInBattle);
+        }
+        if (!handler.battleSettled()) {
+            (uint spearTotal, uint shieldTotal, ) = handler.checkBalance();
+            uint total = spearTotal > shieldTotal ? spearTotal : shieldTotal;
+            uint seedCollateral = handler.ghost_seed_collateral();
+            uint collateralIn = handler.ghost_collatealIn();
+            assertGe(seedCollateral+collateralIn, total, "collateral should greater than/equal stoken");
         }
     }
 

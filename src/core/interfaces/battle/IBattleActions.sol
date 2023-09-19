@@ -62,7 +62,7 @@ interface IBattleTrade {
     /// @param tp The params of trade
     /// @return cAmount The amount of collateral user spent
     /// @return sAmount The amount of spear/shield user received
-    function trade(BattleTradeParams memory tp) external returns (uint256 cAmount, uint256 sAmount);
+    function trade(BattleTradeParams memory tp) external returns (uint256 cAmount, uint256 sAmount, uint256 fAmount);
 
     /// @notice collect protocol fee
     function collectProtocolFee(address recipient) external;
