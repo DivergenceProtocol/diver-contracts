@@ -37,7 +37,6 @@ import { DeploymentParams } from "./params/DeploymentParams.sol";
 import { TradeCache, TradeState, StepComputations } from "./types/TradeTypes.sol";
 import { LiquidityType, BattleKey, Outcome, GrowthX128, TickInfo, PositionInfo, Fee, TradeType } from "./types/common.sol";
 
-import { console2 } from "@std/console2.sol";
 
 /// @title Battle
 contract Battle is IBattle {
@@ -78,15 +77,6 @@ contract Battle is IBattle {
     mapping(int24 => TickInfo) public ticks;
     mapping(int16 => uint256) public tickBitmap;
     mapping(bytes32 => PositionInfo) private _positions;
-
-    // just for testing
-    uint160[] public sqrtStarts;
-    uint160[] public sqrtEnds;
-    uint128[] public liquidities;
-
-    function getProcess() external view returns (uint160[] memory, uint160[] memory, uint128[] memory) {
-        return (sqrtStarts, sqrtEnds, liquidities);
-    }
 
     modifier lock() {
         if (!slot0.unlocked) {
@@ -299,24 +289,16 @@ contract Battle is IBattle {
             transactionFee: 0
         });
         while (state.amountSpecifiedRemaining != 0 && state.sqrtPriceX96 != params.sqrtPriceLimitX96) {
-            console2.log("index: %s", index++);
-            console2.log("remain: %s", state.amountSpecifiedRemaining);
-            // if (index >= 100) {
-            //     revert("escape loop");
-            // }
             StepComputations memory step;
             step.sqrtPriceStartX96 = state.sqrtPriceX96;
 
             (step.tickNext, step.initialized) = tickBitmap.nextInitializedTickWithinOneWord(state.tick, 30, isPriceDown);
-            console2.log("next tick: %s", step.tickNext);
             if (step.tickNext < TickMath.MIN_TICK) {
                 step.tickNext = TickMath.MIN_TICK;
             }
             if (step.tickNext > TickMath.MAX_TICK) {
                 step.tickNext = TickMath.MAX_TICK;
             }
-            sqrtStarts.push(state.sqrtPriceX96);
-            liquidities.push(state.liquidity);
             step.sqrtPriceNextX96 = TickMath.getSqrtRatioAtTick(step.tickNext);
             (state.sqrtPriceX96, step.amountIn, step.amountOut) = TradeMath.computeTradeStep(
                 ComputeTradeStepParams({
@@ -330,9 +312,6 @@ contract Battle is IBattle {
                     unit: unit
                 })
             );
-            sqrtEnds.push(state.sqrtPriceX96);
-            console2.log("step.amountIn  %s", step.amountIn);
-            console2.log("step.amountOut %s", step.amountOut);
             if (exactIn) {
                 state.amountSpecifiedRemaining -= (step.amountIn).toInt256();
                 state.amountCalculated += (step.amountOut).toInt256();
@@ -373,8 +352,6 @@ contract Battle is IBattle {
                     if (isPriceDown) {
                         liquidityNet = -liquidityNet;
                     }
-                    console2.log("liquidityNet %s   ", liquidityNet);
-                    console2.log("state.liquidity %s", state.liquidity);
                     state.liquidity = liquidityNet < 0 ? state.liquidity - uint128(-liquidityNet) : state.liquidity + uint128(liquidityNet);
                 }
                 state.tick = isPriceDown ? step.tickNext - 1 : step.tickNext;
@@ -415,8 +392,6 @@ contract Battle is IBattle {
             // mint shield to user
             ISToken(shield).mint(params.recipient, sAmount);
         }
-        console2.log("cAmount %s.%s", cAmount / unit, cAmount % unit);
-        console2.log("sAmount %s.%s", sAmount / unit, sAmount % unit);
         emit Traded(params.recipient, state.liquidity, cAmount, sAmount, params.tradeType, state.sqrtPriceX96, state.tick);
         slot0.unlocked = true;
     }
