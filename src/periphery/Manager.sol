@@ -212,7 +212,7 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
         }
     }
 
-    function trade(TradeParams calldata p) external override returns (uint256 amountIn, uint256 amountOut) {
+    function trade(TradeParams calldata p) external override returns (uint256 amountIn, uint256 amountOut, uint256 amountFee) {
         if (block.timestamp > p.deadline) {
             revert Errors.Deadline();
         }
@@ -238,7 +238,7 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
         }
 
         // call battle
-        (amountIn, amountOut) = IBattleActions(battle).trade(tps);
+        (amountIn, amountOut, amountFee) = IBattleActions(battle).trade(tps);
         if (amountOut < p.amountOutMin) {
             revert Errors.Slippage();
         }

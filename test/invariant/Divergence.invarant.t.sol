@@ -24,7 +24,7 @@ contract DivergenceInvariant is Test {
     function setUp() public virtual {
         // targetContract(manager);
         // handler = new Handler(6, 6000, 6000, 6000);
-        handler = new Handler(6,600, 600, 600);
+        handler = new Handler(6,600, 600, 600, true);
         // handler = new Handler(5, 15, 15);
 
         // handler.getManager();

@@ -55,7 +55,7 @@ interface IManagerTrade is ITradeCallback {
     /// @notice buySpear or buyShield
     /// @param mtp The params of trade
     /// @return amountOut The amount of spear/shield that user who bought spear/shield got
-    function trade(TradeParams calldata mtp) external returns (uint256, uint256);
+    function trade(TradeParams calldata mtp) external returns (uint256, uint256, uint256);
 }
 
 interface IManagerActions is IManagerLiquidity, IManagerTrade { }

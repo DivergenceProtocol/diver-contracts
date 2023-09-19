@@ -23,7 +23,7 @@ contract DivergenceLiquidityInvariant is Test {
 
     function setUp() public virtual {
         // targetContract(manager);
-        handler = new BaseHandler(50, 150, 150);
+        handler = new BaseHandler(50, 150, 150, false);
 
         // handler.getManager();
         selectors.push(BaseHandler.addLiquidityByCol.selector);

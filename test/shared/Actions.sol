@@ -105,10 +105,10 @@ function getTradeParams(
     });
 }
 
-function trade(address sender, address manager, TradeParams memory params, address quoter) returns (uint256 amtIn, uint256 amtOut) {
+function trade(address sender, address manager, TradeParams memory params, address quoter) returns (uint256 amtIn, uint256 amtOut, uint256 amtFee) {
     console2.log("log@ =====>begin trade user: %s <======", sender);
 
-    (amtIn, amtOut) = IManager(manager).trade(params);
+    (amtIn, amtOut, amtFee) = IManager(manager).trade(params);
     console2.log("log@ amtIn: %s", amtIn);
     console2.log("log@ amtOut: %s", amtOut);
     console2.log("log@ battleKey collateral: %s", params.battleKey.collateral);
@@ -126,7 +126,7 @@ function trade(address sender, address manager, TradeParams memory params, addre
 
     console2.log("log@ =====>end trade user: %s <======", sender);
     console2.log("log@ ");
-    return (amtIn, amtOut);
+    return (amtIn, amtOut, amtFee);
 }
 
 function exercise(address sender, address battle) {

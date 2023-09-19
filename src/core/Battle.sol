@@ -258,7 +258,7 @@ contract Battle is IBattle {
     }
 
 
-    function trade(BattleTradeParams memory params) external returns (uint256 cAmount, uint256 sAmount) {
+    function trade(BattleTradeParams memory params) external returns (uint256 cAmount, uint256 sAmount, uint256 fAmount) {
         uint256 index;
         if (block.timestamp >= _bk.expiries) {
             revert Errors.BattleEnd();
@@ -400,6 +400,7 @@ contract Battle is IBattle {
         if (state.protocolFee > 0) {
             protocolFeeAmount += state.protocolFee;
         }
+        fAmount = state.transactionFee + state.protocolFee;
 
         uint256 colBalanceBefore = collateralBalance();
         ITradeCallback(msg.sender).tradeCallback(cAmount, sAmount, params.data);

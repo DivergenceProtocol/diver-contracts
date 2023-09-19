@@ -27,7 +27,7 @@ contract DeploymentFixture is BaseTest {
         address wethAddr = address(0);
         address _oracle = address(new OracleForTest());
         DeployAddrs memory das =
-            DeployAddrs({ owner: owner, arenaAddr: arenaAddr, collateralToken: collateralToken, wethAddr: wethAddr, quoter: quoter, oracle: _oracle, decimal: decimal});
+            DeployAddrs({ owner: owner, arenaAddr: arenaAddr, collateralToken: collateralToken, wethAddr: wethAddr, quoter: quoter, oracle: _oracle, decimal: decimal, hasFee: false});
         // (manager, arena, oracle) = deploy(cuts, baseFacetSelectors,
         // mintBurnFacetSelectors, tradeFacetSelectors,
         // owner, arenaAddr, collateralToken, wethAddr);

@@ -36,6 +36,16 @@ contract Mint is CreateAndInit {
         return battleAddr;
     }
 
+    function addOneLiquidity() public virtual returns(address) {
+        address battleAddr = super.test();
+        assertGt(uint160(battleAddr), 0);
+        vm.startPrank(alice);
+        AddLiqParams memory p = getAddLiquidityParams(defaultBattleKey, alice, -30, 0, LiquidityType.COLLATERAL, 1000e18, 300);
+        IManagerActions(manager).addLiquidity(p);
+        vm.stopPrank();
+        return battleAddr;
+    }
+
     function addMultiLiquidity() public virtual returns(address) {
         address battleAddr = super.test();
         assertGt(uint160(battleAddr), 0);

@@ -52,6 +52,7 @@ contract Handler is CommonBase, StdCheats, StdUtils, StdAssertions {
     uint256 public ghost_seed_collateral;
     uint256 public ghost_collatealIn;
     uint256 public ghost_tradeAmount;
+    uint256 public ghost_totalFee;
     bool public battleSettled;
     bool public ghost_run_end;
 
@@ -74,7 +75,7 @@ contract Handler is CommonBase, StdCheats, StdUtils, StdAssertions {
     uint8 public decimal;
     uint256 public unit;
 
-    constructor(uint8 decimal_, uint256 minAddLiqCount_, uint256 minBuySpearCount_, uint256 minBuyShieldCount_) {
+    constructor(uint8 decimal_, uint256 minAddLiqCount_, uint256 minBuySpearCount_, uint256 minBuyShieldCount_, bool hasFee) {
         decimal = decimal_;
         unit = 10 ** decimal_;
         minAddLiqCount = minAddLiqCount_;
@@ -97,7 +98,8 @@ contract Handler is CommonBase, StdCheats, StdUtils, StdAssertions {
             wethAddr: wethAddr,
             quoter: quoter,
             oracle: _oracle,
-            decimal: decimal
+            decimal: decimal,
+            hasFee: hasFee
         });
         (manager, arena, oracle, collateral, quoter) = deploy(das);
 
@@ -421,9 +423,10 @@ contract Handler is CommonBase, StdCheats, StdUtils, StdAssertions {
         amount = adjustAmount(amount);
 
         TradeParams memory param = getTradeParams(bk, TradeType.BUY_SPEAR, amount, currentActor, 0, 0, 300);
-        (uint256 amountIn, uint256 amountOut) = trade(currentActor, manager, param, quoter);
+        (uint256 amountIn, uint256 amountOut, uint256 amountFee) = trade(currentActor, manager, param, quoter);
         ghost_tradeAmount += amountIn;
         ghost_collatealIn += amountIn;
+        ghost_totalFee += amountFee;
         ghost_total_camount += amountIn;
         ghost_total_samount_spear += amountOut;
         uint256 balance = IERC20(spear).balanceOf(currentActor);
@@ -465,9 +468,10 @@ contract Handler is CommonBase, StdCheats, StdUtils, StdAssertions {
         amount = adjustAmount(amount);
         console2.log("user collateral balance: %s", TestERC20(collateral).balanceOf(currentActor));
         TradeParams memory param = getTradeParams(bk, TradeType.BUY_SHIELD, amount, currentActor, 0, 0, 300);
-        (uint256 amountIn, uint256 amountOut) = trade(currentActor, manager, param, quoter);
+        (uint256 amountIn, uint256 amountOut, uint256 amountFee) = trade(currentActor, manager, param, quoter);
         ghost_tradeAmount += amountIn;
         ghost_collatealIn += amountIn;
+        ghost_totalFee += amountFee;
         ghost_total_camount += amountIn;
         ghost_total_samount_shield += amountOut;
         uint256 balance = IERC20(shield).balanceOf(currentActor);
@@ -708,7 +712,9 @@ contract Handler is CommonBase, StdCheats, StdUtils, StdAssertions {
         console2.log("execriseAll", calls["execriseAll"]);
         console2.log("withdrawAndExerciseAll", calls["withdrawAndExerciseAll"]);
         console2.log("ghost_seed_collateral   %s", ghost_seed_collateral);
-        console2.log("ghost_tradeAmount: %s", ghost_tradeAmount);
+        console2.log("ghost_tradeAmount:      %s", ghost_tradeAmount);
+        console2.log("ghost_totalFee:         %s", ghost_totalFee);
+
     }
 
     function checkBalance() public view returns (uint256 spearAmount, uint256 shieldAmount, uint256 balanceAmount) {
