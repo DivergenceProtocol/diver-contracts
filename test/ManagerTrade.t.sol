@@ -374,7 +374,7 @@ contract ManagerTrade is Mint {
         address battleAddr = super.addOneLiquidity();
         (address spear, address shield) = IBattleState(battleAddr).spearAndShield();
         vm.startPrank(bob);
-        TradeParams memory params1 = getTradeParams(defaultBattleKey, TradeType.BUY_SPEAR, 100e18, bob, 0, 0, 300);
+        TradeParams memory params1 = getTradeParams(defaultBattleKey, TradeType.BUY_SPEAR, 2000e18, bob, 0, 0, 300);
         (uint cAmount1, uint sAmount1, uint fAmount1, uint160 sqrtPriceX96End1, ) = wrapTrade(params1, battleAddr, spear, shield);
         console2.log("cAmount1 %", cAmount1);
         console2.log("sAmount1 %", sAmount1);

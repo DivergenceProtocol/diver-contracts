@@ -154,14 +154,15 @@ contract Oracle is Ownable {
         returns (uint256 p, uint256 actualTs)
     {
         for (uint80 i = end; i >= start; i--) {
-            (, int256 answer, uint256 startedAt,,) = cOracle.getRoundData(i);
-            if (startedAt < ts) {
-                break;
-            }
-            if (startedAt >= ts && startedAt - ts <= 1 hours) {
-                p = answer.toUint256();
-                actualTs = startedAt;
-            }
+            try cOracle.getRoundData(i) returns (uint80 roundIdF, int256 answer, uint256 startedAt, uint256 updatedAtF, uint80 answeredInRoundF) {
+                if (startedAt > 0 && startedAt < ts) {
+                    break;
+                }
+                if (startedAt >= ts && startedAt - ts <= 1 hours) {
+                    p = answer.toUint256();
+                    actualTs = startedAt;
+                }
+            } catch { }
         }
     }
 }
