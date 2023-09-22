@@ -14,11 +14,15 @@ contract OracleForTest is IOracle {
     }
 
     function getPriceByExternal(address cOracleAddr, uint256 ts) public view returns (uint256 price_, uint256 actualTs) {
+        // remove unused function paramter warnning
+        cOracleAddr = cOracleAddr;
         price_ = price["BTC"];
         actualTs = ts;
     }
 
-    function getCOracle(string memory symbol) external view returns (address) {
+    function getCOracle(string memory symbol) external pure returns (address) {
+        // remove unused function paramter warnning
+        symbol = symbol;
         return address(1);
     }
 }

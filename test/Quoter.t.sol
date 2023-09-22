@@ -26,6 +26,8 @@ contract QuoterTest is ManagerTrade {
             data: bytes("")
         });
         (uint256 spend, uint256 get) = quoter.quoteExactInput(battleParams, battleAddr);
+        assertGt(spend, uint(0));
+        assertGt(get, uint(0));
         return battleAddr;
     }
 }

@@ -27,8 +27,8 @@ contract OracleChainlinkTest is Test {
         oracle.setExternalOracle(underlyings, oracles);
     }
 
-    function test_chainLink() public {
-        (uint256 start, uint256 expiries) = getTS(Period.BIWEEKLY);
+    function test_chainLink() view public {
+        // (uint256 start, uint256 expiries) = getTS(Period.BIWEEKLY);
         console2.log("now: %s", block.timestamp);
         (uint256 price_, uint256 actualTs) = oracle.getPriceByExternal(oracles[0], block.timestamp - 1000);
         console2.log("price: %s, actualTs: %s", price_, actualTs);
@@ -47,7 +47,7 @@ contract OracleChainlinkTest is Test {
     }
 
     function test_UpdatePhase() public {
-        (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
+        (uint80 roundId, , , , ) =
             AggregatorV3Interface(btc_usd).latestRoundData();
         console2.log("roundId %s", roundId);
         oracle.updatePhase(roundId, "BTC");
@@ -59,11 +59,10 @@ contract OracleChainlinkTest is Test {
         assertEq(endRoundId, roundId, "latest round id");
     }
 
-    function test_GtLatestRound() public {
-        (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
+    function test_GtLatestRound() view public {
+        (uint80 roundId, , , , ) =
             AggregatorV3Interface(btc_usd).latestRoundData();
-
-        (uint80 roundId1, int256 answer1, uint256 startedAt1, uint256 updatedAt1, uint80 answeredInRound1) =
+        (uint80 roundId1, int256 answer1, uint256 startedAt1, uint256 updatedAt1, ) =
         AggregatorV3Interface(btc_usd).getRoundData(roundId+1);
         console2.log("roundId1 %s", roundId1);
         console2.log("answer1 %s", answer1);
@@ -73,7 +72,7 @@ contract OracleChainlinkTest is Test {
     }
 
     // function getPriceByExternal(address cOracleAddr, uint256 ts) public view returns (uint256 price_, uint256 actualTs) {
-    function test_GetPriceByExternal() public {
+    function test_GetPriceByExternal() view public {
         (uint p, uint ts) = oracle.getPriceByExternal(oracle.getCOracle("BTC"), 1692954000);
         console2.log("p %s", p);
         console2.log("ts %s", ts);

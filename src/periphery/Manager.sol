@@ -36,7 +36,7 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
     using SafeCast for uint256;
     using SafeCast for int256;
 
-    uint256 public nextId;
+    uint256 public override nextId;
     mapping(uint256 => Position) private _positions;
 
     modifier isAuthorizedForToken(uint256 tokenId) {

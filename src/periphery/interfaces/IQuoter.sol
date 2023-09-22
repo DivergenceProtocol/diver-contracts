@@ -2,10 +2,12 @@
 
 pragma solidity ^0.8.19;
 
-import { IManagerState, Position, PositionState } from "../interfaces/IManagerState.sol";
+import { PositionState, Position } from "../types/common.sol";
 import { BattleTradeParams } from "../../core/params/BattleTradeParams.sol";
 
-interface IQuoter is IManagerState {
+interface IQuoter {
+    function positions(uint256 tokenId) external view returns (Position memory);
+
     /**
      * @notice Get all positions belong to an account
      */

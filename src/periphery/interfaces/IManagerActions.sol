@@ -44,8 +44,11 @@ interface IManagerLiquidity {
         returns (uint256 collateral, uint256 spear, uint256 shield, uint256 spearObligation, uint256 shieldObligation);
 
     /// @notice withdraw obligation, it will be call after removeLiquidity
+    /// @notice tokenId The id of the nft
     function withdrawObligation(uint256 tokenId) external;
 
+    /// @notice after removeLiquidity users can call redeemObligation to get their collateral by spending stoken
+    /// @param tokenId The id of the nft 
     function redeemObligation(uint256 tokenId) external;
 }
 
@@ -53,7 +56,7 @@ interface IManagerTrade is ITradeCallback {
     event Traded(address recipient, TradeType tradeType, uint256 amountIn, uint256 amountOut);
 
     /// @notice buySpear or buyShield
-    /// @param mtp The params of trade
+    /// @param mtp The params of trade in manager contract
     /// @return amountOut The amount of spear/shield that user who bought spear/shield got
     function trade(TradeParams calldata mtp) external returns (uint256, uint256, uint256);
 }

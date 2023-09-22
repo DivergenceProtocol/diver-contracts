@@ -118,7 +118,7 @@ contract Handler is CommonBase, StdCheats, StdUtils, StdAssertions {
         }
         (, uint256 expiries) = getTS(Period.WEEKLY);
         bk = getBattleKey(collateral, "BTC", expiries, 26_000e18);
-        CreateAndInitBattleParams memory params = getCreateBattleParams(bk, oracle, TickMath.getSqrtRatioAtTick(0));
+        CreateAndInitBattleParams memory params = getCreateBattleParams(bk, TickMath.getSqrtRatioAtTick(0));
         vm.prank(users[0]);
         battle = createBattle(manager, params);
         spear = IBattle(battle).spear();
@@ -364,7 +364,7 @@ contract Handler is CommonBase, StdCheats, StdUtils, StdAssertions {
                 TradeParams memory params =
                     getTradeParams(bk, isSpear ? TradeType.BUY_SPEAR : TradeType.BUY_SHIELD, -int256(diff), currentActor, 0, 0, 300);
                 console2.log("current actor %s", currentActor);
-                trade(currentActor, manager, params, quoter);
+                trade(currentActor, manager, params);
                 sBalance = TestERC20(isSpear ? spear : shield).balanceOf(currentActor);
                 // assertGe(sBalance, diff, "not enough stoken");
             }
@@ -393,7 +393,7 @@ contract Handler is CommonBase, StdCheats, StdUtils, StdAssertions {
         }
     }
 
-    function shouldSkipTrade(TradeType tt) internal returns (bool) {
+    function shouldSkipTrade(TradeType tt) internal view returns (bool) {
         (uint160 p,,) = IBattle(battle).slot0();
         if (tt == TradeType.BUY_SPEAR) {
             if (p == TickMath.MIN_SQRT_RATIO + 1) {
@@ -427,7 +427,7 @@ contract Handler is CommonBase, StdCheats, StdUtils, StdAssertions {
         amount = adjustAmount(amount);
 
         TradeParams memory param = getTradeParams(bk, TradeType.BUY_SPEAR, amount, currentActor, 0, 0, 300);
-        (uint256 amountIn, uint256 amountOut, uint256 amountFee) = trade(currentActor, manager, param, quoter);
+        (uint256 amountIn, uint256 amountOut, uint256 amountFee) = trade(currentActor, manager, param);
         ghost_tradeAmount += amountIn;
         ghost_collatealIn += amountIn;
         ghost_totalFee += amountFee;
@@ -472,7 +472,7 @@ contract Handler is CommonBase, StdCheats, StdUtils, StdAssertions {
         amount = adjustAmount(amount);
         console2.log("user collateral balance: %s", TestERC20(collateral).balanceOf(currentActor));
         TradeParams memory param = getTradeParams(bk, TradeType.BUY_SHIELD, amount, currentActor, 0, 0, 300);
-        (uint256 amountIn, uint256 amountOut, uint256 amountFee) = trade(currentActor, manager, param, quoter);
+        (uint256 amountIn, uint256 amountOut, uint256 amountFee) = trade(currentActor, manager, param);
         ghost_tradeAmount += amountIn;
         ghost_collatealIn += amountIn;
         ghost_totalFee += amountFee;
@@ -655,7 +655,6 @@ contract Handler is CommonBase, StdCheats, StdUtils, StdAssertions {
                 vm.startPrank(currentActor);
                 // remove liquidity
                 // multicall
-                bytes[] memory data = new bytes[](2);
                 callData.push(abi.encodeWithSelector(IManager(manager).removeLiquidity.selector, i, currentActor));
                 callData.push(abi.encodeWithSelector(IManager(manager).withdrawObligation.selector, i, currentActor));
                 Multicall(manager).multicall(callData);

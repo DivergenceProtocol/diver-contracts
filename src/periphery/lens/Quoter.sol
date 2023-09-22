@@ -19,7 +19,8 @@ import { AddLiqParams } from "../params/Params.sol";
 import { LiquidityType } from "../../core/types/enums.sol";
 import { DiverLiquidityAmounts } from "../libs/DiverLiquidityAmounts.sol";
 import { DiverSqrtPriceMath } from "../../core/libs/DiverSqrtPriceMath.sol";
-import { IQuoter, IManagerState, Position, PositionState } from "../interfaces/IQuoter.sol";
+import { IQuoter, Position, PositionState } from "../interfaces/IQuoter.sol";
+import {IManagerState} from "../interfaces/IManagerState.sol";
 import { PositionInfo, BattleKey, GrowthX128, Owed, LiquidityType, Outcome } from "../../core/types/common.sol";
 
 contract Quoter is Multicall, ITradeCallback, IQuoter {

@@ -65,7 +65,7 @@ library DiverSqrtPriceMath {
         console2.log("bl   %s", bl);
         uint256 f1 = b_2l > bs + l ? b_2l - bs - l : bs + l - b_2l;
         console2.log("f1   %s", f1);
-        uint qd = FixedPoint96.Q96 * unit;
+        // uint qd = FixedPoint96.Q96 * unit;
         uint256 f_2 = FullMath.mulDiv(f1, f1 / unit, FixedPoint96.Q96);
         console2.log("f2   %s", f_2);
         uint256 fourB_2L_2 = 4*FullMath.mulDiv(bl, bl, FixedPoint96.Q96*unit);
@@ -84,10 +84,10 @@ library DiverSqrtPriceMath {
         console2.log("nextSqrtPrice %s", nextSqrtPrice);
     }
 
-    function getNextSqrtPriceFromShield(uint160 sqrtPrice, uint128 liquidity, uint256 amount, uint unit) internal view returns (uint160 nextSqrtPrice) {
+    function getNextSqrtPriceFromShield(uint160 sqrtPrice, uint128 liquidity, uint256 amount, uint unit) internal pure returns (uint160 nextSqrtPrice) {
         uint256 b_2 = FullMath.mulDiv(sqrtPrice, sqrtPrice, FixedPoint96.Q96);
         uint256 l = FullMath.mulDiv(liquidity, FixedPoint96.Q96, 1);
-        uint256 l_2 = FullMath.mulDiv(liquidity, liquidity, unit);
+        // uint256 l_2 = FullMath.mulDiv(liquidity, liquidity, unit);
         uint256 b_2l = FullMath.mulDiv(b_2, l, FixedPoint96.Q96);
         uint256 bs = FullMath.mulDiv(sqrtPrice, amount, 1);
         uint256 bl = FullMath.mulDiv(sqrtPrice, liquidity, 1);

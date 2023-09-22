@@ -59,11 +59,11 @@ contract DivergenceTradeInvariant is Test {
     /// forge-config: default.invariant.depth = 1000
     function invariant_TradeAmount() public {
         handler.callSummary();
-        address manager = handler.manager();
-        address battle = handler.battle();
-        address collateral = handler.collateral();
-        uint256 totalSpear = IERC20(handler.spear()).totalSupply();
-        uint256 totalShield = IERC20(handler.shield()).totalSupply();
+        // address manager = handler.manager();
+        // address battle = handler.battle();
+        // address collateral = handler.collateral();
+        // uint256 totalSpear = IERC20(handler.spear()).totalSupply();
+        // uint256 totalShield = IERC20(handler.shield()).totalSupply();
         // It will check something to prove trades are ok.
         uint cAmount = handler.ghost_total_camount();
         uint spearAmount = handler.ghost_total_samount_spear();

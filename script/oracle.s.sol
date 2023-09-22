@@ -21,7 +21,6 @@ contract OracleSet is BaseScript {
 
     function setPriceForTest() public {
         Oracle oracle = Oracle(address(0xcA4988Dc5002E966E361e7d8A927b2201b955408));
-        address owner = oracle.owner();
 
         symbols.push("BTC");
         symbols.push("ETH");
