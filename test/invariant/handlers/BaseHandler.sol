@@ -152,7 +152,7 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
         tickUpper = int24(bound(tickUpper, tickLower + 1, TickMath.MAX_TICK));
         amount = uint128(bound(uint256(amount), 1e6, 100_000e18));
         AddLiqParams memory param = getAddLiquidityParams(bk, currentActor, tickLower, tickUpper, LiquidityType.COLLATERAL, amount, 300);
-        (uint256 tokenId,,) = IManager(manager).addLiquidity(param);
+        (uint256 tokenId,) = IManager(manager).addLiquidity(param);
         return (amount, tokenId);
     }
 

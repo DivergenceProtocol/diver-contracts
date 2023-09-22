@@ -53,7 +53,7 @@ function getAddLiquidityParams(
 }
 
 function addLiquidity(address sender, address manager, AddLiqParams memory params, address quoter) returns(uint tokenId) {
-    (tokenId, ,) = IManager(manager).addLiquidity(params);
+    (tokenId, ) = IManager(manager).addLiquidity(params);
     console2.log("log@ =====>begin addLiquidity user: %s <======", sender);
     console2.log("log@ battleKey collateral: %s", params.battleKey.collateral);
     console2.log("log@ battleKey underlying: %s", params.battleKey.underlying);

@@ -30,7 +30,7 @@ interface IManagerLiquidity {
 
     /// @notice add liquidity
     /// @param params The params of add liquidity
-    function addLiquidity(AddLiqParams calldata params) external returns (uint256 tokenId, uint128 liquidity, uint256 seed);
+    function addLiquidity(AddLiqParams calldata params) external returns (uint256 tokenId, uint128 liquidity);
 
     /// @notice remove liquidity, one nft will call this function once
     /// @param tokenId The id of the nft
