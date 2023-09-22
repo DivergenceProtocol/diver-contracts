@@ -85,25 +85,25 @@ contract ManagerTrade is Mint {
         vm.startPrank(trader);
         TradeParams memory params = getTradeParams(defaultBattleKey, TradeType.BUY_SPEAR, 10e18, bob, 0, 0, 300);
         TradeParams memory params2 = getTradeParams(defaultBattleKey, TradeType.BUY_SHIELD, 10e18, bob, 0, 0, 300);
-        trade(trader, manager, params, quoter);
-        trade(trader, manager, params2, quoter);
-        trade(trader, manager, params, quoter);
-        trade(trader, manager, params2, quoter);
-        trade(trader, manager, params, quoter);
-        trade(trader, manager, params2, quoter);
-        trade(trader, manager, params2, quoter);
-        trade(trader, manager, params, quoter);
-        trade(trader, manager, params2, quoter);
-        trade(trader, manager, params, quoter);
-        trade(trader, manager, params2, quoter);
-        trade(trader, manager, params, quoter);
-        trade(trader, manager, params, quoter);
-        trade(trader, manager, params2, quoter);
-        trade(trader, manager, params, quoter);
-        trade(trader, manager, params2, quoter);
-        trade(trader, manager, params, quoter);
-        trade(trader, manager, params2, quoter);
-        trade(trader, manager, params, quoter);
+        trade(trader, manager, params);
+        trade(trader, manager, params2);
+        trade(trader, manager, params);
+        trade(trader, manager, params2);
+        trade(trader, manager, params);
+        trade(trader, manager, params2);
+        trade(trader, manager, params2);
+        trade(trader, manager, params);
+        trade(trader, manager, params2);
+        trade(trader, manager, params);
+        trade(trader, manager, params2);
+        trade(trader, manager, params);
+        trade(trader, manager, params);
+        trade(trader, manager, params2);
+        trade(trader, manager, params);
+        trade(trader, manager, params2);
+        trade(trader, manager, params);
+        trade(trader, manager, params2);
+        trade(trader, manager, params);
         vm.stopPrank();
     }
 
@@ -111,15 +111,15 @@ contract ManagerTrade is Mint {
         vm.startPrank(trader);
         TradeParams memory params = getTradeParams(defaultBattleKey, TradeType.BUY_SPEAR, 20e18, bob, 0, 0, 300);
         TradeParams memory params2 = getTradeParams(defaultBattleKey, TradeType.BUY_SHIELD, 20e18, bob, 0, 0, 300);
-        trade(trader, manager, params, quoter);
-        trade(trader, manager, params2, quoter);
-        trade(trader, manager, params, quoter);
-        trade(trader, manager, params2, quoter);
-        trade(trader, manager, params, quoter);
-        trade(trader, manager, params2, quoter);
-        trade(trader, manager, params, quoter);
-        trade(trader, manager, params2, quoter);
-        trade(trader, manager, params, quoter);
+        trade(trader, manager, params);
+        trade(trader, manager, params2);
+        trade(trader, manager, params);
+        trade(trader, manager, params2);
+        trade(trader, manager, params);
+        trade(trader, manager, params2);
+        trade(trader, manager, params);
+        trade(trader, manager, params2);
+        trade(trader, manager, params);
         vm.stopPrank();
     }
 
@@ -220,7 +220,7 @@ contract ManagerTrade is Mint {
         (address spear, address shield) = IBattleState(battleAddr).spearAndShield();
         // bob will buy shield
         vm.startPrank(bob);
-        (uint160 sqrtPriceX96Start, int24 tickStart,) = IBattleState(battleAddr).slot0();
+        // (uint160 sqrtPriceX96Start, int24 tickStart,) = IBattleState(battleAddr).slot0();
         // buy exact out spear
         specific = bound(specific, -6000000e18, -1e6);
         // int specific = -500e18;
@@ -228,7 +228,7 @@ contract ManagerTrade is Mint {
         (uint cAmount1, uint sAmount1, , ,) = wrapTrade(params1, battleAddr, spear, shield);
         TradeParams memory params2 = params1;
         params2.tradeType = TradeType.BUY_SHIELD;
-        (uint cAmount2, uint sAmount2, uint fAmount2, uint160 sqrtPriceX96End, int24 tickEnd) = wrapTrade(params2, battleAddr, spear, shield);
+        (uint cAmount2, uint sAmount2, , , ) = wrapTrade(params2, battleAddr, spear, shield);
 
         assertEq(sAmount1, sAmount2, "sAmount violated");
         assertGe(cAmount1+cAmount2, sAmount1>sAmount2 ? sAmount1 : sAmount2, "cAmount >= sAmount1");
@@ -245,15 +245,15 @@ contract ManagerTrade is Mint {
         (address spear, address shield) = IBattleState(battleAddr).spearAndShield();
         // bob will buy shield
         vm.startPrank(bob);
-        (uint160 sqrtPriceX96Start, ,) = IBattleState(battleAddr).slot0();
+        // (, ,) = IBattleState(battleAddr).slot0();
         // buy exact out spear
         specific = bound(specific, -6000000e18, -1e6);
         // int specific = -500e18;
         TradeParams memory params1 = getTradeParams(defaultBattleKey, TradeType.BUY_SHIELD, specific, bob, 0, 0, 300);
-        (uint cAmount1, uint sAmount1, uint fAmount1,, ) = wrapTrade(params1, battleAddr, spear, shield);
+        (uint cAmount1, uint sAmount1, , , ) = wrapTrade(params1, battleAddr, spear, shield);
         TradeParams memory params2 = params1;
         params2.tradeType = TradeType.BUY_SPEAR;
-        (uint cAmount2, uint sAmount2, , uint160 sqrtPriceX96End, int24 tickEnd) = wrapTrade(params2, battleAddr, spear, shield);
+        (uint cAmount2, uint sAmount2, , , ) = wrapTrade(params2, battleAddr, spear, shield);
 
         assertEq(sAmount1, sAmount2, "sAmount violated");
         assertGe(cAmount1+cAmount2, sAmount1>sAmount2 ? sAmount1 : sAmount2, "cAmount >= sAmount1");
@@ -271,15 +271,15 @@ contract ManagerTrade is Mint {
         (address spear, address shield) = IBattleState(battleAddr).spearAndShield();
         // bob will buy shield
         vm.startPrank(bob);
-        (uint160 sqrtPriceX96Start, int24 tickStart,) = IBattleState(battleAddr).slot0();
+        // (uint160 sqrtPriceX96Start, ,) = IBattleState(battleAddr).slot0();
         // buy exact out spear
         specific = int(bound(specific, 1e6, 1e24));
         TradeParams memory params1 = getTradeParams(defaultBattleKey, TradeType.BUY_SPEAR, specific, bob, 0, 0, 300);
-        (uint cAmount1, uint sAmount1, uint fAmount1, , ) = wrapTrade(params1, battleAddr, spear, shield);
+        (uint cAmount1, uint sAmount1, , , ) = wrapTrade(params1, battleAddr, spear, shield);
         TradeParams memory params2 = params1;
         params2.tradeType = TradeType.BUY_SHIELD;
         params2.amountSpecified = -int(sAmount1);
-        (uint cAmount2, uint sAmount2, , uint160 sqrtPriceX96End, int24 tickEnd) = wrapTrade(params2, battleAddr, spear, shield);
+        (uint cAmount2, , , , ) = wrapTrade(params2, battleAddr, spear, shield);
 
         assertGe(cAmount1+cAmount2, sAmount1, "c1+c2 >= s1");
         // assertGt(sqrtPriceX96Start, sqrtPriceX96End, "price violated");
@@ -300,11 +300,11 @@ contract ManagerTrade is Mint {
         (address spear, address shield) = IBattleState(battleAddr).spearAndShield();
         // bob will buy shield
         vm.startPrank(bob);
-        (uint160 sqrtPriceX96Start, ,) = IBattleState(battleAddr).slot0();
+        // (uint160 sqrtPriceX96Start, ,) = IBattleState(battleAddr).slot0();
         // buy exact out spear
         specific = int(bound(specific, 1e6, 1e26));
         TradeParams memory params1 = getTradeParams(defaultBattleKey, TradeType.BUY_SPEAR, specific, bob, 0, 0, 300);
-        (uint cAmount1, uint sAmount1, uint fAmount1, uint160 sqrtPriceX96End1, ) = wrapTrade(params1, battleAddr, spear, shield);
+        (uint cAmount1, uint sAmount1, , , ) = wrapTrade(params1, battleAddr, spear, shield);
 
         (sqrtStarts, 
         sqrtEnds,
@@ -321,7 +321,7 @@ contract ManagerTrade is Mint {
         TradeParams memory params2 = params1;
         params2.tradeType = TradeType.BUY_SHIELD;
         params2.amountSpecified = int(fakeC2);
-        (uint cAmount2, uint sAmount2,  uint fAmount2, ,) = wrapTrade(params2, battleAddr, spear, shield);
+        (uint cAmount2, uint sAmount2,  , ,) = wrapTrade(params2, battleAddr, spear, shield);
         console2.log("c1+c2 %s", cAmount1+cAmount2);
         console2.log("s1 %s", sAmount1);
         console2.log("s2 %s", sAmount2);
@@ -344,13 +344,13 @@ contract ManagerTrade is Mint {
         specific = int(bound(specific, 1e6, 1e24));
         // specific = 50e18;
         TradeParams memory params1 = getTradeParams(defaultBattleKey, TradeType.BUY_SPEAR, specific, bob, 0, 0, 300);
-        (uint cAmount1, uint sAmount1, , uint160 sqrtPriceX96End1, ) = wrapTrade(params1, battleAddr, spear, shield);
+        (uint cAmount1, uint sAmount1, , , ) = wrapTrade(params1, battleAddr, spear, shield);
 
         TradeParams memory params2 = params1;
         params2.tradeType = TradeType.BUY_SHIELD;
         assertGt(sAmount1, cAmount1, "s1 should greater than c1");
         params2.amountSpecified = int(sAmount1 - cAmount1);
-        (uint cAmount2, uint sAmount2, uint fAmount2, uint160 sqrtPriceX96End, int24 tickEnd) = wrapTrade(params2, battleAddr, spear, shield);
+        (uint cAmount2, uint sAmount2, , uint160 sqrtPriceX96End, ) = wrapTrade(params2, battleAddr, spear, shield);
 
         uint128 liqui = Battle(battleAddr).liquidity();
 
@@ -374,8 +374,8 @@ contract ManagerTrade is Mint {
         address battleAddr = super.addOneLiquidity();
         (address spear, address shield) = IBattleState(battleAddr).spearAndShield();
         vm.startPrank(bob);
-        TradeParams memory params1 = getTradeParams(defaultBattleKey, TradeType.BUY_SPEAR, 100e18, bob, 0, 0, 300);
-        (uint cAmount1, uint sAmount1, uint fAmount1, uint160 sqrtPriceX96End1, ) = wrapTrade(params1, battleAddr, spear, shield);
+        TradeParams memory params1 = getTradeParams(defaultBattleKey, TradeType.BUY_SPEAR, 2000e18, bob, 0, 0, 300);
+        (uint cAmount1, uint sAmount1, , uint160 sqrtPriceX96End1, ) = wrapTrade(params1, battleAddr, spear, shield);
         console2.log("cAmount1 %", cAmount1);
         console2.log("sAmount1 %", sAmount1);
         console2.log("nextPrice %s", sqrtPriceX96End1);
@@ -390,11 +390,11 @@ contract ManagerTrade is Mint {
         (address spear, address shield) = IBattleState(battleAddr).spearAndShield();
         // bob will buy shield
         vm.startPrank(bob);
-        (uint160 sqrtPriceX96Start, ,) = IBattleState(battleAddr).slot0();
+        // (uint160 sqrtPriceX96Start, ,) = IBattleState(battleAddr).slot0();
         // buy exact out spear
         specific = int(bound(specific, 1e6, 1e26));
         TradeParams memory params1 = getTradeParams(defaultBattleKey, TradeType.BUY_SHIELD, specific, bob, 0, 0, 300);
-        (uint cAmount1, uint sAmount1, uint fAmount1, uint160 sqrtPriceX96End1, ) = wrapTrade(params1, battleAddr, spear, shield);
+        (uint cAmount1, uint sAmount1, , , ) = wrapTrade(params1, battleAddr, spear, shield);
 
         (sqrtStarts, 
         sqrtEnds,
@@ -411,7 +411,7 @@ contract ManagerTrade is Mint {
         TradeParams memory params2 = params1;
         params2.tradeType = TradeType.BUY_SPEAR;
         params2.amountSpecified = int(fakeC2);
-        (uint cAmount2, uint sAmount2, uint fAmount2 , ,) = wrapTrade(params2, battleAddr, spear, shield);
+        (uint cAmount2, uint sAmount2, , ,) = wrapTrade(params2, battleAddr, spear, shield);
         console2.log("c1+c2 %s", cAmount1+cAmount2);
         console2.log("s1 %s", sAmount1);
         console2.log("s2 %s", sAmount2);
@@ -424,7 +424,7 @@ contract ManagerTrade is Mint {
     }
 
 
-    function test_maxLiquidityPerTick() public {
+    function test_maxLiquidityPerTick() view public {
         uint128 liquidity = Tick.tickSpacingToMaxLiquidityPerTick(1);
         uint128 uniMaxLiqui = UniTick.tickSpacingToMaxLiquidityPerTick(1);
         console2.log("uni max Liqui          %s", uniMaxLiqui);

@@ -57,7 +57,7 @@ contract Oracle is Ownable {
         fixPrices[externalOracleOf[symbol]][ts] = price;
     }
 
-    /// @notice Helper for retrieving prices from an external oracle
+    /// @notice Helper for retrieving prices from an external oracle.
     /// @param cOracle Oracle interface for retrieving price feed
     /// @param id The roundId using which price is retrieved
     /// @param ts Timestamp for the asset price
@@ -71,16 +71,30 @@ contract Oracle is Ownable {
     )
         private
         view
-        returns (uint256 p, uint256 actualTs)
+        returns (uint256 finalPrice, uint256 finalTs)
     {
         // get next price after 8am utc
         uint80 phaseId = getPhaseIdFromRoundId(id);
-
+        uint256 price;
+        uint256 actualTs;
+        // get price in two phase and select price that closer to 08 utc
         for (uint80 i = phaseId; i >= 1; i--) {
-            (p, actualTs) = getPriceInPhase(cOracle, getStartRoundId(i), i == phaseId ? id : getEndRoundId(i), ts);
-            if (p != 0) {
-                p *= decimalDiff;
-                break;
+            (uint p, uint aTs) = getPriceInPhase(cOracle, getStartRoundId(i), i == phaseId ? id : getEndRoundId(i), ts);
+            if (price == 0) {
+                // first phase
+                price = p;
+                actualTs = aTs;
+            } else {
+                if (p != 0) {
+                    // it is not first phase and closer than pre phase
+                    price = p;
+                    actualTs = aTs;
+                } else {
+                    // now, price is the closest to 08 utc
+                    price *= decimalDiff;
+                    finalPrice = price;
+                    finalTs = actualTs;
+                }
             }
         }
     }
@@ -93,7 +107,7 @@ contract Oracle is Ownable {
 
     function updatePhase(uint80 roundId, string memory symbol) public {
         try AggregatorV3Interface(getCOracle(symbol)).getRoundData(roundId) returns (
-            uint80 roundIdF, int256 answerF, uint256 startedAtF, uint256 updatedAtF, uint80 answeredInRoundF
+            uint80, int256 answerF, uint256 startedAtF, uint256, uint80
         ) {
             if (answerF == 0 && startedAtF == 0) {
                 revert("invalid roundId");
@@ -105,7 +119,7 @@ contract Oracle is Ownable {
             roundId++;
             while (true) {
                 try AggregatorV3Interface(getCOracle(symbol)).getRoundData(roundId) returns (
-                    uint80 roundIdNew, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
+                    uint80, int256 answer, uint256, uint256 updatedAt, uint80
                 ) {
                     if (answer == 0 && updatedAt == 0) {
                         endRoundId[phaseId] = (roundId - 1);
@@ -128,11 +142,11 @@ contract Oracle is Ownable {
         }
     }
 
-    function getPhaseIdFromRoundId(uint80 roundId) internal view returns (uint80) {
+    function getPhaseIdFromRoundId(uint80 roundId) internal pure returns (uint80) {
         return roundId >> 64;
     }
 
-    function getStartRoundId(uint80 phaseId) internal view returns (uint80) {
+    function getStartRoundId(uint80 phaseId) internal pure returns (uint80) {
         return (phaseId << 64) | 1;
     }
 
@@ -152,14 +166,15 @@ contract Oracle is Ownable {
         returns (uint256 p, uint256 actualTs)
     {
         for (uint80 i = end; i >= start; i--) {
-            (, int256 answer, uint256 startedAt,,) = cOracle.getRoundData(i);
-            if (startedAt < ts) {
-                break;
-            }
-            if (startedAt >= ts && startedAt - ts <= 1 hours) {
-                p = answer.toUint256();
-                actualTs = startedAt;
-            }
+            try cOracle.getRoundData(i) returns (uint80, int256 answer, uint256 startedAt, uint256, uint80) {
+                if (startedAt > 0 && startedAt < ts) {
+                    break;
+                }
+                if (startedAt >= ts && startedAt - ts <= 1 hours) {
+                    p = answer.toUint256();
+                    actualTs = startedAt;
+                }
+            } catch { }
         }
     }
 }

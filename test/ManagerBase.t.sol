@@ -27,7 +27,7 @@ contract CreateAndInit is ReadyFixture {
         console2.log(block.timestamp);
         (, uint256 expiries) = getTS(Period.BIWEEKLY);
         defaultBattleKey = getBattleKey(collateral, "BTC", expiries, 20_000e18);
-        defaultCreateBattleParams = getCreateBattleParams(defaultBattleKey, oracle, TickMath.getSqrtRatioAtTick(0));
+        defaultCreateBattleParams = getCreateBattleParams(defaultBattleKey, TickMath.getSqrtRatioAtTick(0));
     }
 
     event BattleCreated(BattleKey bk, address battleAddr, address spear, address shield, Fee fee);
@@ -52,6 +52,7 @@ contract CreateAndInit is ReadyFixture {
         address battleAddr1 = createBattle(manager, defaultCreateBattleParams);
         vm.expectRevert(Errors.BattleExisted.selector);
         address battleAddr2 = createBattle(manager, defaultCreateBattleParams);
+        assertEq(battleAddr1, battleAddr2);
     }
 
     bytes[] public callData;

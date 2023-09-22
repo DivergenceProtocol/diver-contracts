@@ -19,7 +19,7 @@ function getBattleKey(address collateral, string memory underlying, uint256 expi
     return BattleKey({ collateral: collateral, underlying: underlying, expiries: expiries, strikeValue: strikeValue });
 }
 
-function getCreateBattleParams(BattleKey memory bk, address oracle, uint160 startSqrtPriceX96) pure returns (CreateAndInitBattleParams memory) {
+function getCreateBattleParams(BattleKey memory bk, uint160 startSqrtPriceX96) pure returns (CreateAndInitBattleParams memory) {
     return CreateAndInitBattleParams({ bk: bk, sqrtPriceX96: startSqrtPriceX96 });
 }
 
@@ -53,7 +53,7 @@ function getAddLiquidityParams(
 }
 
 function addLiquidity(address sender, address manager, AddLiqParams memory params, address quoter) returns(uint tokenId) {
-    (tokenId, ,) = IManager(manager).addLiquidity(params);
+    (tokenId, ) = IManager(manager).addLiquidity(params);
     console2.log("log@ =====>begin addLiquidity user: %s <======", sender);
     console2.log("log@ battleKey collateral: %s", params.battleKey.collateral);
     console2.log("log@ battleKey underlying: %s", params.battleKey.underlying);
@@ -77,7 +77,7 @@ function removeLiquidity(address sender, address manager, uint256 tokenId) {
 }
 
 function redeemObligation(address sender, address manager, uint tokenId) {
-    
+    console2.log("redeemObligation %s", sender);
     IManager(manager).redeemObligation(tokenId);
 
 }
@@ -105,7 +105,7 @@ function getTradeParams(
     });
 }
 
-function trade(address sender, address manager, TradeParams memory params, address quoter) returns (uint256 amtIn, uint256 amtOut, uint256 amtFee) {
+function trade(address sender, address manager, TradeParams memory params) returns (uint256 amtIn, uint256 amtOut, uint256 amtFee) {
     console2.log("log@ =====>begin trade user: %s <======", sender);
 
     (amtIn, amtOut, amtFee) = IManager(manager).trade(params);
@@ -143,7 +143,7 @@ function settle(address sender, address battle) {
     console2.log("log@ ");
 }
 
-function withdrawObligation(address sender, address manager, uint256 tokenId, address quoter) {
+function withdrawObligation(address sender, address manager, uint256 tokenId) {
     IManager(manager).withdrawObligation(tokenId);
     console2.log("log@ =====>begin withdrawObligation user: %s <======", sender);
     console2.log("log@ tokenId: %s", tokenId);
@@ -154,7 +154,8 @@ function withdrawObligation(address sender, address manager, uint256 tokenId, ad
     console2.log("log@ ");
 }
 
-function position(address sender, address manager, address quoter) {
+function position(address sender, address manager, address quoter) view {
+    console2.log("manager %s", manager);
     Position[] memory ps = IQuoter(quoter).accountPositions(sender);
     console2.log("log@ =====>begin position user: %s <======", sender);
     for (uint256 i; i < ps.length; i++) {
@@ -178,7 +179,7 @@ function position(address sender, address manager, address quoter) {
     console2.log("log@ =====>end position user: %s <======", sender);
 }
 
-function positionTokenId(uint256 tokenId, address manager, address quoter) {
+function positionTokenId(uint256 tokenId, address manager, address quoter) view {
     Position memory p = IQuoter(quoter).positions(tokenId);
     address sender = ERC721Enumerable(manager).ownerOf(tokenId);
     console2.log("log@ =====>begin position user: %s <======", sender);

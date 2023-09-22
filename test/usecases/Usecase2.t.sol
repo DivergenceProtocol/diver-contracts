@@ -72,12 +72,12 @@ contract Usecase2 is ManagerTrade {
         vm.stopPrank();
 
         // bob add liquidity by spear
-        (uint160 sqrtPriceX96, int24 tick, bool unlocked) = IBattle(battleAddr).slot0();
+        (uint160 sqrtPriceX96, int24 tick, ) = IBattle(battleAddr).slot0();
         console2.log("sqrtPriceX96: %s", sqrtPriceX96);
         console2.log("tick: %s", tick);
         AddLiqParams memory mintParams2 = getAddLiquidityParams(defaultBattleKey, bob, tick - 1000, tick - 100, LiquidityType.SPEAR, 20e18, 300);
         vm.startPrank(bob);
-        (address spearAddr, address shieldAddr) = IBattle(battleAddr).spearAndShield();
+        (address spearAddr, ) = IBattle(battleAddr).spearAndShield();
         TestERC20(spearAddr).approve(manager, type(uint256).max);
         addLiquidity(bob, manager, mintParams2, quoter);
         vm.stopPrank();
@@ -94,7 +94,7 @@ contract Usecase2 is ManagerTrade {
         settle(msg.sender, battleAddr);
         exercise(msg.sender, battleAddr);
 
-        withdrawObligation(dave, manager, 1, quoter);
+        withdrawObligation(dave, manager, 1);
         position(dave, manager, quoter);
         console2.log("============>>Usecase2 end<<============");
     }

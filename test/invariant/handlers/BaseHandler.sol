@@ -91,7 +91,7 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
         }
         (, uint256 expiries) = getTS(Period.WEEKLY);
         bk = getBattleKey(collateral, "BTC", expiries, 26_000e18);
-        CreateAndInitBattleParams memory params = getCreateBattleParams(bk, oracle, TickMath.getSqrtRatioAtTick(0));
+        CreateAndInitBattleParams memory params = getCreateBattleParams(bk, TickMath.getSqrtRatioAtTick(0));
         vm.prank(users[0]);
         battle = createBattle(manager, params);
         spear = IBattle(battle).spear();
@@ -152,7 +152,7 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
         tickUpper = int24(bound(tickUpper, tickLower + 1, TickMath.MAX_TICK));
         amount = uint128(bound(uint256(amount), 1e6, 100_000e18));
         AddLiqParams memory param = getAddLiquidityParams(bk, currentActor, tickLower, tickUpper, LiquidityType.COLLATERAL, amount, 300);
-        (uint256 tokenId,,) = IManager(manager).addLiquidity(param);
+        (uint256 tokenId,) = IManager(manager).addLiquidity(param);
         return (amount, tokenId);
     }
 
@@ -177,9 +177,9 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
         // deal(collateral, currentActor, amount);
         // TestERC20(collateral).approve(manager, type(uint256).max);
         TradeParams memory param = getTradeParams(bk, TradeType.BUY_SPEAR, amount, currentActor, 0, 0, 300);
-        (uint cAmount, uint sAmount, uint fAmount) = trade(currentActor, manager, param, quoter);
-        ghost_cAmount += cAmount;
-        ghost_spearAmount += sAmount;
+        (uint cAmount0, uint sAmount0, ) = trade(currentActor, manager, param);
+        ghost_cAmount += cAmount0;
+        ghost_spearAmount += sAmount0;
         // ghost_tradeAmount += amount;
         // uint256 balance = IERC20(spear).balanceOf(currentActor);
         // if (balance > 0) {

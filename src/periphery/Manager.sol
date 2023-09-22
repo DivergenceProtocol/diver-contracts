@@ -34,7 +34,7 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
     using SafeCast for uint256;
     using SafeCast for int256;
 
-    uint256 public nextId;
+    uint256 public override nextId;
     mapping(uint256 => Position) private _positions;
 
     modifier isAuthorizedForToken(uint256 tokenId) {
@@ -45,7 +45,7 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
     constructor(address _arena, address _weth) ERC721("Divergence Protocol Positions NFT", "DIVER-POS") PeripheryImmutableState(_arena, _weth) { }
 
     /// @inheritdoc IManagerLiquidity
-    function addLiquidity(AddLiqParams calldata params) external override returns (uint256 tokenId, uint128 liquidity, uint256 seed) {
+    function addLiquidity(AddLiqParams calldata params) external override returns (uint256 tokenId, uint128 liquidity) {
         if (block.timestamp > params.deadline) {
             revert Errors.Deadline();
         }
@@ -68,7 +68,7 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
             spearObligation: 0,
             shieldObligation: 0
         });
-        emit LiquidityAdded(battleAddr, params.recipient, tokenId, liquidity, params.liquidityType, seed);
+        emit LiquidityAdded(battleAddr, params.recipient, tokenId, liquidity, params.liquidityType, params.amount);
     }
 
     function updateInsideLast(PositionInfo memory pb, Position storage pm) private {
@@ -238,14 +238,7 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
 
     function tradeCallback(uint256 cAmount, uint256 sAmount, bytes calldata _data) external override {
         TradeCallbackData memory data = abi.decode(_data, (TradeCallbackData));
-        // address battle = IArenaCreation(arena).getBattle(data.battleKey);
         CallbackValidation.verifyCallback(arena, data.battleKey);
-        // if (battle == address(0)) {
-        //     revert Errors.BattleNotExist();
-        // }
-        // if (msg.sender != battle) {
-        //     revert Errors.CallerNotBattle();
-        // }
         pay(data.battleKey.collateral, data.payer, msg.sender, cAmount);
     }
 

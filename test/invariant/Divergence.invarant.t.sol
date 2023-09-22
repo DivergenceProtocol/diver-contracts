@@ -23,8 +23,8 @@ contract DivergenceInvariant is Test {
 
     function setUp() public virtual {
         // targetContract(manager);
-        // handler = new Handler(6, 6000, 6000, 6000);
-        handler = new Handler(6,600, 600, 600, true);
+        handler = new Handler(18, 6000, 6000, 6000, true);
+        // handler = new Handler(6,600, 600, 600, true);
         // handler = new Handler(5, 15, 15);
 
         // handler.getManager();
@@ -87,7 +87,7 @@ contract DivergenceInvariant is Test {
         }
         handler.callSummary();
         handler.ghost_run_end();
-        address manager = handler.manager();
+        // address manager = handler.manager();
         address quoter = handler.quoter();
         // assertGt(uint256(uint160(manager)), 0, "manager zero");
         IERC721Enumerable nft = IERC721Enumerable(address(handler.manager()));
@@ -111,7 +111,7 @@ contract DivergenceInvariant is Test {
     }
 
     /// forge-config: default.invariant.runs = 1
-    /// forge-config: default.invariant.depth = 3000
+    /// forge-config: default.invariant.depth = 30000
     function invariant_Zero() public {
         if (handler.withdrawAndExerciseCalled()) {
             handler.callSummary();
@@ -151,7 +151,4 @@ contract DivergenceInvariant is Test {
         }
     }
 
-    function invariant_CallSummary() public {
-        handler.callSummary();
-    }
 }

@@ -36,13 +36,13 @@ contract DiverSqrtPriceMathTest is Test {
         console2.log("amount: %s", amount);
     }
 
-    function testTick() public {
+    function testTick() view public {
         uint160 p = 58_137_576_983_530_239_198_007_442_646;
         int24 tick = TickMath.getTickAtSqrtRatio(p);
         console2.log("tick: %s", tick);
     }
 
-    function testFuzz_GetNextSqrtPriceFromSpear(int24 tickLower, int24 tickUpper, uint spearAmount) public {
+    function testFuzz_GetNextSqrtPriceFromSpear(int24 tickLower, int24 tickUpper, uint spearAmount) view public {
         uint decimal = 18;
         // vm.assume(decimal <=18 );
 
@@ -87,7 +87,7 @@ contract DiverSqrtPriceMathTest is Test {
 
     }
 
-    function testFuzz_GetNextSqrtPriceFromShield(int24 tickLower, int24 tickUpper, uint shieldAmount) public {
+    function testFuzz_GetNextSqrtPriceFromShield(int24 tickLower, int24 tickUpper, uint shieldAmount) view public {
         uint decimal = 18;
         // vm.assume(decimal <=18 );
 

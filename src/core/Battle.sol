@@ -37,7 +37,6 @@ import { DeploymentParams } from "./params/DeploymentParams.sol";
 import { TradeCache, TradeState, StepComputations } from "./types/TradeTypes.sol";
 import { LiquidityType, BattleKey, Outcome, GrowthX128, TickInfo, PositionInfo, Fee, TradeType } from "./types/common.sol";
 
-
 /// @title Battle
 contract Battle is IBattle {
     using Tick for mapping(int24 => TickInfo);
@@ -249,7 +248,6 @@ contract Battle is IBattle {
 
 
     function trade(BattleTradeParams memory params) external returns (uint256 cAmount, uint256 sAmount, uint256 fAmount) {
-        uint256 index;
         if (block.timestamp >= _bk.expiries) {
             revert Errors.BattleEnd();
         }
