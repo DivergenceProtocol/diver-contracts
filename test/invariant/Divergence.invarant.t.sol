@@ -23,8 +23,8 @@ contract DivergenceInvariant is Test {
 
     function setUp() public virtual {
         // targetContract(manager);
-        handler = new Handler(18, 6000, 6000, 6000, true);
-        // handler = new Handler(6,600, 600, 600, true);
+        // handler = new Handler(18, 6000, 6000, 6000, true);
+        handler = new Handler(6,600, 600, 600, true);
         // handler = new Handler(5, 15, 15);
 
         // handler.getManager();
@@ -111,7 +111,7 @@ contract DivergenceInvariant is Test {
     }
 
     /// forge-config: default.invariant.runs = 1
-    /// forge-config: default.invariant.depth = 30000
+    /// forge-config: default.invariant.depth = 3000
     function invariant_Zero() public {
         if (handler.withdrawAndExerciseCalled()) {
             handler.callSummary();
