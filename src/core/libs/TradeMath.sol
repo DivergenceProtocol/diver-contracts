@@ -13,45 +13,45 @@ import { TradeType } from "../types/enums.sol";
 library TradeMath {
     using SafeCast for int256;
 
-    error NotSupportYet();
-
     function computeTradeStep(ComputeTradeStepParams memory params)
         internal
         pure
         returns (uint160 sqrtRatioNextX96, uint256 amountIn, uint256 amountOut)
     {
-        if (params.amountRemaining < 0) {
-            revert NotSupportYet();
-        }
         bool isSpear = params.tradeType == TradeType.BUY_SPEAR;
-        if (isSpear) {
-            // buy spear
-            uint256 cap = SqrtPriceMath.getAmount0Delta(params.sqrtRatioCurrentX96, params.sqrtRatioTargetX96, params.liquidity, false);
-            if (params.amountRemaining < cap) {
-                sqrtRatioNextX96 = SqrtPriceMath.getNextSqrtPriceFromInput(params.sqrtRatioCurrentX96, params.liquidity, params.amountRemaining, true);
-                amountOut = DiverSqrtPriceMath.getSTokenDelta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, false);
+        bool exactIn = params.amountRemaining >= 0;
 
-                // values.amountIn = params.amountRemaining;
-                amountIn = SqrtPriceMath.getAmount0Delta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, true);
-            } else {
+        // calculate next price
+        if (exactIn) {
+            amountIn = isSpear
+                ? SqrtPriceMath.getAmount0Delta(params.sqrtRatioCurrentX96, params.sqrtRatioTargetX96, params.liquidity, true)
+                : SqrtPriceMath.getAmount1Delta(params.sqrtRatioCurrentX96, params.sqrtRatioTargetX96, params.liquidity, true);
+            uint256 amount = uint256(params.amountRemaining);
+            if (amount >= amountIn) {
                 sqrtRatioNextX96 = params.sqrtRatioTargetX96;
-                amountOut = DiverSqrtPriceMath.getSTokenDelta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, false);
-
-                amountIn = SqrtPriceMath.getAmount0Delta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, true);
+            } else {
+                sqrtRatioNextX96 = SqrtPriceMath.getNextSqrtPriceFromInput(params.sqrtRatioCurrentX96, params.liquidity, amount, isSpear);
+                amountIn = amount;
             }
+            amountOut = DiverSqrtPriceMath.getSTokenDelta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, false);
         } else {
-            // buy shield
-            uint256 cap = SqrtPriceMath.getAmount1Delta(params.sqrtRatioCurrentX96, params.sqrtRatioTargetX96, params.liquidity, false);
-            if (params.amountRemaining < cap) {
-                sqrtRatioNextX96 =
-                    SqrtPriceMath.getNextSqrtPriceFromInput(params.sqrtRatioCurrentX96, params.liquidity, params.amountRemaining, false);
-                amountOut = DiverSqrtPriceMath.getSTokenDelta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, false);
-
-                amountIn = SqrtPriceMath.getAmount1Delta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, true);
-            } else {
+            amountOut = DiverSqrtPriceMath.getSTokenDelta(params.sqrtRatioCurrentX96, params.sqrtRatioTargetX96, params.liquidity, false);
+            uint256 amount = uint256(-params.amountRemaining);
+            if (amount >= amountOut) {
                 sqrtRatioNextX96 = params.sqrtRatioTargetX96;
-                amountOut = DiverSqrtPriceMath.getSTokenDelta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, false);
-
+            } else {
+                sqrtRatioNextX96 = isSpear
+                    ? DiverSqrtPriceMath.getNextSqrtPriceFromSpear(
+                        params.sqrtRatioCurrentX96, params.liquidity, uint256(-params.amountRemaining), params.unit
+                    )
+                    : DiverSqrtPriceMath.getNextSqrtPriceFromShield(
+                        params.sqrtRatioCurrentX96, params.liquidity, uint256(-params.amountRemaining), params.unit
+                    );
+                amountOut = amount;
+            }
+            if (isSpear) {
+                amountIn = SqrtPriceMath.getAmount0Delta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, true);
+            } else {
                 amountIn = SqrtPriceMath.getAmount1Delta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, true);
             }
         }

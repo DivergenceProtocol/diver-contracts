@@ -52,5 +52,4 @@ struct TickInfo {
 struct PositionInfo {
     uint128 liquidity;
     GrowthX128 insideLast;
-    Owed owed;
 }

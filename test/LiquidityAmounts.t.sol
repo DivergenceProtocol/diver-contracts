@@ -115,7 +115,7 @@ contract LiquidityAmountsTest is BaseTest {
         assertApproxEqAbs(shield2, shield1, 1);
     }
 
-    function test_LiquidityFromCs() public {
+    function test_LiquidityFromCs() view public {
         uint160 sqrtPriceAX96 = TickMath.getSqrtRatioAtTick(-3);
         uint160 sqrtPriceBX96 = TickMath.getSqrtRatioAtTick(45_948);
         // uint160 sqrtPriceCX96 = TickMath.getSqrtRatioAtTick();

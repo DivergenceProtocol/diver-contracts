@@ -27,7 +27,7 @@ contract CreateAndInit is ReadyFixture {
         console2.log(block.timestamp);
         (, uint256 expiries) = getTS(Period.BIWEEKLY);
         defaultBattleKey = getBattleKey(collateral, "BTC", expiries, 20_000e18);
-        defaultCreateBattleParams = getCreateBattleParams(defaultBattleKey, oracle, TickMath.getSqrtRatioAtTick(0));
+        defaultCreateBattleParams = getCreateBattleParams(defaultBattleKey, TickMath.getSqrtRatioAtTick(0));
     }
 
     event BattleCreated(BattleKey bk, address battleAddr, address spear, address shield, Fee fee);
@@ -52,15 +52,16 @@ contract CreateAndInit is ReadyFixture {
         address battleAddr1 = createBattle(manager, defaultCreateBattleParams);
         vm.expectRevert(Errors.BattleExisted.selector);
         address battleAddr2 = createBattle(manager, defaultCreateBattleParams);
+        assertEq(battleAddr1, battleAddr2);
     }
 
     bytes[] public callData;
 
     function test_CreateBattleByMulticall() public {
         CreateAndInitBattleParams memory params0 = defaultCreateBattleParams;
-        params0.battleKey.strikeValue = 10_000e18;
+        params0.bk.strikeValue = 10_000e18;
         CreateAndInitBattleParams memory params1 = defaultCreateBattleParams;
-        params1.battleKey.strikeValue = 30_000e18;
+        params1.bk.strikeValue = 30_000e18;
         bytes memory data0 = abi.encodeWithSelector(IBattleInitializer.createAndInitializeBattle.selector, params0);
         bytes memory data1 = abi.encodeWithSelector(IBattleInitializer.createAndInitializeBattle.selector, params1);
         callData.push(data0);

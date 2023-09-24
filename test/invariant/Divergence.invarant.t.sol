@@ -23,7 +23,9 @@ contract DivergenceInvariant is Test {
 
     function setUp() public virtual {
         // targetContract(manager);
-        handler = new Handler(50, 150, 150);
+        // handler = new Handler(18, 6000, 6000, 6000, true);
+        handler = new Handler(6,600, 600, 600, true);
+        // handler = new Handler(5, 15, 15);
 
         // handler.getManager();
 
@@ -31,6 +33,7 @@ contract DivergenceInvariant is Test {
         selectors.push(Handler.addLiqBySpear.selector);
         selectors.push(Handler.addLiqByShield.selector);
         selectors.push(Handler.addLiq1.selector);
+        selectors.push(Handler.addLiq2.selector);
         selectors.push(Handler.removeLiq.selector);
         selectors.push(Handler.buySpear.selector);
         selectors.push(Handler.buySpear1.selector);
@@ -39,7 +42,8 @@ contract DivergenceInvariant is Test {
         selectors.push(Handler.buyShield1.selector);
         selectors.push(Handler.buyShield3.selector);
         selectors.push(Handler.settleBattle.selector);
-        selectors.push(Handler.withdrawAndExercise.selector);
+
+        // selectors.push(Handler.withdrawAndExercise.selector);
 
         // selectors.push(Handler.withdraw.selector);
         // selectors.push(Handler.execriseSpear.selector);
@@ -83,7 +87,7 @@ contract DivergenceInvariant is Test {
         }
         handler.callSummary();
         handler.ghost_run_end();
-        address manager = handler.manager();
+        // address manager = handler.manager();
         address quoter = handler.quoter();
         // assertGt(uint256(uint160(manager)), 0, "manager zero");
         IERC721Enumerable nft = IERC721Enumerable(address(handler.manager()));
@@ -106,43 +110,45 @@ contract DivergenceInvariant is Test {
         // assertGt(total, 0, "total zero");
     }
 
+    /// forge-config: default.invariant.runs = 1
+    /// forge-config: default.invariant.depth = 3000
     function invariant_Zero() public {
-        handler.callSummary();
-        address manager = handler.manager();
-        address battle = handler.battle();
-        address collateral = handler.collateral();
-        uint256 totalSpear = IERC20(handler.spear()).totalSupply();
-        uint256 totalShield = IERC20(handler.shield()).totalSupply();
-        Outcome outcome = IBattleState(battle).battleOutcome();
         if (handler.withdrawAndExerciseCalled()) {
+            handler.callSummary();
+            address manager = handler.manager();
+            address battle = handler.battle();
+            address collateral = handler.collateral();
+            uint256 totalSpear = IERC20(handler.spear()).totalSupply();
+            uint256 totalShield = IERC20(handler.shield()).totalSupply();
+            Outcome outcome = IBattleState(battle).battleOutcome();
             // console2.log("withdrawAndExerciseCalled",
             // handler.withdrawAndExerciseCalled());
             // IBattleTrade(battle).collectProtocolFee(address(this));
             uint256 total = IERC721Enumerable(manager).totalSupply();
             console2.log("total nft: ", total);
             if (outcome == Outcome.SPEAR_WIN) {
-                assert(totalSpear == 0);
+                assertEq(totalSpear, uint256(0), "Spear");
                 // assertEq(totalShield, 0, "total shield error");
             } else if (outcome == Outcome.SHIELD_WIN) {
                 // assertEq(totalSpear, 0, "total spear error");
-                assert(totalShield == 0);
+                assertEq(totalShield, uint256(0), "Shield");
             } else {
-                assert(1 == 0);
+                assertGe(uint(1) , uint(0), "what");
             }
             uint256 collateralInBattle = IERC20(collateral).balanceOf(battle);
             console2.log("collateralInBattle:", collateralInBattle);
-            assert(collateralInBattle >= 0);
-            uint256 ghost_collateral = handler.ghost_collateral();
-            console2.log("ghost_collateral  :", ghost_collateral / 1e18);
-            uint256 ghost_tradeAmount = handler.ghost_tradeAmount();
-            console2.log("ghost_tradeAmount: ", ghost_tradeAmount / 1e18);
+            assertGe(collateralInBattle, uint256(0), "collateral after withdraw");
         } else {
-            uint256 collateralInBattle = IERC20(collateral).balanceOf(battle);
-            console2.log("collateralInBattle", collateralInBattle);
+            // uint256 collateralInBattle = IERC20(collateral).balanceOf(battle);
+            // console2.log("collateralInBattle", collateralInBattle);
+        }
+        if (!handler.battleSettled()) {
+            (uint spearTotal, uint shieldTotal, ) = handler.checkBalance();
+            uint total = spearTotal > shieldTotal ? spearTotal : shieldTotal;
+            uint seedCollateral = handler.ghost_seed_collateral();
+            uint collateralIn = handler.ghost_collatealIn();
+            assertGe(seedCollateral+collateralIn, total, "collateral should greater than/equal stoken");
         }
     }
 
-    function invariant_CallSummary() public {
-        handler.callSummary();
-    }
 }

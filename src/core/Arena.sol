@@ -6,9 +6,10 @@ import { IERC20 } from "@oz/token/ERC20/IERC20.sol";
 import { Ownable } from "@oz/access/Ownable.sol";
 import { Clones } from "@oz/proxy/Clones.sol";
 import { IERC20Metadata } from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
+import { Strings } from "@oz/utils/Strings.sol";
 import { IOracle } from "./interfaces/IOracle.sol";
 import { Errors } from "./errors/Errors.sol";
-import { IArena, Fee, Outcome, BattleKey, CreateBattleParams } from "./interfaces/IArena.sol";
+import { IArena, Fee, Outcome, BattleKey, CreateAndInitBattleParams } from "./interfaces/IArena.sol";
 import { IBattleInit } from "./interfaces/battle/IBattleInit.sol";
 import { IBattleState } from "./interfaces/battle/IBattleState.sol";
 import { IBattleActions, IBattleMintBurn } from "./interfaces/battle/IBattleActions.sol";
@@ -25,7 +26,6 @@ contract Arena is IArena, Ownable {
     address[] private battleList;
     address public immutable battleImpl;
     bool public isPermissionless;
-    DeploymentParams public deploymentParameters;
     mapping(bytes32 => address) public battles;
     mapping(string => Fee) public fees;
 
@@ -33,12 +33,17 @@ contract Arena is IArena, Ownable {
     mapping(string => bool) public underlyingWhitelist;
 
     constructor(address _oracleAddr, address _battleImpl) {
+        if (_oracleAddr == address(0) || _battleImpl == address(0)) {
+            revert Errors.ZeroAddress();
+        }
         oracleAddr = _oracleAddr;
         battleImpl = _battleImpl;
     }
 
     function setFeeForUnderlying(string calldata underlying, Fee calldata _fee) external onlyOwner {
+        require(keccak256(abi.encode(underlying)) != keccak256(abi.encode("")), "underlying null");
         fees[underlying] = _fee;
+        emit FeeChanged(underlying, _fee);
     }
 
     event CollateralWhitelistChanged(address collateral, bool state);
@@ -66,59 +71,66 @@ contract Arena is IArena, Ownable {
     }
 
     function setManager(address _manager) external onlyOwner {
+        if (_manager == address(0)) {
+            revert Errors.ZeroAddress();
+        }
+        address old = managerAddr;
         managerAddr = _manager;
+        emit ManagerChanged(old, _manager);
     }
 
-    function createBattle(BattleKey memory bk) external override returns (address battle) {
-        if (msg.sender != managerAddr) {
+    function createBattle(CreateAndInitBattleParams memory params) external override returns (address battle) {
+        address ma = managerAddr;
+        if (msg.sender != ma) {
             revert Errors.CallerNotManager();
         }
         // collaterl address error
-        if (bk.collateral == address(0)) {
+        if (params.bk.collateral == address(0)) {
             revert Errors.ZeroAddress();
         }
 
         // not supported
         if (!isPermissionless) {
-            if (!collateralWhitelist[bk.collateral]) {
+            if (!collateralWhitelist[params.bk.collateral]) {
                 revert Errors.NotSupported();
             }
         }
 
-        if (!underlyingWhitelist[bk.underlying]) {
+        if (!underlyingWhitelist[params.bk.underlying]) {
             revert Errors.NotSupported();
         }
 
         // expiries must at 8am utc
-        if ((bk.expiries - 28_800) % 86_400 != 0 || block.timestamp >= bk.expiries) {
+        if ((params.bk.expiries - 28_800) % 86_400 != 0 || block.timestamp >= params.bk.expiries) {
             revert Errors.NotSupportedExpiries();
         }
 
-        bk.strikeValue = getAdjustPrice(bk.strikeValue);
-        bytes32 battleKeyB32 = keccak256(abi.encode(bk.collateral, bk.underlying, bk.expiries, bk.strikeValue));
+        params.bk.strikeValue = getAdjustPrice(params.bk.strikeValue);
+        require(params.bk.strikeValue != 0, "strike value zero");
+        bytes32 battleKeyB32 = keccak256(abi.encode(params.bk.collateral, params.bk.underlying, params.bk.expiries, params.bk.strikeValue));
         if (battles[battleKeyB32] != address(0)) {
             revert Errors.BattleExisted();
         }
-        deploymentParameters = DeploymentParams({
-            arenaAddr: address(this),
-            battleKey: bk,
-            oracleAddr: oracleAddr,
-            cOracleAddr: IOracle(oracleAddr).getCOracle(bk.underlying),
-            fee: fees[bk.underlying],
-            spear: address(0),
-            shield: address(0),
-            manager: managerAddr
-        });
         battle = Clones.cloneDeterministic(battleImpl, battleKeyB32);
-        uint8 decimals = IERC20Metadata(bk.collateral).decimals();
-        address spear = address(new SToken("Spear", "SPEAR", decimals, battle));
-        address shield = address(new SToken("Shield", "SHIELD", decimals, battle));
-        deploymentParameters.spear = spear;
-        deploymentParameters.shield = shield;
+        uint8 decimals = IERC20Metadata(params.bk.collateral).decimals();
+        string memory indexString = Strings.toString(battleList.length);
+        address spear = address(new SToken(string.concat("Spear", indexString), string.concat("SPEAR", indexString), decimals, battle));
+        address shield = address(new SToken(string.concat("Shield", indexString), string.concat("SHIELD", indexString), decimals, battle));
+        DeploymentParams memory deploymentParameters = DeploymentParams({
+            arenaAddr: address(this),
+            battleKey: params.bk,
+            oracleAddr: oracleAddr,
+            cOracleAddr: IOracle(oracleAddr).getCOracle(params.bk.underlying),
+            fee: fees[params.bk.underlying],
+            spear: spear,
+            shield: shield,
+            manager: ma,
+            sqrtPriceX96: params.sqrtPriceX96
+        });
         battles[battleKeyB32] = battle;
         battleList.push(battle);
-        IBattleInit(battle).initState(deploymentParameters);
-        emit BattleCreated(bk, battle, spear, shield, fees[bk.underlying]);
+        IBattleInit(battle).init(deploymentParameters);
+        emit BattleCreated(params.bk, battle, spear, shield, fees[params.bk.underlying]);
     }
 
     function getBattle(BattleKey memory battleKey) external view override returns (address battle) {
@@ -146,8 +158,6 @@ contract Arena is IArena, Ownable {
                 endTS: endTS,
                 spear: spear,
                 shield: shield,
-                spearBalance: 0,
-                shieldBalance: 0,
                 result: result
             });
         }

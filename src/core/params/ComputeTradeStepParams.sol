@@ -9,5 +9,6 @@ struct ComputeTradeStepParams {
     uint160 sqrtRatioCurrentX96;
     uint160 sqrtRatioTargetX96;
     uint128 liquidity;
-    uint256 amountRemaining;
+    int256 amountRemaining;
+    uint unit;
 }

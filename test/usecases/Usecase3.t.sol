@@ -38,12 +38,12 @@ contract Usecase3 is ManagerTrade {
         AddLiqParams memory addLiqParams = defaultAddLiqParams;
         addLiqParams.amount = 1000e18;
         vm.startPrank(alice);
-        addLiquidity(alice, manager, addLiqParams);
+        addLiquidity(alice, manager, addLiqParams, quoter);
         vm.stopPrank();
 
         AddLiqParams memory outRangeAddLiqParams = getAddLiquidityParams(defaultBattleKey, dave, -2000, -1500, LiquidityType.COLLATERAL, 1000e18, 300);
         vm.startPrank(dave);
-        addLiquidity(dave, manager, outRangeAddLiqParams);
+        addLiquidity(dave, manager, outRangeAddLiqParams, quoter);
         position(dave, manager, quoter);
         vm.stopPrank();
 
@@ -54,14 +54,14 @@ contract Usecase3 is ManagerTrade {
         vm.stopPrank();
 
         // bob add liquidity by spear
-        (uint160 sqrtPriceX96, int24 tick, bool unlocked) = IBattle(battleAddr).slot0();
+        (uint160 sqrtPriceX96, int24 tick, ) = IBattle(battleAddr).slot0();
         console2.log("sqrtPriceX96: %s", sqrtPriceX96);
         console2.log("tick: %s", tick);
         AddLiqParams memory mintParams2 = getAddLiquidityParams(defaultBattleKey, bob, tick - 1000, tick - 100, LiquidityType.SPEAR, 20e18, 300);
         vm.startPrank(bob);
-        (address spearAddr, address shieldAddr) = IBattle(battleAddr).spearAndShield();
+        (address spearAddr, ) = IBattle(battleAddr).spearAndShield();
         TestERC20(spearAddr).approve(manager, type(uint256).max);
-        addLiquidity(bob, manager, mintParams2);
+        addLiquidity(bob, manager, mintParams2, quoter);
         vm.stopPrank();
 
         trade100SpearAnd90Shield(carol);
@@ -72,11 +72,11 @@ contract Usecase3 is ManagerTrade {
 
         (, uint256 expiries) = getTS(Period.BIWEEKLY);
         skip(expiries + 1);
-        Oracle(oracle).setPrice(defaultCreateBattleParams.battleKey.underlying, expiries, 21_000e18);
+        Oracle(oracle).setPrice(defaultCreateBattleParams.bk.underlying, expiries, 21_000e18);
         settle(msg.sender, battleAddr);
         exercise(msg.sender, battleAddr);
 
-        withdrawObligation(dave, manager, 1, quoter);
+        withdrawObligation(dave, manager, 1);
         position(dave, manager, quoter);
         console2.log("============>>Usecase3 end<<============");
     }

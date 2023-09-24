@@ -36,14 +36,16 @@ contract GoerliManagerDeploy is BaseScript {
         address arenaAddr = address(0);
         address collateralToken = address(0);
         address wethAddr = address(0);
-        address oracle = _deployOracle();
+        oracle = _deployOracle();
         DeployAddrs memory das = DeployAddrs({
             owner: deployer,
             arenaAddr: arenaAddr,
             collateralToken: collateralToken,
             wethAddr: wethAddr,
             quoter: quoter,
-            oracle: oracle
+            oracle: oracle,
+            decimal: 18,
+            hasFee: true
         });
         (manager, arena, oracle, collateral, quoter) = deploy(das);
 
@@ -52,43 +54,42 @@ contract GoerliManagerDeploy is BaseScript {
         // deployQuoter();
     }
 
-    function getBattleKey(uint256 strikeValue) internal returns (BattleKey memory) {
+    function getBattleKey(uint256 strikeValue) internal view returns (BattleKey memory) {
         (, uint256 expiries) = getTS(Period.WEEKLY);
         BattleKey memory bk = BattleKey({
             collateral: address(0xA87B4e604aCefd6Cf6059bb73a7b4e0bA90434DA),
             underlying: "BTC",
             expiries: expiries,
-            strikeValue: 25_000_000_000_000_000_000_000
+            strikeValue: strikeValue
         });
         return bk;
     }
 
-    function _deployOracle() private returns (address oracle) {
-        Oracle oracle = new Oracle();
+    function _deployOracle() private returns (address _oracle) {
+        Oracle oracleInst = new Oracle();
         symbols.push("BTC");
         symbols.push("ETH");
         oracles.push(address(0x8bdFc91FB3f89F4c211461B06afDe84Dc55bedc2));
         oracles.push(address(0x1B8e08a5457b12ae3CbC4233e645AEE2fA809e39));
-        oracle.setExternalOracle(symbols, oracles);
-        return address(oracle);
+        oracleInst.setExternalOracle(symbols, oracles);
+        _oracle = address(oracleInst);
     }
 
-    function createBattle() public virtual returns (address) {
-        BattleKey memory bk = getBattleKey(100_000e18);
-        int24 tick = 22;
-        // uint160 sqrtPriceX96 = TickMath.getSqrtRatioAtTick(22);
+    function createBattle() public virtual returns (address, address, address) {
+        BattleKey memory bk = getBattleKey(25000e18);
         uint160 sqrtPriceX96 = 79_228_162_514_264_337_593_543_950_336;
         CreateAndInitBattleParams memory params =
-            CreateAndInitBattleParams({ oracle: address(0x1947457d02Fafa47E39371b99E87951Fb3fb932c), battleKey: bk, sqrtPriceX96: sqrtPriceX96 });
+            CreateAndInitBattleParams({ bk: bk, sqrtPriceX96: sqrtPriceX96 });
         address battleAddr = IBattleInitializer(address(0xc35717a122b664Fc784De66cF9C27A2cc8cfb62d)).createAndInitializeBattle(params);
         address spear = IBattle(battleAddr).spear();
         address shield = IBattle(battleAddr).shield();
 
-        return battleAddr;
+        return (battleAddr, spear, shield);
     }
 
-    function deployQuoter() public {
-        Quoter quoter = new Quoter(address(0xC09619865f6EEAB0C87360D3200da0b6FA4034a1), address(0));
+    function deployQuoter() public returns(address) {
+        Quoter quoter0 = new Quoter(address(0xC09619865f6EEAB0C87360D3200da0b6FA4034a1), address(0));
+        return address(quoter0);
     }
 
     function doBaseThing() public {

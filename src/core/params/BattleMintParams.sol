@@ -10,5 +10,6 @@ struct BattleMintParams {
     int24 tickUpper;
     LiquidityType liquidityType;
     uint128 amount;
+    uint128 seed;
     bytes data;
 }

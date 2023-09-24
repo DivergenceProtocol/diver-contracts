@@ -20,7 +20,7 @@ contract Mint is CreateAndInit {
 
     function setUp() public virtual override {
         super.setUp();
-        defaultAddLiqParams = getAddLiquidityParams(defaultBattleKey, alice, 0, 5000, LiquidityType.COLLATERAL, 10_000_000e18, 300);
+        defaultAddLiqParams = getAddLiquidityParams(defaultBattleKey, alice, -2500, 2500, LiquidityType.COLLATERAL, 10_000_000e18, 300);
     }
 
     event Transfer(address indexed from, address indexed to, uint256 value);
@@ -33,6 +33,53 @@ contract Mint is CreateAndInit {
         vm.stopPrank();
         Position[] memory lis = IQuoter(quoter).accountPositions(alice);
         console2.log("lis %s", lis.length);
+        return battleAddr;
+    }
+
+    function addOneLiquidity() public virtual returns(address) {
+        address battleAddr = super.test();
+        assertGt(uint160(battleAddr), 0);
+        vm.startPrank(alice);
+        AddLiqParams memory p = getAddLiquidityParams(defaultBattleKey, alice, -30, 0, LiquidityType.COLLATERAL, 1, 300);
+        (, uint128 liquidity) = IManagerActions(manager).addLiquidity(p);
+        console2.log("liquidity %s", liquidity);
+        vm.stopPrank();
+        return battleAddr;
+    }
+
+    function addMultiLiquidity() public virtual returns(address) {
+        address battleAddr = super.test();
+        assertGt(uint160(battleAddr), 0);
+        vm.startPrank(alice);
+        AddLiqParams memory up1 = getAddLiquidityParams(defaultBattleKey, alice, 100, 200, LiquidityType.COLLATERAL, 10000e18, 300);
+        AddLiqParams memory up2 = getAddLiquidityParams(defaultBattleKey, alice, 300, 400, LiquidityType.COLLATERAL, 10000e18, 300);
+        AddLiqParams memory up3 = getAddLiquidityParams(defaultBattleKey, alice, 400, 500, LiquidityType.COLLATERAL, 10000e18, 300);
+        AddLiqParams memory up4 = getAddLiquidityParams(defaultBattleKey, alice, 600, 1000, LiquidityType.COLLATERAL, 1_000_000_000e18, 300);
+        AddLiqParams memory up5 = getAddLiquidityParams(defaultBattleKey, alice, 200, 800, LiquidityType.COLLATERAL, 100e18, 300);
+        AddLiqParams memory up6 = getAddLiquidityParams(defaultBattleKey, alice, 0, 100, LiquidityType.COLLATERAL, 100e18, 300);
+        // AddLiqParams memory up7 = getAddLiquidityParams(defaultBattleKey, alice, 0, 1000, LiquidityType.COLLATERAL, 10000000e18, 300);
+        AddLiqParams memory down1 = getAddLiquidityParams(defaultBattleKey, alice, -200, -100, LiquidityType.COLLATERAL, 10000e18, 300);
+        AddLiqParams memory down2 = getAddLiquidityParams(defaultBattleKey, alice, -400, -300, LiquidityType.COLLATERAL, 10000e18, 300);
+        AddLiqParams memory down3 = getAddLiquidityParams(defaultBattleKey, alice, -500, -400, LiquidityType.COLLATERAL, 10000e18, 300);
+        AddLiqParams memory down4 = getAddLiquidityParams(defaultBattleKey, alice, -1000, -600, LiquidityType.COLLATERAL, 1_000_000_000e18, 300);
+        AddLiqParams memory down5 = getAddLiquidityParams(defaultBattleKey, alice, -800, -200, LiquidityType.COLLATERAL, 10000e18, 300);
+        AddLiqParams memory down6 = getAddLiquidityParams(defaultBattleKey, alice, -100, 0, LiquidityType.COLLATERAL, 100e18, 300);
+        // AddLiqParams memory down7 = getAddLiquidityParams(defaultBattleKey, alice, -1000, 0, LiquidityType.COLLATERAL, 100000000e18, 300);
+        IManagerActions(manager).addLiquidity(up1);
+        IManagerActions(manager).addLiquidity(up2);
+        IManagerActions(manager).addLiquidity(up3);
+        IManagerActions(manager).addLiquidity(up4);
+        IManagerActions(manager).addLiquidity(up5);
+        IManagerActions(manager).addLiquidity(up6);
+        // IManagerActions(manager).addLiquidity(up7);
+        IManagerActions(manager).addLiquidity(down1);
+        IManagerActions(manager).addLiquidity(down2);
+        IManagerActions(manager).addLiquidity(down3);
+        IManagerActions(manager).addLiquidity(down4);
+        IManagerActions(manager).addLiquidity(down5);
+        IManagerActions(manager).addLiquidity(down6);
+        // IManagerActions(manager).addLiquidity(down7);
+        vm.stopPrank();
         return battleAddr;
     }
 }

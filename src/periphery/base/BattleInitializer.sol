@@ -12,11 +12,10 @@ import { PeripheryImmutableState } from "./PeripheryImmutableState.sol";
 import { Errors } from "../../core/errors/Errors.sol";
 
 abstract contract BattleInitializer is IBattleInitializer, PeripheryImmutableState {
-    function createAndInitializeBattle(CreateAndInitBattleParams memory params) external override returns (address battle) {
-        battle = IArenaCreation(arena).getBattle(params.battleKey);
+    function createAndInitializeBattle(CreateAndInitBattleParams calldata params) external override returns (address battle) {
+        battle = IArenaCreation(arena).getBattle(params.bk);
         if (battle == address(0)) {
-            (battle) = IArenaCreation(arena).createBattle(params.battleKey);
-            IBattleInit(battle).init(params.sqrtPriceX96);
+            (battle) = IArenaCreation(arena).createBattle(params);
         } else {
             revert Errors.BattleExisted();
         }

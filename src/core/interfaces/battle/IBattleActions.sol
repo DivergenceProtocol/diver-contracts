@@ -16,17 +16,15 @@ interface IBattleMintBurn {
     /// @param seedAmount The amount of collateral/spear/shield(according to liquidityType) spent
     event Minted(address indexed sender, LiquidityType liquidityType, int24 tickLower, int24 tickUpper, uint128 liquidity, uint256 seedAmount);
 
-    /// @param sender The address who burned the liquidity
     /// @param tickLower The lower tick of the position
     /// @param tickUpper The upper tick of the position
     /// @param liquidityType The type of liquidity burned
     /// @param liquidityAmount The amount of liquidity burned
-    event Burned(address indexed sender, int24 tickLower, int24 tickUpper, LiquidityType liquidityType, uint128 liquidityAmount);
+    event Burned(int24 tickLower, int24 tickUpper, LiquidityType liquidityType, uint128 liquidityAmount);
 
     /// @notice Mint liquidity
     /// @param mp The params of mint
-    /// @return seed The amount of collateral/spear/shield(according to liquidityType) spent
-    function mint(BattleMintParams memory mp) external returns (uint256 seed);
+    function mint(BattleMintParams memory mp) external;
 
     // / @notice Burn liquidity for a slot
     // / @dev
@@ -58,16 +56,13 @@ interface IBattleTrade {
         address indexed recipient, uint128 liquidity, uint256 amountIn, uint256 amountOut, TradeType tradeType, uint160 sqrtPriceX96, int24 tick
     );
 
-    event ProtocolFeeCollected(address recipient, uint256 amount);
 
     /// @notice trade spear/shield for collateral
     /// @param tp The params of trade
     /// @return cAmount The amount of collateral user spent
     /// @return sAmount The amount of spear/shield user received
-    function trade(BattleTradeParams memory tp) external returns (uint256 cAmount, uint256 sAmount);
+    function trade(BattleTradeParams memory tp) external returns (uint256 cAmount, uint256 sAmount, uint256 fAmount);
 
-    /// @notice collect protocol fee
-    function collectProtocolFee(address recipient) external;
 }
 
 interface IBattleBase {
@@ -78,6 +73,8 @@ interface IBattleBase {
     event Settled(address indexed sender, Outcome battleResult);
 
     event Exercised(address indexed sender, bool spearWin, uint256 amount);
+    
+    event ProtocolFeeCollected(address recipient, uint256 amount);
 
     /// @notice settle the battle
     /// battle will fetch the price of underlying asset, and determinate the
@@ -101,6 +98,9 @@ interface IBattleBase {
     /// @param recipient address which receive collateral
     /// @param amount the amount of collateral will receive
     function withdrawObligation(address recipient, uint256 amount) external;
+
+    /// @notice collect protocol fee
+    function collectProtocolFee(address recipient) external;
 }
 
 interface IBattleActions is IBattleMintBurn, IBattleTrade, IBattleBase { }

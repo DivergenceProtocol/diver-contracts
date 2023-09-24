@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import { SafeERC20 } from "@oz/token/ERC20/utils/SafeERC20.sol";
 import { IERC20 } from "@oz/token/ERC20/IERC20.sol";
+import { IERC20Metadata } from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 import { SafeCast } from "@oz/utils/math/SafeCast.sol";
 import { FullMath } from "@uniswap/v3-core/contracts/libraries/FullMath.sol";
 import { TickBitmap } from "@uniswap/v3-core/contracts/libraries/TickBitmap.sol";
@@ -34,8 +35,7 @@ import { BattleTradeParams } from "./params/BattleTradeParams.sol";
 import { ComputeTradeStepParams } from "./params/ComputeTradeStepParams.sol";
 import { DeploymentParams } from "./params/DeploymentParams.sol";
 import { TradeCache, TradeState, StepComputations } from "./types/TradeTypes.sol";
-import { LiquidityType, BattleKey, Outcome, GrowthX128, TickInfo } from "./types/common.sol";
-import { PositionInfo, Fee, Outcome, GrowthX128, TradeType } from "./types/common.sol";
+import { LiquidityType, BattleKey, Outcome, GrowthX128, TickInfo, PositionInfo, Fee, TradeType } from "./types/common.sol";
 
 /// @title Battle
 contract Battle is IBattle {
@@ -60,12 +60,13 @@ contract Battle is IBattle {
     address public override shield;
     address public cOracle;
 
+    uint256 public unit;
     uint256 public startTS;
     uint128 public liquidity;
     uint128 public maxLiquidityPerTick;
     uint128 public protocolFeeAmount;
 
-    Fee public fee;
+    Fee public override fee;
 
     BattleKey private _bk;
     GrowthX128 public global;
@@ -93,11 +94,15 @@ contract Battle is IBattle {
     }
 
     /// @notice init storage state variable, only be caled once
-    function initState(DeploymentParams memory params) external override {
+    function init(DeploymentParams memory params) external override {
         if (_bk.expiries != 0) {
             revert Errors.InitTwice();
         }
+        if (slot0.sqrtPriceX96 != 0) {
+            revert Errors.InitTwice();
+        }
         _bk = params.battleKey;
+        unit = 10 ** IERC20Metadata(_bk.collateral).decimals();
         oracle = params.oracleAddr;
         cOracle = params.cOracleAddr;
         startTS = block.timestamp;
@@ -106,15 +111,8 @@ contract Battle is IBattle {
         shield = params.shield;
         manager = params.manager;
         arena = address(msg.sender);
-    }
-
-    /// @notice init sqrtPriceX96, it will be called once
-    function init(uint160 startSqrtPriceX96) external override {
-        if (slot0.sqrtPriceX96 != 0) {
-            revert Errors.InitTwice();
-        }
-        slot0 = Slot0({ sqrtPriceX96: startSqrtPriceX96, tick: TickMath.getTickAtSqrtRatio(startSqrtPriceX96), unlocked: true });
-        maxLiquidityPerTick = Tick.tickSpacingToMaxLiquidityPerTick(1);
+        slot0 = Slot0({ sqrtPriceX96: params.sqrtPriceX96, tick: TickMath.getTickAtSqrtRatio(params.sqrtPriceX96), unlocked: true });
+        maxLiquidityPerTick = Tick.tickSpacingToMaxLiquidityPerTick(30);
     }
 
     function _updatePosition(UpdatePositionParams memory params) internal returns (PositionInfo storage position) {
@@ -129,10 +127,10 @@ contract Battle is IBattle {
             flippedUpper = ticks.update(params.mpParams.tickUpper, params.tick, params.mpParams.liquidityDelta, _global, maxLiquidityPerTick, true);
 
             if (flippedLower) {
-                tickBitmap.flipTick(params.mpParams.tickLower, 1);
+                tickBitmap.flipTick(params.mpParams.tickLower, 30);
             }
             if (flippedUpper) {
-                tickBitmap.flipTick(params.mpParams.tickUpper, 1);
+                tickBitmap.flipTick(params.mpParams.tickUpper, 30);
             }
         }
         GrowthX128 memory insideLast = ticks.getGrowthInside(params.mpParams.tickLower, params.mpParams.tickUpper, params.tick, _global);
@@ -153,47 +151,12 @@ contract Battle is IBattle {
         if (tickUpper > TickMath.MAX_TICK) revert Errors.TickInvalid();
     }
 
-    function _modifyPosition(ModifyPositionParams memory params) internal returns (PositionInfo storage position, uint256 seed) {
+    function _modifyPosition(ModifyPositionParams memory params) internal returns (PositionInfo storage position) {
         checkTicks(params.tickLower, params.tickUpper);
         position = _updatePosition(UpdatePositionParams(params, slot0.tick));
-        uint256 csp;
-        uint256 csh;
-        //
         if (params.liquidityDelta > 0) {
-            if (params.liquidityType == LiquidityType.COLLATERAL) {
-                if (slot0.tick < params.tickLower) {
-                    csp = SqrtPriceMath.getAmount0Delta(
-                        TickMath.getSqrtRatioAtTick(params.tickLower),
-                        TickMath.getSqrtRatioAtTick(params.tickUpper),
-                        uint128(params.liquidityDelta),
-                        true
-                    );
-                } else if (slot0.tick < params.tickUpper) {
-                    // current tick is inside the passed range
-                    csp = SqrtPriceMath.getAmount0Delta(
-                        slot0.sqrtPriceX96, TickMath.getSqrtRatioAtTick(params.tickUpper), uint128(params.liquidityDelta), false
-                    );
-                    csh = SqrtPriceMath.getAmount1Delta(
-                        TickMath.getSqrtRatioAtTick(params.tickLower), slot0.sqrtPriceX96, uint128(params.liquidityDelta), false
-                    );
-                    liquidity += uint128(params.liquidityDelta);
-                } else {
-                    csh = SqrtPriceMath.getAmount1Delta(
-                        TickMath.getSqrtRatioAtTick(params.tickLower),
-                        TickMath.getSqrtRatioAtTick(params.tickUpper),
-                        uint128(params.liquidityDelta),
-                        true
-                    );
-                }
-                seed = csp + csh;
-            } else if (params.liquidityType == LiquidityType.SPEAR) {
-                seed = DiverSqrtPriceMath.getSTokenDelta(
-                    TickMath.getSqrtRatioAtTick(params.tickLower), TickMath.getSqrtRatioAtTick(params.tickUpper), params.liquidityDelta
-                ).toUint256();
-            } else {
-                seed = DiverSqrtPriceMath.getSTokenDelta(
-                    TickMath.getSqrtRatioAtTick(params.tickLower), TickMath.getSqrtRatioAtTick(params.tickUpper), params.liquidityDelta
-                ).toUint256();
+            if (slot0.tick >= params.tickLower && slot0.tick < params.tickUpper) {
+                liquidity += uint128(params.liquidityDelta);
             }
         } else if (params.liquidityDelta < 0) {
             if (slot0.tick >= params.tickLower && slot0.tick < params.tickUpper) {
@@ -203,15 +166,16 @@ contract Battle is IBattle {
     }
 
     /// @inheritdoc IBattleMintBurn
-    function mint(BattleMintParams memory params) external override lock onlyManager returns (uint256 seed) {
+    function mint(BattleMintParams memory params) external override lock onlyManager {
         if (block.timestamp >= _bk.expiries) {
             revert Errors.BattleEnd();
         }
-        // check tick
-        if (params.liquidityType == LiquidityType.SPEAR && params.tickLower >= slot0.tick) {
+
+        if (params.liquidityType == LiquidityType.SPEAR && !(slot0.tick > params.tickUpper)) {
             revert Errors.TickInvalid();
         }
-        if (params.liquidityType == LiquidityType.SHIELD && params.tickUpper <= slot0.tick) {
+
+        if (params.liquidityType == LiquidityType.SHIELD && !(slot0.tick < params.tickLower)) {
             revert Errors.TickInvalid();
         }
         if (params.amount == 0) {
@@ -219,7 +183,7 @@ contract Battle is IBattle {
         }
 
         PositionInfo storage positionInfo;
-        (positionInfo, seed) = _modifyPosition(
+        positionInfo = _modifyPosition(
             ModifyPositionParams({
                 tickLower: params.tickLower,
                 tickUpper: params.tickUpper,
@@ -230,27 +194,27 @@ contract Battle is IBattle {
 
         if (params.liquidityType == LiquidityType.COLLATERAL) {
             uint256 balanceBefore = IERC20(_bk.collateral).balanceOf(address(this));
-            IMintCallback(msg.sender).mintCallback(seed, params.data);
-            if (IERC20(_bk.collateral).balanceOf(address(this)) < balanceBefore + seed) {
+            IMintCallback(msg.sender).mintCallback(params.seed, params.data);
+            if (IERC20(_bk.collateral).balanceOf(address(this)) < balanceBefore + params.seed) {
                 revert Errors.InsufficientCollateral();
             }
         } else if (params.liquidityType == LiquidityType.SPEAR) {
             uint256 balanceBefore = IERC20(spear).balanceOf(address(this));
-            IMintCallback(msg.sender).mintCallback(seed, params.data);
-            if (IERC20(spear).balanceOf(address(this)) < balanceBefore + seed) {
+            IMintCallback(msg.sender).mintCallback(params.seed, params.data);
+            if (IERC20(spear).balanceOf(address(this)) < balanceBefore + params.seed) {
                 revert Errors.InsufficientSpear();
             }
-            ISToken(spear).burn(address(this), seed);
+            ISToken(spear).burn(address(this), params.seed);
         } else {
             uint256 balanceBefore = IERC20(shield).balanceOf(address(this));
-            IMintCallback(msg.sender).mintCallback(seed, params.data);
-            if (IERC20(shield).balanceOf(address(this)) < balanceBefore + seed) {
+            IMintCallback(msg.sender).mintCallback(params.seed, params.data);
+            if (IERC20(shield).balanceOf(address(this)) < balanceBefore + params.seed) {
                 revert Errors.InsufficientShield();
             }
-            ISToken(shield).burn(address(this), seed);
+            ISToken(shield).burn(address(this), params.seed);
         }
 
-        emit Minted(msg.sender, params.liquidityType, params.tickLower, params.tickUpper, params.amount, seed);
+        emit Minted(msg.sender, params.liquidityType, params.tickLower, params.tickUpper, params.amount, params.seed);
     }
 
     /// @inheritdoc IBattleMintBurn
@@ -266,7 +230,7 @@ contract Battle is IBattle {
                 liquidityDelta: -int128(params.liquidityAmount)
             })
         );
-        emit Burned(params.recipient, params.tickLower, params.tickUpper, params.liquidityType, params.liquidityAmount);
+        emit Burned(params.tickLower, params.tickUpper, params.liquidityType, params.liquidityAmount);
     }
 
     /// comments see IBattleTrade
@@ -282,8 +246,8 @@ contract Battle is IBattle {
         }
     }
 
-    /// comments see IBattleTrade
-    function trade(BattleTradeParams memory params) external returns (uint256 cAmount, uint256 sAmount) {
+
+    function trade(BattleTradeParams memory params) external returns (uint256 cAmount, uint256 sAmount, uint256 fAmount) {
         if (block.timestamp >= _bk.expiries) {
             revert Errors.BattleEnd();
         }
@@ -302,6 +266,7 @@ contract Battle is IBattle {
         }
 
         bool isPriceDown = params.tradeType == TradeType.BUY_SPEAR;
+        bool exactIn = params.amountSpecified > 0;
         require(
             isPriceDown
                 ? params.sqrtPriceLimitX96 < slot0Start.sqrtPriceX96 && params.sqrtPriceLimitX96 > TickMath.MIN_SQRT_RATIO
@@ -325,7 +290,7 @@ contract Battle is IBattle {
             StepComputations memory step;
             step.sqrtPriceStartX96 = state.sqrtPriceX96;
 
-            (step.tickNext, step.initialized) = tickBitmap.nextInitializedTickWithinOneWord(state.tick, 1, isPriceDown);
+            (step.tickNext, step.initialized) = tickBitmap.nextInitializedTickWithinOneWord(state.tick, 30, isPriceDown);
             if (step.tickNext < TickMath.MIN_TICK) {
                 step.tickNext = TickMath.MIN_TICK;
             }
@@ -341,12 +306,17 @@ contract Battle is IBattle {
                         isPriceDown ? step.sqrtPriceNextX96 < params.sqrtPriceLimitX96 : step.sqrtPriceNextX96 > params.sqrtPriceLimitX96
                         ) ? params.sqrtPriceLimitX96 : step.sqrtPriceNextX96,
                     liquidity: state.liquidity,
-                    amountRemaining: state.amountSpecifiedRemaining
+                    amountRemaining: state.amountSpecifiedRemaining,
+                    unit: unit
                 })
             );
-
-            state.amountSpecifiedRemaining -= step.amountIn;
-            state.amountCalculated += step.amountOut;
+            if (exactIn) {
+                state.amountSpecifiedRemaining -= (step.amountIn).toInt256();
+                state.amountCalculated += (step.amountOut).toInt256();
+            } else {
+                state.amountSpecifiedRemaining += (step.amountOut).toInt256();
+                state.amountCalculated += (step.amountIn).toInt256();
+            }
 
             step.feeAmount = FullMath.mulDiv(step.amountOut, fee.transactionFee, 1e6);
             if (cache.feeProtocol > 0) {
@@ -395,11 +365,17 @@ contract Battle is IBattle {
         }
         liquidity = state.liquidity;
         global = state.global;
-        cAmount = params.amountSpecified - state.amountSpecifiedRemaining + state.transactionFee + state.protocolFee;
-        sAmount = state.amountCalculated;
+        if (exactIn) {
+            cAmount = uint256(params.amountSpecified) - uint256(state.amountSpecifiedRemaining) + state.transactionFee + state.protocolFee;
+            sAmount = uint256(state.amountCalculated);
+        } else {
+            cAmount = uint256(state.amountCalculated) + state.transactionFee + state.protocolFee;
+            sAmount = uint256(-(params.amountSpecified - state.amountSpecifiedRemaining));
+        }
         if (state.protocolFee > 0) {
             protocolFeeAmount += state.protocolFee;
         }
+        fAmount = state.transactionFee + state.protocolFee;
 
         uint256 colBalanceBefore = collateralBalance();
         ITradeCallback(msg.sender).tradeCallback(cAmount, sAmount, params.data);

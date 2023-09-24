@@ -6,13 +6,14 @@ import { SafeCast } from "@oz/utils/math/SafeCast.sol";
 import { FullMath } from "@uniswap/v3-core/contracts/libraries/FullMath.sol";
 import { UnsafeMath } from "@uniswap/v3-core/contracts/libraries/UnsafeMath.sol";
 import { FixedPoint96 } from "@uniswap/v3-core/contracts/libraries/FixedPoint96.sol";
+import { Math } from "@oz/utils/math/Math.sol";
 
 library DiverSqrtPriceMath {
     using SafeCast for uint256;
     using SafeCast for int128;
 
     /**
-     * todo formula
+     * formula
      * amount = liquidity * (sqrtRatioBX96 - sqrtRatioAX96) * (1 + 1 /
      * (sqrtRatioAX96 * sqrtRatioBX96));
      *
@@ -45,5 +46,40 @@ library DiverSqrtPriceMath {
         } else {
             amount = getSTokenDelta(sqrtPriceAX96, sqrtPriceBX96, uint128(liquidity), true).toInt256();
         }
+    }
+
+    function getNextSqrtPriceFromSpear(uint160 sqrtPrice, uint128 liquidity, uint256 amount, uint unit) internal pure returns (uint160 nextSqrtPrice) {
+        uint256 b_2 = FullMath.mulDiv(sqrtPrice, sqrtPrice, FixedPoint96.Q96);
+        uint256 l = FullMath.mulDiv(liquidity, FixedPoint96.Q96, 1);
+        uint256 b_2l = FullMath.mulDiv(b_2, l, FixedPoint96.Q96);
+        uint256 bs = FullMath.mulDiv(sqrtPrice, amount, 1);
+        uint256 bl = FullMath.mulDiv(sqrtPrice, liquidity, 1);
+        uint256 f1 = b_2l > bs + l ? b_2l - bs - l : bs + l - b_2l;
+        uint256 f_2 = FullMath.mulDiv(f1, f1 / unit, FixedPoint96.Q96);
+        uint256 fourB_2L_2 = 4*FullMath.mulDiv(bl, bl, FixedPoint96.Q96*unit);
+        
+        uint256 underSqrt = Math.sqrt((f_2 + fourB_2L_2)) * Math.sqrt(FixedPoint96.Q96) * Math.sqrt(unit);
+        uint256 numerator;
+        if (b_2l > bs + l) {
+            numerator = underSqrt + f1;
+        } else {
+            numerator = underSqrt -f1;
+        }
+        nextSqrtPrice = FullMath.mulDiv(numerator, FixedPoint96.Q96, 2 * bl).toUint160();
+    }
+
+    function getNextSqrtPriceFromShield(uint160 sqrtPrice, uint128 liquidity, uint256 amount, uint unit) internal pure returns (uint160 nextSqrtPrice) {
+        uint256 b_2 = FullMath.mulDiv(sqrtPrice, sqrtPrice, FixedPoint96.Q96);
+        uint256 l = FullMath.mulDiv(liquidity, FixedPoint96.Q96, 1);
+        // uint256 l_2 = FullMath.mulDiv(liquidity, liquidity, unit);
+        uint256 b_2l = FullMath.mulDiv(b_2, l, FixedPoint96.Q96);
+        uint256 bs = FullMath.mulDiv(sqrtPrice, amount, 1);
+        uint256 bl = FullMath.mulDiv(sqrtPrice, liquidity, 1);
+        uint256 f1 = b_2l + bs > l ? b_2l + bs - l : l - b_2l - bs;
+        uint256 f_2 = FullMath.mulDiv(f1, f1 / unit, FixedPoint96.Q96);
+        uint256 fourB_2L_2 = 4*FullMath.mulDiv(bl, bl, FixedPoint96.Q96*unit);
+        uint256 underSqrt = Math.sqrt((f_2 + fourB_2L_2)) * Math.sqrt(FixedPoint96.Q96) * Math.sqrt(unit);
+        uint256 numerator = underSqrt + b_2l + bs - l;
+        nextSqrtPrice = FullMath.mulDiv(numerator, FixedPoint96.Q96, 2 * bl).toUint160();
     }
 }

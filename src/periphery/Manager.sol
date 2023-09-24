@@ -9,8 +9,6 @@ import { Multicall } from "@oz/utils/Multicall.sol";
 import { SafeCast } from "@oz/utils/math/SafeCast.sol";
 import { FullMath } from "@uniswap/v3-core/contracts/libraries/FullMath.sol";
 import { FixedPoint128 } from "@uniswap/v3-core/contracts/libraries/FixedPoint128.sol";
-import { FullMath } from "@uniswap/v3-core/contracts/libraries/FullMath.sol";
-import { FixedPoint128 } from "@uniswap/v3-core/contracts/libraries/FixedPoint128.sol";
 import { BattleInitializer } from "./base/BattleInitializer.sol";
 import { LiquidityManagement } from "./base/LiquidityManagement.sol";
 import { PeripheryImmutableState } from "./base/PeripheryImmutableState.sol";
@@ -20,7 +18,6 @@ import { TradeType } from "../core/types/enums.sol";
 import { TickMath } from "../core/libs/TickMath.sol";
 import { Errors } from "../core/errors/Errors.sol";
 import { BattleBurnParams } from "../core/params/BattleBurnParams.sol";
-import { IBattleState } from "../core/interfaces/battle/IBattleState.sol";
 import { PositionInfo, BattleKey, GrowthX128, Owed, LiquidityType, Outcome } from "../core/types/common.sol";
 import { IArenaCreation } from "../core/interfaces/IArena.sol";
 import { IBattleState } from "../core/interfaces/battle/IBattleState.sol";
@@ -30,28 +27,32 @@ import { IManagerLiquidity } from "./interfaces/IManagerActions.sol";
 import { AddLiqParams } from "./params/Params.sol";
 import { TradeParams } from "./params/Params.sol";
 import { PositionState, Position } from "./types/common.sol";
+import { CallbackValidation } from "./libs/CallbackValidation.sol";
 
 /// @title Manager
 contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableState, BattleInitializer, LiquidityManagement {
     using SafeCast for uint256;
     using SafeCast for int256;
 
-    uint256 public nextId;
+    uint256 public override nextId;
     mapping(uint256 => Position) private _positions;
+
+    modifier isAuthorizedForToken(uint256 tokenId) {
+        require(_isApprovedOrOwner(msg.sender, tokenId), 'Not approved');
+        _;
+    }
 
     constructor(address _arena, address _weth) ERC721("Divergence Protocol Positions NFT", "DIVER-POS") PeripheryImmutableState(_arena, _weth) { }
 
     /// @inheritdoc IManagerLiquidity
-    function addLiquidity(AddLiqParams calldata params) external override returns (uint256 tokenId, uint128 liquidity, uint256 seed) {
+    function addLiquidity(AddLiqParams calldata params) external override returns (uint256 tokenId, uint128 liquidity) {
         if (block.timestamp > params.deadline) {
             revert Errors.Deadline();
         }
-        AddLiqParams memory p1 = params;
-        p1.recipient = address(this);
         address battleAddr;
-        (liquidity, seed, battleAddr) = _addLiquidity(p1);
+        (liquidity, battleAddr) = _addLiquidity(params);
 
-        _mint(params.recipient, (tokenId = nextId++));
+        _safeMint(params.recipient, (tokenId = nextId++));
         bytes32 pk = keccak256(abi.encodePacked(address(this), params.tickLower, params.tickUpper));
         _positions[tokenId] = Position({
             tokenId: tokenId,
@@ -60,14 +61,14 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
             tickUpper: params.tickUpper,
             liquidity: liquidity,
             liquidityType: params.liquidityType,
-            seed: seed,
+            seed: params.amount,
             insideLast: IBattleState(battleAddr).positions(pk).insideLast,
             owed: Owed(0, 0, 0, 0),
             state: PositionState.LiquidityAdded,
             spearObligation: 0,
             shieldObligation: 0
         });
-        emit LiquidityAdded(battleAddr, params.recipient, tokenId, liquidity, params.liquidityType, seed);
+        emit LiquidityAdded(battleAddr, params.recipient, tokenId, liquidity, params.liquidityType, params.amount);
     }
 
     function updateInsideLast(PositionInfo memory pb, Position storage pm) private {
@@ -85,11 +86,9 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
     function removeLiquidity(uint256 tokenId)
         external
         override
+        isAuthorizedForToken(tokenId)
         returns (uint256 collateral, uint256 spear, uint256 shield, uint256 spearObligation, uint256 shieldObligation)
     {
-        if (_ownerOf(tokenId) != msg.sender) {
-            revert Errors.OnlyOwner();
-        }
         // pm => position in manager
         Position memory pmMemory = _positions[tokenId];
         if (pmMemory.state != PositionState.LiquidityAdded) {
@@ -97,12 +96,9 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
         }
 
         BattleBurnParams memory bp;
-        bp.recipient = msg.sender;
         bp.tickLower = pmMemory.tickLower;
         bp.tickUpper = pmMemory.tickUpper;
-        bp.liquidityType = pmMemory.liquidityType == LiquidityType.COLLATERAL
-            ? LiquidityType.COLLATERAL
-            : (pmMemory.liquidityType == LiquidityType.SPEAR ? LiquidityType.SPEAR : LiquidityType.SHIELD);
+        bp.liquidityType = pmMemory.liquidityType;
         bp.liquidityAmount = pmMemory.liquidity;
 
         IBattleActions(pmMemory.battleAddr).burn(bp);
@@ -119,7 +115,7 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
         pmStorage.spearObligation = spearObligation;
         pmStorage.shieldObligation = shieldObligation;
 
-        IBattleActions(pmMemory.battleAddr).collect(msg.sender, collateral, spear, shield);
+        IBattleActions(pmMemory.battleAddr).collect(ownerOf(tokenId), collateral, spear, shield);
 
         emit LiquidityRemoved(tokenId, collateral, spear > shield ? spear : shield);
     }
@@ -160,7 +156,7 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
     }
 
     /// @inheritdoc IManagerLiquidity
-    function withdrawObligation(uint256 tokenId) external override {
+    function withdrawObligation(uint256 tokenId) external override isAuthorizedForToken(tokenId) {
         Position memory pm = _positions[tokenId];
 
         if (pm.state != PositionState.LiquidityRemoved) {
@@ -181,13 +177,13 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
             }
         }
         if (toLp > 0) {
-            IBattleActions(pm.battleAddr).withdrawObligation(_ownerOf(tokenId), toLp);
+            IBattleActions(pm.battleAddr).withdrawObligation(ownerOf(tokenId), toLp);
         }
         _positions[tokenId].state = PositionState.ObligationWithdrawn;
         emit ObligationWithdrawn(pm.battleAddr, tokenId, toLp);
     }
 
-    function redeemObligation(uint256 tokenId) external override {
+    function redeemObligation(uint256 tokenId) external override isAuthorizedForToken(tokenId){
         Position memory pm = _positions[tokenId];
         if (pm.state != PositionState.LiquidityRemoved) {
             revert Errors.LiquidityNotRemoved();
@@ -201,13 +197,13 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
                 ? (pm.spearObligation - pm.shieldObligation, IBattleState(pm.battleAddr).spear())
                 : (pm.shieldObligation - pm.spearObligation, IBattleState(pm.battleAddr).shield());
             ERC20Burnable(stoken).burnFrom(msg.sender, diff);
-            IBattleActions(pm.battleAddr).withdrawObligation(_ownerOf(tokenId), diff);
+            IBattleActions(pm.battleAddr).withdrawObligation(ownerOf(tokenId), diff);
             _positions[tokenId].state = PositionState.ObligationRedeemed;
             emit ObligationRedeemed(pm.battleAddr, tokenId, diff);
         }
     }
 
-    function trade(TradeParams calldata p) external override returns (uint256 amountIn, uint256 amountOut) {
+    function trade(TradeParams calldata p) external override returns (uint256 amountIn, uint256 amountOut, uint256 amountFee) {
         if (block.timestamp > p.deadline) {
             revert Errors.Deadline();
         }
@@ -233,7 +229,7 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
         }
 
         // call battle
-        (amountIn, amountOut) = IBattleActions(battle).trade(tps);
+        (amountIn, amountOut, amountFee) = IBattleActions(battle).trade(tps);
         if (amountOut < p.amountOutMin) {
             revert Errors.Slippage();
         }
@@ -242,13 +238,7 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
 
     function tradeCallback(uint256 cAmount, uint256 sAmount, bytes calldata _data) external override {
         TradeCallbackData memory data = abi.decode(_data, (TradeCallbackData));
-        address battle = IArenaCreation(arena).getBattle(data.battleKey);
-        if (battle == address(0)) {
-            revert Errors.BattleNotExist();
-        }
-        if (msg.sender != battle) {
-            revert Errors.CallerNotBattle();
-        }
+        CallbackValidation.verifyCallback(arena, data.battleKey);
         pay(data.battleKey.collateral, data.payer, msg.sender, cAmount);
     }
 
@@ -257,31 +247,6 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
     /// @inheritdoc IManagerState
     function positions(uint256 tokenId) external view override returns (Position memory) {
         return _positions[tokenId];
-        // return handlePosition(tokenId);
     }
 
-    // function handlePosition(uint256 tokenId) private view returns (Position memory p) {
-    //     p = _positions[tokenId];
-    //     if (p.state == PositionState.LiquidityAdded) {
-    //         unchecked {
-    //             GrowthX128 memory insideLast = IBattleState(p.battleAddr).getInsideLast(p.tickLower, p.tickUpper);
-    //             p.owed.fee += uint128(FullMath.mulDiv(insideLast.fee - p.insideLast.fee, p.liquidity, FixedPoint128.Q128));
-    //             p.owed.collateralIn += uint128(FullMath.mulDiv(insideLast.collateralIn - p.insideLast.collateralIn, p.liquidity,
-    // FixedPoint128.Q128));
-    //             p.owed.spearOut += uint128(FullMath.mulDiv(insideLast.spearOut - p.insideLast.spearOut, p.liquidity, FixedPoint128.Q128));
-    //             p.owed.shieldOut += uint128(FullMath.mulDiv(insideLast.shieldOut - p.insideLast.shieldOut, p.liquidity, FixedPoint128.Q128));
-    //             p.insideLast = insideLast;
-    //         }
-    //     }
-    // }
-
-    /// @inheritdoc IManagerState
-    // function accountPositions(address account) external view override returns (Position[] memory) {
-    //     uint256 balance = balanceOf(account);
-    //     Position[] memory p = new Position[](balance);
-    //     for (uint256 i = 0; i < balance; i++) {
-    //         p[i] = handlePosition(tokenOfOwnerByIndex(account, i));
-    //     }
-    //     return p;
-    // }
 }

@@ -36,7 +36,7 @@ contract UseCase5 is ManagerTrade {
 
     function test_Usecase5() public {
         address battleAddr = super.test();
-        (address spear, address shield) = IBattleState(battleAddr).spearAndShield();
+        // (address spear, ) = IBattleState(battleAddr).spearAndShield();
         // AddLiqParams memory addLiqParams = defaultAddLiqParams;
         // addLiqParams.amount = 1000_000e18;
         // addLiqParams.tickLower = 40000;
@@ -50,25 +50,25 @@ contract UseCase5 is ManagerTrade {
 
         vm.startPrank(bob);
         logSlot0(battleAddr);
-        (uint256 amtIn0, uint256 amtOut0) = trade(bob, manager, params1, quoter);
+        (uint256 amtIn0, uint256 amtOut0, ) = trade(bob, manager, params1);
         logSpearAndShield(bob, battleAddr);
         logSlot0(battleAddr);
         TradeParams memory params2 = params1;
         params2.tradeType = TradeType.BUY_SHIELD;
-        params2.amountSpecified = amtIn0 - amtOut0;
-        trade(bob, manager, params2, quoter);
+        params2.amountSpecified = int256(amtIn0 - amtOut0);
+        trade(bob, manager, params2);
         logSpearAndShield(bob, battleAddr);
         logSlot0(battleAddr);
         vm.stopPrank();
     }
 
-    function logSlot0(address battleAddr) internal {
-        (uint160 sqrtPriceX96, int24 tick, bool unlocked) = IBattleState(battleAddr).slot0();
+    function logSlot0(address battleAddr) view internal {
+        (uint160 sqrtPriceX96, int24 tick, ) = IBattleState(battleAddr).slot0();
         console2.log("log@ tick: %s", tick);
         console2.log("log@ sqrtPriceX96: %s", sqrtPriceX96);
     }
 
-    function logSpearAndShield(address user, address battleAddr) internal {
+    function logSpearAndShield(address user, address battleAddr) view internal {
         (address spear, address shield) = IBattleState(battleAddr).spearAndShield();
         console2.log("log@ shield balance: %s", IERC20(shield).balanceOf(user));
         console2.log("log@ spear balance: %s", IERC20(spear).balanceOf(user));

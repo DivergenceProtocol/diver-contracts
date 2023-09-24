@@ -20,6 +20,8 @@ struct DeployAddrs {
     address wethAddr;
     address quoter;
     address oracle;
+    uint8 decimal;
+    bool hasFee;
 }
 
 interface IMulticall {
@@ -34,13 +36,13 @@ function deploy(DeployAddrs memory das) returns (address managerAddr, address ar
     if (das.arenaAddr == address(0)) {
         Battle battleImpl = new Battle();
         if (das.collateralToken == address(0)) {
-            das.collateralToken = address(new TestERC20("DAI", "DAI", uint8(18)));
+            das.collateralToken = address(new TestERC20("DAI", "DAI", das.decimal));
             collateral = das.collateralToken;
         }
         // oracle = deployOracle();
         require(das.oracle != address(0), "oracle not exist");
         oracle = das.oracle;
-        arena = deployArena(das.collateralToken, das.oracle, address(battleImpl));
+        arena = deployArena(das.collateralToken, das.oracle, address(battleImpl), das.hasFee);
     }
     managerAddr = address(new Manager(arena, das.wethAddr));
     if (das.quoter == address(0)) {
@@ -50,19 +52,22 @@ function deploy(DeployAddrs memory das) returns (address managerAddr, address ar
     return (managerAddr, arena, oracle, das.collateralToken, das.quoter);
 }
 
-function deployArena(address token, address oracle, address battleImpl) returns (address) {
+function deployArena(address token, address oracle, address battleImpl, bool hasFee) returns (address) {
     Arena arena = new Arena(
         oracle,
         battleImpl
     );
-    _initArena(arena, address(token));
+    _initArena(arena, address(token), hasFee);
     return address(arena);
 }
 
-function _initArena(Arena arena, address token) {
+function _initArena(Arena arena, address token, bool hasFee) {
     arena.setCollateralWhitelist(token, true);
-    // arena.setUnderlyingWhitelist("BTC", true, Fee(0.003e6, 0.3e6, 0.0015e6));
-    // arena.setUnderlyingWhitelist("ETH", true, Fee(0.003e6, 0.3e6, 0.0015e6));
-    arena.setUnderlyingWhitelist("BTC", true, Fee(0, 0, 0));
-    arena.setUnderlyingWhitelist("ETH", true, Fee(0, 0, 0));
+    if (hasFee) {
+        arena.setUnderlyingWhitelist("BTC", true, Fee(0.003e6, 0.3e6, 0.0015e6));
+        arena.setUnderlyingWhitelist("ETH", true, Fee(0.003e6, 0.3e6, 0.0015e6));
+    } else {
+        arena.setUnderlyingWhitelist("BTC", true, Fee(0, 0, 0));
+        arena.setUnderlyingWhitelist("ETH", true, Fee(0, 0, 0));
+    }
 }
