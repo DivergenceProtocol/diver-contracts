@@ -15,7 +15,7 @@ library TradeMath {
 
     function computeTradeStep(ComputeTradeStepParams memory params)
         internal
-        view
+        pure
         returns (uint160 sqrtRatioNextX96, uint256 amountIn, uint256 amountOut)
     {
         bool isSpear = params.tradeType == TradeType.BUY_SPEAR;

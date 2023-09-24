@@ -26,3 +26,4 @@ broadcast/
 script/bash/anvil.sh
 test/invariant/handlers/NextSqrtPriceBySTokenHandler.sol
 test/invariant/NextSqrtPriceBySToken.invariant.t.sol
+script/oracleAction.s.sol

@@ -122,7 +122,7 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
 
     function getObligation(Position memory pm)
         private
-        view
+        pure
         returns (uint256 collateral, uint256 spear, uint256 shield, uint256 spearObligation, uint256 shieldObligation)
     {
         if (pm.liquidityType == LiquidityType.COLLATERAL) {
