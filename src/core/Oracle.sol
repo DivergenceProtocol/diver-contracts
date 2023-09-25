@@ -86,6 +86,11 @@ contract Oracle is Ownable {
                 // first phase
                 price = p;
                 actualTs = aTs;
+                if (i == 1) {
+                    price *= decimalDiff;
+                    finalPrice = price;
+                    finalTs = actualTs;
+                }
             } else {
                 if (p != 0) {
                     // it is not first phase and closer than pre phase
