@@ -7,3 +7,7 @@
 chainlink/=lib/chainlink/contracts/src/v0.8/
 @uniswap/=lib/
 @openzeppelin/=lib/openzeppelin-contracts/
+core/=src/core/
+periphery/=src/periphery/
+test/=test/
+script/=script/

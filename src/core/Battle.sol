@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.19;
 
 import { SafeERC20 } from "@oz/token/ERC20/utils/SafeERC20.sol";
 import { IERC20 } from "@oz/token/ERC20/IERC20.sol";
@@ -10,32 +10,34 @@ import { FullMath } from "@uniswap/v3-core/contracts/libraries/FullMath.sol";
 import { TickBitmap } from "@uniswap/v3-core/contracts/libraries/TickBitmap.sol";
 import { SqrtPriceMath } from "@uniswap/v3-core/contracts/libraries/SqrtPriceMath.sol";
 import { FixedPoint128 } from "@uniswap/v3-core/contracts/libraries/FixedPoint128.sol";
-import { Errors } from "./errors/Errors.sol";
-import { IBattle } from "./interfaces/battle/IBattle.sol";
-import { IOracle } from "./interfaces/IOracle.sol";
-import { IBattleBase } from "./interfaces/battle/IBattleActions.sol";
-import { IBattleState } from "./interfaces/battle/IBattleState.sol";
-import { IBattleInit } from "./interfaces/battle/IBattleInit.sol";
-import { IMintCallback } from "./interfaces/callback/IMintCallback.sol";
-import { IBattleMintBurn } from "./interfaces/battle/IBattleActions.sol";
-import { ISToken } from "./interfaces/ISToken.sol";
-import { IOwner } from "./interfaces/IOwner.sol";
-import { ITradeCallback } from "./interfaces/callback/ITradeCallback.sol";
-import { IArenaState } from "./interfaces/IArena.sol";
-import { TickMath } from "./libs/TickMath.sol";
-import { Tick } from "./libs/Tick.sol";
-import { UpdatePositionParams } from "./params/UpdatePositionParams.sol";
-import { Position } from "./libs/Position.sol";
-import { DiverSqrtPriceMath } from "./libs/DiverSqrtPriceMath.sol";
-import { TradeMath } from "./libs/TradeMath.sol";
-import { ModifyPositionParams } from "./params/ModifyPositionParams.sol";
-import { BattleMintParams } from "./params/BattleMintParams.sol";
-import { BattleBurnParams } from "./params/BattleBurnParams.sol";
-import { BattleTradeParams } from "./params/BattleTradeParams.sol";
-import { ComputeTradeStepParams } from "./params/ComputeTradeStepParams.sol";
-import { DeploymentParams } from "./params/DeploymentParams.sol";
+import { Errors } from "core/errors/Errors.sol";
+import { IBattle } from "core/interfaces/battle/IBattle.sol";
+import { IOracle } from "core/interfaces/IOracle.sol";
+import { IBattleBase } from "core/interfaces/battle/IBattleActions.sol";
+import { IBattleState } from "core/interfaces/battle/IBattleState.sol";
+import { IBattleInit } from "core/interfaces/battle/IBattleInit.sol";
+import { IMintCallback } from "core/interfaces/callback/IMintCallback.sol";
+import { IBattleMintBurn } from "core/interfaces/battle/IBattleActions.sol";
+import { ISToken } from "core/interfaces/ISToken.sol";
+import { IOwner } from "core/interfaces/IOwner.sol";
+import { ITradeCallback } from "core/interfaces/callback/ITradeCallback.sol";
+import { IArenaState } from "core/interfaces/IArena.sol";
+import { TickMath } from "core/libs/TickMath.sol";
+import { Tick } from "core/libs/Tick.sol";
+import { Position } from "core/libs/Position.sol";
+import { DiverSqrtPriceMath } from "core/libs/DiverSqrtPriceMath.sol";
+import { TradeMath } from "core/libs/TradeMath.sol";
 import { TradeCache, TradeState, StepComputations } from "./types/TradeTypes.sol";
 import { LiquidityType, BattleKey, Outcome, GrowthX128, TickInfo, PositionInfo, Fee, TradeType } from "./types/common.sol";
+import {
+    ModifyPositionParams,
+    BattleMintParams,
+    BattleBurnParams,
+    BattleTradeParams,
+    ComputeTradeStepParams,
+    DeploymentParams,
+    UpdatePositionParams
+} from "core/params/coreParams.sol";
 
 /// @title Battle
 contract Battle is IBattle {
@@ -88,7 +90,7 @@ contract Battle is IBattle {
 
     modifier onlyManager() {
         if (msg.sender != manager) {
-            revert Errors.CallerNotManager();
+            revert Errors.OnlyManager();
         }
         _;
     }
@@ -179,7 +181,7 @@ contract Battle is IBattle {
             revert Errors.TickInvalid();
         }
         if (params.amount == 0) {
-            revert Errors.ZeroAmount();
+            revert Errors.ZeroValue();
         }
 
         PositionInfo storage positionInfo;
@@ -246,17 +248,12 @@ contract Battle is IBattle {
         }
     }
 
-
     function trade(BattleTradeParams memory params) external returns (uint256 cAmount, uint256 sAmount, uint256 fAmount) {
         if (block.timestamp >= _bk.expiries) {
             revert Errors.BattleEnd();
         }
-        // manager or quoter need call this function
-        // if (msg.sender != s.manager) {
-        //     revert Errors.CallerNotManager();
-        // }
         if (params.amountSpecified == 0) {
-            revert Errors.ZeroAmount();
+            revert Errors.ZeroValue();
         }
 
         Slot0 memory slot0Start = slot0;
@@ -267,6 +264,7 @@ contract Battle is IBattle {
 
         bool isPriceDown = params.tradeType == TradeType.BUY_SPEAR;
         bool exactIn = params.amountSpecified > 0;
+
         require(
             isPriceDown
                 ? params.sqrtPriceLimitX96 < slot0Start.sqrtPriceX96 && params.sqrtPriceLimitX96 > TickMath.MIN_SQRT_RATIO
@@ -450,7 +448,9 @@ contract Battle is IBattle {
 
     /// comments see IBattleTrade
     function collectProtocolFee(address recipient) external override lock {
-        require(IOwner(arena).owner() == msg.sender, "only owner");
+        if (IOwner(arena).owner() != msg.sender) {
+            revert Errors.OnlyOwner();
+        }
         uint256 _fee = protocolFeeAmount;
         protocolFeeAmount = 0;
         IERC20(_bk.collateral).safeTransfer(recipient, _fee);

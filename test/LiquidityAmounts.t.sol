@@ -6,10 +6,10 @@ import { Test } from "@std/Test.sol";
 import { BaseTest } from "./shared/Base.t.sol";
 import { DiverLiquidityAmounts as la } from "../src/periphery/libs/DiverLiquidityAmounts.sol";
 import { console2 } from "@std/console2.sol";
-import { Tick } from "../src/core/libs/Tick.sol";
-import { TickMath } from "../src/core/libs/TickMath.sol";
+import { Tick } from "core/libs/Tick.sol";
+import { TickMath } from "core/libs/TickMath.sol";
 import { SqrtPriceMath } from "@uniswap/v3-core/contracts/libraries/SqrtPriceMath.sol";
-import { DiverSqrtPriceMath } from "../src/core/libs/DiverSqrtPriceMath.sol";
+import { DiverSqrtPriceMath } from "core/libs/DiverSqrtPriceMath.sol";
 
 /// @notice GetLiquidityFromSToken -> Glfs
 contract Glfs is BaseTest {
@@ -115,7 +115,7 @@ contract LiquidityAmountsTest is BaseTest {
         assertApproxEqAbs(shield2, shield1, 1);
     }
 
-    function test_LiquidityFromCs() view public {
+    function test_LiquidityFromCs() public view {
         uint160 sqrtPriceAX96 = TickMath.getSqrtRatioAtTick(-3);
         uint160 sqrtPriceBX96 = TickMath.getSqrtRatioAtTick(45_948);
         // uint160 sqrtPriceCX96 = TickMath.getSqrtRatioAtTick();

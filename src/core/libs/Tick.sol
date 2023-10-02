@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import { TickMath } from "./TickMath.sol";
-import { GrowthX128, TickInfo } from "../types/common.sol";
+import { GrowthX128, TickInfo } from "core/types/common.sol";
 
 library Tick {
     function tickSpacingToMaxLiquidityPerTick(int24 tickSpacing) internal pure returns (uint128) {

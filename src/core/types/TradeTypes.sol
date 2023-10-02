@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.14;
+pragma solidity ^0.8.0;
 
 import { GrowthX128 } from "./common.sol";
 
 struct TradeCache {
     uint256 feeProtocol;
 }
-
 
 struct TradeState {
     int256 amountSpecifiedRemaining;

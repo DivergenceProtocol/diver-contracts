@@ -4,19 +4,19 @@ pragma solidity ^0.8.0;
 
 import { ReadyFixture } from "./fixtures/Ready.sol";
 import { IBattleInitializer } from "../src/periphery/interfaces/IBattleInitializer.sol";
-import { CreateAndInitBattleParams } from "../src/periphery/params/Params.sol";
+import { CreateAndInitBattleParams } from "periphery/params/peripheryParams.sol";
 import { console2 } from "@std/console2.sol";
-import { TickMath } from "../src/core/libs/TickMath.sol";
-import { IBattleState } from "../src/core/interfaces/battle/IBattleState.sol";
-import { IArenaCreation } from "../src/core/interfaces/IArena.sol";
+import { TickMath } from "core/libs/TickMath.sol";
+import { IBattleState } from "core/interfaces/battle/IBattleState.sol";
+import { IArenaCreation } from "core/interfaces/IArena.sol";
 import { createBattle, getBattleKey, getCreateBattleParams } from "./shared/Actions.sol";
-import "../src/core/types/common.sol";
-import "../src/core/types/enums.sol";
-import { IBattle } from "../src/core/interfaces/battle/IBattle.sol";
+import "core/types/common.sol";
+import "core/types/enums.sol";
+import { IBattle } from "core/interfaces/battle/IBattle.sol";
 import { IManager } from "../src/periphery/interfaces/IManager.sol";
 import { Multicall } from "@oz/utils/Multicall.sol";
 import { getTS, Period } from "./shared/utils.sol";
-import { Errors } from "../src/core/errors/Errors.sol";
+import { Errors } from "core/errors/Errors.sol";
 
 contract CreateAndInit is ReadyFixture {
     BattleKey public defaultBattleKey;
@@ -32,10 +32,10 @@ contract CreateAndInit is ReadyFixture {
 
     event BattleCreated(BattleKey bk, address battleAddr, address spear, address shield, Fee fee);
 
-    function test() public virtual returns (address) {
+    function test_CreateBattle() public virtual returns (address battleAddr) {
         vm.expectEmit(false, false, false, false);
         emit BattleCreated(defaultBattleKey, address(0), address(0), address(0), Fee(0, 0, 0));
-        address battleAddr = createBattle(manager, defaultCreateBattleParams);
+        battleAddr = createBattle(manager, defaultCreateBattleParams);
         assertGt(uint160(battleAddr), 0, "battle not exist");
         address spear = IBattle(battleAddr).spear();
         assertGt(uint160(spear), 0, "spear not exist");
@@ -43,16 +43,12 @@ contract CreateAndInit is ReadyFixture {
         assertGt(uint160(shield), 0, "shield not exist");
         (uint160 sqrtPriceX96,,) = IBattleState(battleAddr).slot0();
         assertEq(sqrtPriceX96, defaultCreateBattleParams.sqrtPriceX96);
-        // todo check battle key
-
-        return battleAddr;
     }
 
     function test_SameBattleKeySameBattle() public {
-        address battleAddr1 = createBattle(manager, defaultCreateBattleParams);
+        createBattle(manager, defaultCreateBattleParams);
         vm.expectRevert(Errors.BattleExisted.selector);
-        address battleAddr2 = createBattle(manager, defaultCreateBattleParams);
-        assertEq(battleAddr1, battleAddr2);
+        createBattle(manager, defaultCreateBattleParams);
     }
 
     bytes[] public callData;

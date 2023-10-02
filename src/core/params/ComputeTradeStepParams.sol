@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.14;
+pragma solidity ^0.8.0;
 
-import { TradeType } from "../types/common.sol";
+import { TradeType } from "core/types/common.sol";
 
 struct ComputeTradeStepParams {
     TradeType tradeType;
@@ -10,5 +10,5 @@ struct ComputeTradeStepParams {
     uint160 sqrtRatioTargetX96;
     uint128 liquidity;
     int256 amountRemaining;
-    uint unit;
+    uint256 unit;
 }

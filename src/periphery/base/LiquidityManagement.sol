@@ -3,19 +3,19 @@
 pragma solidity ^0.8.14;
 
 import { SqrtPriceMath } from "@uniswap/v3-core/contracts/libraries/SqrtPriceMath.sol";
-import { IArenaCreation } from "../../core/interfaces/IArena.sol";
-import { IBattleActions } from "../../core/interfaces/battle/IBattleActions.sol";
-import { IBattleState } from "../../core/interfaces/battle/IBattleState.sol";
-import { BattleKey } from "../../core/types/common.sol";
-import { TickMath } from "../../core/libs/TickMath.sol";
-import { Errors } from "../../core/errors/Errors.sol";
-import { LiquidityType } from "../../core/types/enums.sol";
-import { IMintCallback } from "../../core/interfaces/callback/IMintCallback.sol";
-import { BattleMintParams } from "../../core/params/BattleMintParams.sol";
+import { IArenaCreation } from "core/interfaces/IArena.sol";
+import { IBattleActions } from "core/interfaces/battle/IBattleActions.sol";
+import { IBattleState } from "core/interfaces/battle/IBattleState.sol";
+import { BattleKey } from "core/types/common.sol";
+import { TickMath } from "core/libs/TickMath.sol";
+import { Errors } from "core/errors/Errors.sol";
+import { LiquidityType } from "core/types/enums.sol";
+import { IMintCallback } from "core/interfaces/callback/IMintCallback.sol";
+import { BattleMintParams } from "core/params/coreParams.sol";
 import { DiverLiquidityAmounts } from "../libs/DiverLiquidityAmounts.sol";
 import { CallbackValidation } from "../libs/CallbackValidation.sol";
 import { PeripheryPayments } from "./PeripheryPayments.sol";
-import { AddLiqParams } from "../params/Params.sol";
+import { AddLiqParams } from "../params/peripheryParams.sol";
 import { PeripheryImmutableState } from "./PeripheryImmutableState.sol";
 
 abstract contract LiquidityManagement is IMintCallback, PeripheryImmutableState, PeripheryPayments {

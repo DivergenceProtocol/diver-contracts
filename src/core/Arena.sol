@@ -1,27 +1,27 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.14;
+pragma solidity ^0.8.19;
 
 import { IERC20 } from "@oz/token/ERC20/IERC20.sol";
 import { Ownable } from "@oz/access/Ownable.sol";
 import { Clones } from "@oz/proxy/Clones.sol";
 import { IERC20Metadata } from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 import { Strings } from "@oz/utils/Strings.sol";
-import { IOracle } from "./interfaces/IOracle.sol";
-import { Errors } from "./errors/Errors.sol";
-import { IArena, Fee, Outcome, BattleKey, CreateAndInitBattleParams } from "./interfaces/IArena.sol";
-import { IBattleInit } from "./interfaces/battle/IBattleInit.sol";
-import { IBattleState } from "./interfaces/battle/IBattleState.sol";
-import { IBattleActions, IBattleMintBurn } from "./interfaces/battle/IBattleActions.sol";
-import { DeploymentParams } from "./params/DeploymentParams.sol";
-import { SToken } from "./token/SToken.sol";
-import { getAdjustPrice } from "./utils.sol";
+import { IOracle } from "core/interfaces/IOracle.sol";
+import { Errors } from "core/errors/Errors.sol";
+import { IArena, Fee, Outcome, BattleKey, CreateAndInitBattleParams } from "core/interfaces/IArena.sol";
+import { IBattleInit } from "core/interfaces/battle/IBattleInit.sol";
+import { IBattleState } from "core/interfaces/battle/IBattleState.sol";
+import { IBattleActions, IBattleMintBurn } from "core/interfaces/battle/IBattleActions.sol";
+import { DeploymentParams } from "core/params/coreParams.sol";
+import { SToken } from "core/token/SToken.sol";
+import { getAdjustPrice } from "core/utils.sol";
 
 /// @notice Deploys battles. Sets pool underlying, collateral, fees and other
 /// deployment
 /// parameters.
 contract Arena is IArena, Ownable {
-    address public immutable oracleAddr;
+    address public oracleAddr;
     address public managerAddr;
     address[] private battleList;
     address public immutable battleImpl;
@@ -34,59 +34,62 @@ contract Arena is IArena, Ownable {
 
     constructor(address _oracleAddr, address _battleImpl) {
         if (_oracleAddr == address(0) || _battleImpl == address(0)) {
-            revert Errors.ZeroAddress();
+            revert Errors.ZeroValue();
         }
         oracleAddr = _oracleAddr;
         battleImpl = _battleImpl;
     }
 
-    function setFeeForUnderlying(string calldata underlying, Fee calldata _fee) external onlyOwner {
+    function setFeeForUnderlying(string calldata underlying, Fee calldata _fee) external override onlyOwner {
         require(keccak256(abi.encode(underlying)) != keccak256(abi.encode("")), "underlying null");
         fees[underlying] = _fee;
         emit FeeChanged(underlying, _fee);
     }
 
-    event CollateralWhitelistChanged(address collateral, bool state);
-
-    function setCollateralWhitelist(address collateral, bool isSupported) external onlyOwner {
+    function setCollateralWhitelist(address collateral, bool isSupported) external override onlyOwner {
         require(collateralWhitelist[collateral] != isSupported, "LD");
         collateralWhitelist[collateral] = isSupported;
         emit CollateralWhitelistChanged(collateral, isSupported);
     }
 
-    event UnderlyingWhitelistChanged(string underlying, bool state, Fee fee);
-
-    function setUnderlyingWhitelist(string memory underlying, bool isSupported, Fee calldata fee) external onlyOwner {
+    function setUnderlyingWhitelist(string memory underlying, bool isSupported, Fee calldata fee) external override onlyOwner {
         require(underlyingWhitelist[underlying] != isSupported, "LD");
         underlyingWhitelist[underlying] = isSupported;
         fees[underlying] = fee;
         emit UnderlyingWhitelistChanged(underlying, isSupported, fee);
     }
 
-    event PermissionlessChanged(bool state);
-
-    function setPermissionless() external onlyOwner {
+    function setPermissionless() external override onlyOwner {
         isPermissionless = !isPermissionless;
         emit PermissionlessChanged(isPermissionless);
     }
 
-    function setManager(address _manager) external onlyOwner {
+    function setManager(address _manager) external override onlyOwner {
         if (_manager == address(0)) {
-            revert Errors.ZeroAddress();
+            revert Errors.ZeroValue();
         }
         address old = managerAddr;
         managerAddr = _manager;
         emit ManagerChanged(old, _manager);
     }
 
+    function setOracle(address _oracle) external override onlyOwner {
+        if (_oracle == address(0)) {
+            revert Errors.ZeroValue();
+        }
+        address old = oracleAddr;
+        oracleAddr = _oracle;
+        emit OracleChanged(old, _oracle);
+    }
+
     function createBattle(CreateAndInitBattleParams memory params) external override returns (address battle) {
         address ma = managerAddr;
         if (msg.sender != ma) {
-            revert Errors.CallerNotManager();
+            revert Errors.OnlyManager();
         }
         // collaterl address error
         if (params.bk.collateral == address(0)) {
-            revert Errors.ZeroAddress();
+            revert Errors.ZeroValue();
         }
 
         // not supported
@@ -106,7 +109,9 @@ contract Arena is IArena, Ownable {
         }
 
         params.bk.strikeValue = getAdjustPrice(params.bk.strikeValue);
-        require(params.bk.strikeValue != 0, "strike value zero");
+        if (params.bk.strikeValue == 0) {
+            revert Errors.ZeroValue();
+        }
         bytes32 battleKeyB32 = keccak256(abi.encode(params.bk.collateral, params.bk.underlying, params.bk.expiries, params.bk.strikeValue));
         if (battles[battleKeyB32] != address(0)) {
             revert Errors.BattleExisted();

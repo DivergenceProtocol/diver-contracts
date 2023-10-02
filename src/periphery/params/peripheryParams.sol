@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import { BattleKey, LiquidityType, TradeType } from "../../core/types/common.sol";
+import { BattleKey, LiquidityType, TradeType } from "core/types/common.sol";
 
 /// @param bk The battle key
 /// @param sqrtPriceX96 The start sqrt price of the battle

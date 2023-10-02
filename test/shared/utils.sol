@@ -5,8 +5,7 @@ pragma solidity ^0.8.0;
 enum Period {
     DAILY,
     WEEKLY,
-    BIWEEKLY,
-    MONTHLY
+    BIWEEKLY
 }
 
 function getTS(Period period) view returns (uint256 start, uint256 end) {
@@ -24,17 +23,7 @@ function getTS(Period period) view returns (uint256 start, uint256 end) {
         start = block.timestamp - ((block.timestamp - 115_200) % 604_800);
         start = start + 1_209_600 * offset;
         end = start + 1_209_600;
-    } else if (period == Period.MONTHLY) {
-        // 2 => MONTHLY
-        // for (uint256 i; i < monStartTS.length; i++) {
-        //     if (block.timestamp >= monStartTS[i] && block.timestamp <=
-        // monStartTS[i + 1]) {
-        //         uint256 index = i + offset;
-        //         start = monStartTS[index];
-        //         end = monStartTS[index + 1];
-        //     }
-        // }
-        // require(start != 0, "not known start ts");
-        // require(end != 0, "not known end ts");
+    } else {
+        revert("Not supported Period");
     }
 }

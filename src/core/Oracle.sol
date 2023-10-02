@@ -35,7 +35,7 @@ contract Oracle is Ownable {
     /// @param ts Timestamp for the asset price
     /// @return price_ The retrieved price
     function getPriceByExternal(address cOracleAddr, uint256 ts) public view returns (uint256 price_, uint256 actualTs) {
-        require(block.timestamp >= ts);
+        require(block.timestamp >= ts, "price not exist");
         if (block.timestamp - ts > 1 hours) {
             // get price from setting
             require(fixPrices[cOracleAddr][ts] != 0, "setting price");
@@ -53,7 +53,7 @@ contract Oracle is Ownable {
     }
 
     function setFixPrice(string memory symbol, uint256 ts, uint256 price) external onlyOwner {
-        require(externalOracleOf[symbol] != address(0));
+        require(externalOracleOf[symbol] != address(0), "not support symbol");
         fixPrices[externalOracleOf[symbol]][ts] = price;
     }
 
@@ -79,11 +79,16 @@ contract Oracle is Ownable {
         uint256 actualTs;
         // get price in two phase and select price that closer to 08 utc
         for (uint80 i = phaseId; i >= 1; i--) {
-            (uint p, uint aTs) = getPriceInPhase(cOracle, getStartRoundId(i), i == phaseId ? id : getEndRoundId(i), ts);
+            (uint256 p, uint256 aTs) = getPriceInPhase(cOracle, getStartRoundId(i), i == phaseId ? id : getEndRoundId(i), ts);
             if (price == 0) {
                 // first phase
                 price = p;
                 actualTs = aTs;
+                if (i == 1) {
+                    price *= decimalDiff;
+                    finalPrice = price;
+                    finalTs = actualTs;
+                }
             } else {
                 if (p != 0) {
                     // it is not first phase and closer than pre phase
@@ -106,9 +111,7 @@ contract Oracle is Ownable {
     }
 
     function updatePhase(uint80 roundId, string memory symbol) public {
-        try AggregatorV3Interface(getCOracle(symbol)).getRoundData(roundId) returns (
-            uint80, int256 answerF, uint256 startedAtF, uint256, uint80
-        ) {
+        try AggregatorV3Interface(getCOracle(symbol)).getRoundData(roundId) returns (uint80, int256 answerF, uint256 startedAtF, uint256, uint80) {
             if (answerF == 0 && startedAtF == 0) {
                 revert("invalid roundId");
             }
@@ -151,7 +154,7 @@ contract Oracle is Ownable {
     }
 
     function getEndRoundId(uint80 phaseId) internal view returns (uint80) {
-        require(endRoundId[phaseId] != 0);
+        require(endRoundId[phaseId] != 0, "round error");
         return endRoundId[phaseId];
     }
 
@@ -174,7 +177,9 @@ contract Oracle is Ownable {
                     p = answer.toUint256();
                     actualTs = startedAt;
                 }
-            } catch { }
+            } catch {
+                // just go to next round
+            }
         }
     }
 }

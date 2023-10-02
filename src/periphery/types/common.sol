@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import { GrowthX128, Owed, LiquidityType } from "../../core/types/common.sol";
+import { GrowthX128, Owed, LiquidityType } from "core/types/common.sol";
 
 enum PositionState {
     LiquidityAdded,
