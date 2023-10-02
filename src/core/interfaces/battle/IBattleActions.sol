@@ -74,6 +74,8 @@ interface IBattleBase {
 
     event ProtocolFeeCollected(address recipient, uint256 amount);
 
+    event ProtocolFeeCollected(address recipient, uint256 amount);
+
     /// @notice settle the battle
     /// battle will fetch the price of underlying asset, and determinate the
     /// battle result.
