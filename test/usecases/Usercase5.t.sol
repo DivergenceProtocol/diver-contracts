@@ -3,10 +3,10 @@
 pragma solidity ^0.8.0;
 
 import { Mint } from "../ManagerMintBurn.t.sol";
-import { IManagerActions } from "../../src/periphery/interfaces/IManagerActions.sol";
-import { IManager } from "../../src/periphery/interfaces/IManager.sol";
-import { AddLiqParams } from "../../src/periphery/params/Params.sol";
-import { IBattleState } from "../../src/core/interfaces/battle/IBattleState.sol";
+import { IManagerActions } from "periphery/interfaces/IManagerActions.sol";
+import { IManager } from "periphery/interfaces/IManager.sol";
+import { AddLiqParams } from "periphery/params/peripheryParams.sol";
+import { IBattleState } from "core/interfaces/battle/IBattleState.sol";
 import { console2 } from "@std/console2.sol";
 import {
     getAddLiquidityParams,
@@ -23,11 +23,11 @@ import {
 } from "../shared/Actions.sol";
 import { IERC20 } from "@oz/token/ERC20/IERC20.sol";
 import { IManagerState } from "../../src/periphery/interfaces/IManagerState.sol";
-import "../../src/core/types/common.sol";
-import "../../src/core/types/enums.sol";
-import { TradeParams } from "../../src/periphery/params/Params.sol";
-import { getTS, Period } from "../shared/utils.sol";
-import { ManagerTrade } from "../ManagerTrade.t.sol";
+import "core/types/common.sol";
+import "core/types/enums.sol";
+import { TradeParams } from "periphery/params/peripheryParams.sol";
+import { getTS, Period } from "test/shared/utils.sol";
+import { ManagerTrade } from "test/ManagerTrade.t.sol";
 
 contract UseCase5 is ManagerTrade {
     function setUp() public virtual override {
@@ -35,7 +35,7 @@ contract UseCase5 is ManagerTrade {
     }
 
     function test_Usecase5() public {
-        address battleAddr = super.test();
+        address battleAddr = super.test_AddLiquidity();
         // (address spear, ) = IBattleState(battleAddr).spearAndShield();
         // AddLiqParams memory addLiqParams = defaultAddLiqParams;
         // addLiqParams.amount = 1000_000e18;
@@ -50,25 +50,27 @@ contract UseCase5 is ManagerTrade {
 
         vm.startPrank(bob);
         logSlot0(battleAddr);
-        (uint256 amtIn0, uint256 amtOut0, ) = trade(bob, manager, params1);
+        (uint256 amtIn0, uint256 amtOut0,) = trade(bob, manager, params1);
         logSpearAndShield(bob, battleAddr);
         logSlot0(battleAddr);
         TradeParams memory params2 = params1;
         params2.tradeType = TradeType.BUY_SHIELD;
-        params2.amountSpecified = int256(amtIn0 - amtOut0);
+        console2.log("amtIn0  %s", amtIn0);
+        console2.log("amtOut0 %s", amtOut0);
+        params2.amountSpecified = int256(amtIn0 > amtOut0 ? amtIn0 - amtOut0 : amtOut0 - amtIn0);
         trade(bob, manager, params2);
         logSpearAndShield(bob, battleAddr);
         logSlot0(battleAddr);
         vm.stopPrank();
     }
 
-    function logSlot0(address battleAddr) view internal {
-        (uint160 sqrtPriceX96, int24 tick, ) = IBattleState(battleAddr).slot0();
+    function logSlot0(address battleAddr) internal view {
+        (uint160 sqrtPriceX96, int24 tick,) = IBattleState(battleAddr).slot0();
         console2.log("log@ tick: %s", tick);
         console2.log("log@ sqrtPriceX96: %s", sqrtPriceX96);
     }
 
-    function logSpearAndShield(address user, address battleAddr) view internal {
+    function logSpearAndShield(address user, address battleAddr) internal view {
         (address spear, address shield) = IBattleState(battleAddr).spearAndShield();
         console2.log("log@ shield balance: %s", IERC20(shield).balanceOf(user));
         console2.log("log@ spear balance: %s", IERC20(spear).balanceOf(user));

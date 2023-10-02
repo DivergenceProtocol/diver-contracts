@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import { TickMath as UniTickMath } from "@uniswap/v3-core/contracts/libraries/TickMath.sol";
-import { Errors } from "../errors/Errors.sol";
+import { Errors } from "core/errors/Errors.sol";
 
 library TickMath {
     int24 internal constant MIN_TICK = -45953;

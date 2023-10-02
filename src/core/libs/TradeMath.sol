@@ -6,9 +6,9 @@ import { SafeCast } from "@oz/utils/math/SafeCast.sol";
 import { FullMath } from "@uniswap/v3-core/contracts/libraries/FullMath.sol";
 import { SqrtPriceMath } from "@uniswap/v3-core/contracts/libraries/SqrtPriceMath.sol";
 import { DiverSqrtPriceMath } from "./DiverSqrtPriceMath.sol";
-import { ComputeTradeStepParams } from "../params/ComputeTradeStepParams.sol";
+import { ComputeTradeStepParams } from "core/params/ComputeTradeStepParams.sol";
 import { TickMath } from "./TickMath.sol";
-import { TradeType } from "../types/enums.sol";
+import { TradeType } from "core/types/enums.sol";
 
 import { console2 } from "@std/console2.sol";
 

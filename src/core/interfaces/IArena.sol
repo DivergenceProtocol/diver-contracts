@@ -2,15 +2,24 @@
 
 pragma solidity ^0.8.0;
 
-import { Fee, BattleKey, Outcome } from "../types/common.sol";
-import { CreateAndInitBattleParams } from "../../periphery/params/Params.sol";
+import { Fee, BattleKey, Outcome } from "core/types/common.sol";
+import { CreateAndInitBattleParams } from "periphery/params/peripheryParams.sol";
 
 interface IArenaAdmin {
-    event SupportedChanged(address collateralToken, string underlying, bool isSupported);
     event FeeChanged(string underlying, Fee fee);
+    event CollateralWhitelistChanged(address collateral, bool state);
+    event UnderlyingWhitelistChanged(string underlying, bool state, Fee fee);
+    event PermissionlessChanged(bool state);
+    event SupportedChanged(address collateralToken, string underlying, bool isSupported);
     event ManagerChanged(address old, address _new);
+    event OracleChanged(address old, address _new);
 
     function setFeeForUnderlying(string calldata underlying, Fee calldata newFee) external;
+    function setCollateralWhitelist(address collateral, bool isSupported) external;
+    function setUnderlyingWhitelist(string memory underlying, bool isSupported, Fee calldata fee) external;
+    function setPermissionless() external;
+    function setManager(address _manager) external;
+    function setOracle(address _oracle) external;
 }
 
 interface IArenaCreation {

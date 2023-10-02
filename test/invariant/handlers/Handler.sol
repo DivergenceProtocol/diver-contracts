@@ -4,10 +4,10 @@ pragma solidity ^0.8.0;
 
 import { ReadyFixture } from "../../fixtures/Ready.sol";
 import { removeLiquidity, getBattleKey, getCreateBattleParams, createBattle, TradeParams, trade, getTradeParams } from "../../shared/Actions.sol";
-import { TickMath } from "../../../src/core/libs/TickMath.sol";
-import { CreateAndInitBattleParams } from "../../../src/periphery/params/Params.sol";
-import "../../../src/core/types/enums.sol";
-import "../../../src/core/types/common.sol";
+import { TickMath } from "core/libs/TickMath.sol";
+import { CreateAndInitBattleParams } from "periphery/params/peripheryParams.sol";
+import "core/types/enums.sol";
+import "core/types/common.sol";
 import { EnumerableSet } from "@oz/utils/structs/EnumerableSet.sol";
 import { getAddLiquidityParams, addLiquidity, AddLiqParams, redeemObligation } from "../../shared/Actions.sol";
 import { console2 } from "@std/console2.sol";
@@ -20,8 +20,8 @@ import { TestERC20 } from "../../shared/TestERC20.sol";
 import { IERC721 } from "@oz/token/ERC721/IERC721.sol";
 import { IManager } from "../../../src/periphery/interfaces/IManager.sol";
 import { OracleForTest } from "../../oracle/OracleForTest.sol";
-import { IBattle } from "../../../src/core/interfaces/battle/IBattle.sol";
-import { ISToken } from "../../../src/core/interfaces/ISToken.sol";
+import { IBattle } from "core/interfaces/battle/IBattle.sol";
+import { ISToken } from "core/interfaces/ISToken.sol";
 import { IERC20 } from "@oz/token/ERC20/IERC20.sol";
 import { Multicall } from "@oz/utils/Multicall.sol";
 import { ERC721Enumerable } from "@oz/token/ERC721/extensions/ERC721Enumerable.sol";
@@ -384,7 +384,6 @@ contract Handler is CommonBase, StdCheats, StdUtils, StdAssertions {
         vm.stopPrank();
     }
 
-
     function adjustAmount(int256 amount) internal view returns (int256) {
         if (amount < 0) {
             return bound(amount, -1e9 * int256(unit), -1);
@@ -723,12 +722,10 @@ contract Handler is CommonBase, StdCheats, StdUtils, StdAssertions {
         console2.log("ghost_tradeAmount:      %s", ghost_tradeAmount);
         console2.log("ghost_totalFee:         %s", ghost_totalFee);
         console2.log("ghost_total_camount:         %s", ghost_total_camount);
-        console2.log("ghost_total_samount:         %s", ghost_total_samount_spear+ghost_total_samount_spear);
+        console2.log("ghost_total_samount:         %s", ghost_total_samount_spear + ghost_total_samount_spear);
         // uint256 public ghost_total_camount;
         // uint256 public ghost_total_samount_spear;
         // uint256 public ghost_total_samount_shield;
-
-
     }
 
     function checkBalance() public view returns (uint256 spearAmount, uint256 shieldAmount, uint256 balanceAmount) {

@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-import { BattleKey } from "../../types/common.sol";
-import { TradeType } from "../../types/enums.sol";
+import { BattleKey } from "core/types/common.sol";
+import { TradeType } from "core/types/enums.sol";
 
 interface ITradeCallback {
     struct TradeCallbackData {

@@ -18,10 +18,10 @@ import {
     withdrawObligation
 } from "../shared/Actions.sol";
 import { IManager } from "../../src/periphery/interfaces/IManager.sol";
-import { Owed, LiquidityType } from "../../src/core/types/common.sol";
-import { IBattle } from "../../src/core/interfaces/battle/IBattle.sol";
-import { TradeParams, CreateAndInitBattleParams, AddLiqParams } from "../../src/periphery/params/Params.sol";
-import { TradeType } from "../../src/core/types/enums.sol";
+import { Owed, LiquidityType } from "core/types/common.sol";
+import { IBattle } from "core/interfaces/battle/IBattle.sol";
+import { TradeParams, CreateAndInitBattleParams, AddLiqParams } from "periphery/params/peripheryParams.sol";
+import { TradeType } from "core/types/enums.sol";
 import { TestERC20 } from "../shared/TestERC20.sol";
 import { console2 } from "@std/console2.sol";
 import { OracleForTest as Oracle } from "../oracle/OracleForTest.sol";
@@ -43,7 +43,7 @@ contract Usecase1 is ManagerTrade {
         addLiquidity(alice, manager, addLiqParams, quoter);
         vm.stopPrank();
 
-        AddLiqParams memory outRangeAddLiqParams = getAddLiquidityParams(defaultBattleKey, dave, -2000, -1500, LiquidityType.COLLATERAL, 1000e18, 300);
+        AddLiqParams memory outRangeAddLiqParams = getAddLiquidityParams(defaultBattleKey, dave, -2100, -1500, LiquidityType.COLLATERAL, 1000e18, 300);
         vm.startPrank(dave);
         addLiquidity(dave, manager, outRangeAddLiqParams, quoter);
         position(dave, manager, quoter);
@@ -52,7 +52,6 @@ contract Usecase1 is ManagerTrade {
         trade100SpearAnd90Shield(bob);
 
         vm.startPrank(dave);
-        // uint256 balance1 = TestERC20(collateral).balanceOf(dave);
         position(dave, manager, quoter);
         removeLiquidity(dave, manager, 1);
 

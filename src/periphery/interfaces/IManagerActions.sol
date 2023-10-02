@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-import { Owed, LiquidityType, TradeType } from "../../core/types/common.sol";
-import { ITradeCallback } from "../../core/interfaces/callback/ITradeCallback.sol";
-import { AddLiqParams, TradeParams } from "../params/Params.sol";
+import { Owed, LiquidityType, TradeType } from "core/types/common.sol";
+import { ITradeCallback } from "core/interfaces/callback/ITradeCallback.sol";
+import { AddLiqParams, TradeParams } from "periphery/params/peripheryParams.sol";
 
 interface IManagerLiquidity {
     /// @notice Emitted when liquidity is added
@@ -48,7 +48,7 @@ interface IManagerLiquidity {
     function withdrawObligation(uint256 tokenId) external;
 
     /// @notice after removeLiquidity users can call redeemObligation to get their collateral by spending stoken
-    /// @param tokenId The id of the nft 
+    /// @param tokenId The id of the nft
     function redeemObligation(uint256 tokenId) external;
 }
 

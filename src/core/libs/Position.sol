@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import { SafeCast } from "@oz/utils/math/SafeCast.sol";
 import { FullMath } from "@uniswap/v3-core/contracts/libraries/FullMath.sol";
 import { FixedPoint128 } from "@uniswap/v3-core/contracts/libraries/FixedPoint128.sol";
-import { PositionInfo, GrowthX128, Owed } from "../types/common.sol";
+import { PositionInfo, GrowthX128, Owed } from "core/types/common.sol";
 
 library Position {
     using SafeCast for uint256;
