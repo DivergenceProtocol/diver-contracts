@@ -5,16 +5,16 @@ import { Test } from "@std/Test.sol";
 import { TestERC20 } from "../shared/TestERC20.sol";
 import { Handler } from "../invariant/handlers/Handler.sol";
 import { IERC721Enumerable, IERC721 } from "@oz/token/ERC721/extensions/IERC721Enumerable.sol";
-import { LiquidityType, Outcome } from "../../src/core/types/common.sol";
+import { LiquidityType, Outcome } from "core/types/common.sol";
 import { IManagerState } from "../../src/periphery/interfaces/IManagerState.sol";
 import { IERC20 } from "@oz/token/ERC20/IERC20.sol";
-import { IBattleState } from "../../src/core/interfaces/battle/IBattleState.sol";
+import { IBattleState } from "core/interfaces/battle/IBattleState.sol";
 import { console2 } from "@std/console2.sol";
 import { Multicall } from "@oz/utils/Multicall.sol";
 import { Position, PositionState } from "../../src/periphery/types/common.sol";
-import { IBattleTrade } from "../../src/core/interfaces/battle/IBattleActions.sol";
+import { IBattleTrade } from "core/interfaces/battle/IBattleActions.sol";
 import { IQuoter } from "../../src/periphery/interfaces/IQuoter.sol";
-import {BaseHandler} from "./handlers/BaseHandler.sol";
+import { BaseHandler } from "./handlers/BaseHandler.sol";
 
 // It focuses on four types of trades.
 contract DivergenceLiquidityInvariant is Test {
@@ -27,7 +27,6 @@ contract DivergenceLiquidityInvariant is Test {
 
         // handler.getManager();
         selectors.push(BaseHandler.addLiquidityByCol.selector);
-
 
         targetSelector(FuzzSelector({ addr: address(handler), selectors: selectors }));
 

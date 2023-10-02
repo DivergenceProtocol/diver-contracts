@@ -4,12 +4,12 @@ pragma solidity ^0.8.0;
 
 import { DiverLiquidityAmounts, LiquidityAmounts } from "../src/periphery/libs/DiverLiquidityAmounts.sol";
 import { Test } from "@std/Test.sol";
-import { TickMath } from "../src/core/libs/TickMath.sol";
+import { TickMath } from "core/libs/TickMath.sol";
 import { console2 } from "@std/console2.sol";
 import { SqrtPriceMath } from "@uniswap/v3-core/contracts/libraries/SqrtPriceMath.sol";
 
 contract DiverLiquidityAmountsTest is Test {
-    function testGetLiquidityFromCs1() public view {
+    function testGetLiquidityFromCs1() public {
         int24 tickLower = -17_005;
         int24 tickCurrent = 0;
         int24 tickUpper = -12_862;
@@ -27,9 +27,10 @@ contract DiverLiquidityAmountsTest is Test {
         console2.log("currentPrice: %s", currentPrice);
         console2.log("amount:  %s", amount);
         console2.log("csh:     %s", csh);
+        assertGt(csh, 0);
     }
 
-    function testGetLiquidityFromCs() public view {
+    function testGetLiquidityFromCs() public {
         int24 tickLower = -35_853;
         int24 tickCurrent = -25_853;
         int24 tickUpper = -20_453;
@@ -45,9 +46,10 @@ contract DiverLiquidityAmountsTest is Test {
         uint256 cs = csp + csh;
         console2.log("amount: %s", amount);
         console2.log("cs:     %s", cs);
+        assertGt(cs, 0);
     }
 
-    function testGetLiquidityFromSToken() public view {
+    function testGetLiquidityFromSToken() public {
         int24 tickLower = -35_853;
         int24 tickUpper = -20_453;
         uint160 lowerPrice = TickMath.getSqrtRatioAtTick(tickLower);
@@ -56,5 +58,6 @@ contract DiverLiquidityAmountsTest is Test {
         uint256 amount = 200e6;
         uint128 liquidity = DiverLiquidityAmounts.getLiquidityFromSToken(lowerPrice, upperPrice, amount);
         console2.log("liquidity: %s", liquidity);
+        assertGt(amount, 0);
     }
 }

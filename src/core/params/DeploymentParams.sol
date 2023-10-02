@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.0;
 
-import { BattleKey, Fee } from "../types/common.sol";
+import { BattleKey, Fee } from "core/types/common.sol";
 
 struct DeploymentParams {
     address arenaAddr;

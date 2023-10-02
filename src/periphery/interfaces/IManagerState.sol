@@ -11,6 +11,5 @@ interface IManagerState {
      */
     function positions(uint256 tokenId) external view returns (Position memory);
 
-    function nextId() external view returns(uint);
-
+    function nextId() external view returns (uint256);
 }

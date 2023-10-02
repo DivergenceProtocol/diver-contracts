@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.19;
 
 import { ERC721Enumerable, ERC721 } from "@oz/token/ERC721/extensions/ERC721Enumerable.sol";
 import { IERC20 } from "@oz/token/ERC20/IERC20.sol";
@@ -12,22 +12,20 @@ import { FixedPoint128 } from "@uniswap/v3-core/contracts/libraries/FixedPoint12
 import { BattleInitializer } from "./base/BattleInitializer.sol";
 import { LiquidityManagement } from "./base/LiquidityManagement.sol";
 import { PeripheryImmutableState } from "./base/PeripheryImmutableState.sol";
-import { IBattleActions } from "../core/interfaces/battle/IBattleActions.sol";
-import { BattleTradeParams } from "../core/params/BattleTradeParams.sol";
-import { TradeType } from "../core/types/enums.sol";
-import { TickMath } from "../core/libs/TickMath.sol";
-import { Errors } from "../core/errors/Errors.sol";
-import { BattleBurnParams } from "../core/params/BattleBurnParams.sol";
-import { PositionInfo, BattleKey, GrowthX128, Owed, LiquidityType, Outcome } from "../core/types/common.sol";
-import { IArenaCreation } from "../core/interfaces/IArena.sol";
-import { IBattleState } from "../core/interfaces/battle/IBattleState.sol";
+import { IBattleActions } from "core/interfaces/battle/IBattleActions.sol";
+import { BattleTradeParams, BattleBurnParams } from "core/params/coreParams.sol";
+import { TradeType } from "core/types/enums.sol";
+import { TickMath } from "core/libs/TickMath.sol";
+import { Errors } from "core/errors/Errors.sol";
+import { IArenaCreation } from "core/interfaces/IArena.sol";
+import { IBattleState } from "core/interfaces/battle/IBattleState.sol";
 import { IManagerState } from "./interfaces/IManagerState.sol";
 import { IManager } from "./interfaces/IManager.sol";
 import { IManagerLiquidity } from "./interfaces/IManagerActions.sol";
-import { AddLiqParams } from "./params/Params.sol";
-import { TradeParams } from "./params/Params.sol";
+import { AddLiqParams, TradeParams } from "periphery/params/peripheryParams.sol";
 import { PositionState, Position } from "./types/common.sol";
 import { CallbackValidation } from "./libs/CallbackValidation.sol";
+import { PositionInfo, BattleKey, GrowthX128, Owed, LiquidityType, Outcome } from "core/types/common.sol";
 
 /// @title Manager
 contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableState, BattleInitializer, LiquidityManagement {
@@ -38,7 +36,7 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
     mapping(uint256 => Position) private _positions;
 
     modifier isAuthorizedForToken(uint256 tokenId) {
-        require(_isApprovedOrOwner(msg.sender, tokenId), 'Not approved');
+        require(_isApprovedOrOwner(msg.sender, tokenId), "Not approved");
         _;
     }
 
@@ -183,7 +181,7 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
         emit ObligationWithdrawn(pm.battleAddr, tokenId, toLp);
     }
 
-    function redeemObligation(uint256 tokenId) external override isAuthorizedForToken(tokenId){
+    function redeemObligation(uint256 tokenId) external override isAuthorizedForToken(tokenId) {
         Position memory pm = _positions[tokenId];
         if (pm.state != PositionState.LiquidityRemoved) {
             revert Errors.LiquidityNotRemoved();
@@ -248,5 +246,4 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
     function positions(uint256 tokenId) external view override returns (Position memory) {
         return _positions[tokenId];
     }
-
 }

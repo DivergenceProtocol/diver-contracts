@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import { IOracle } from "../../src/core/interfaces/IOracle.sol";
+import { IOracle } from "core/interfaces/IOracle.sol";
 
 contract OracleForTest is IOracle {
     mapping(string => uint256) public price;

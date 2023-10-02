@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./enums.sol";
+import { LiquidityType, Outcome, TradeType } from "core/types/enums.sol";
 
 struct BattleKey {
     /// @dev The address of the token used as collateral in the battle, eg: usdt/usdc

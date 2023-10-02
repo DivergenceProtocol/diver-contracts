@@ -3,15 +3,15 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Script.sol";
-import "../../src/core/Arena.sol";
+import "core/Arena.sol";
 import { WETH9 } from "test/shared/WETH9.sol";
 import { TestERC20 } from "test/shared/TestERC20.sol";
-import { IBattleInitializer } from "../../src/periphery/interfaces/IBattleInitializer.sol";
-import { IManagerState } from "../../src/periphery/interfaces/IManagerState.sol";
-import { Quoter } from "../../src/periphery/lens/Quoter.sol";
-import { Fee } from "../../src/core/types/common.sol";
-import { Battle } from "../../src/core/Battle.sol";
-import { Manager } from "../../src/periphery/Manager.sol";
+import { IBattleInitializer } from "periphery/interfaces/IBattleInitializer.sol";
+import { IManagerState } from "periphery/interfaces/IManagerState.sol";
+import { Quoter } from "periphery/lens/Quoter.sol";
+import { Fee } from "core/types/common.sol";
+import { Battle } from "core/Battle.sol";
+import { Manager } from "periphery/Manager.sol";
 
 struct DeployAddrs {
     address owner;

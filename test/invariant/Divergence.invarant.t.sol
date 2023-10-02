@@ -6,14 +6,14 @@ import { DeploymentFixture } from "../fixtures/Ready.sol";
 import { TestERC20 } from "../shared/TestERC20.sol";
 import { Handler } from "../invariant/handlers/Handler.sol";
 import { IERC721Enumerable, IERC721 } from "@oz/token/ERC721/extensions/IERC721Enumerable.sol";
-import { LiquidityType, Outcome } from "../../src/core/types/common.sol";
+import { LiquidityType, Outcome } from "core/types/common.sol";
 import { IManagerState } from "../../src/periphery/interfaces/IManagerState.sol";
 import { IERC20 } from "@oz/token/ERC20/IERC20.sol";
-import { IBattleState } from "../../src/core/interfaces/battle/IBattleState.sol";
+import { IBattleState } from "core/interfaces/battle/IBattleState.sol";
 import { console2 } from "@std/console2.sol";
 import { Multicall } from "@oz/utils/Multicall.sol";
 import { Position, PositionState } from "../../src/periphery/types/common.sol";
-import { IBattleTrade } from "../../src/core/interfaces/battle/IBattleActions.sol";
+import { IBattleTrade } from "core/interfaces/battle/IBattleActions.sol";
 import { IQuoter } from "../../src/periphery/interfaces/IQuoter.sol";
 
 // contract DivergenceInvariant is DeploymentFixture {
@@ -101,15 +101,9 @@ contract DivergenceInvariant is Test {
             (Position memory p) = abi.decode(results[i], (Position));
             assertOne(p);
         }
-
-        // for (uint256 i; i < total; i++) {
-        //     LibManager.Position memory pos =
-        // IManagerState(handler.manager()).positions(i);
-        //     assertOne(pos);
-        // }
-        // assertGt(total, 0, "total zero");
     }
 
+    // run this invariant test on feat-debug branch
     /// forge-config: default.invariant.runs = 1
     /// forge-config: default.invariant.depth = 3000
     function invariant_Zero() public {
@@ -127,28 +121,27 @@ contract DivergenceInvariant is Test {
             uint256 total = IERC721Enumerable(manager).totalSupply();
             console2.log("total nft: ", total);
             if (outcome == Outcome.SPEAR_WIN) {
-                assertEq(totalSpear, uint256(0), "Spear");
+                assertEq(totalSpear, 0, "Spear");
                 // assertEq(totalShield, 0, "total shield error");
             } else if (outcome == Outcome.SHIELD_WIN) {
                 // assertEq(totalSpear, 0, "total spear error");
-                assertEq(totalShield, uint256(0), "Shield");
+                assertEq(totalShield, 0, "Shield");
             } else {
-                assertGe(uint(1) , uint(0), "what");
+                assertGe(uint256(1), 0, "what");
             }
             uint256 collateralInBattle = IERC20(collateral).balanceOf(battle);
             console2.log("collateralInBattle:", collateralInBattle);
-            assertGe(collateralInBattle, uint256(0), "collateral after withdraw");
+            assertGe(collateralInBattle, 0, "collateral after withdraw");
         } else {
             // uint256 collateralInBattle = IERC20(collateral).balanceOf(battle);
             // console2.log("collateralInBattle", collateralInBattle);
         }
         if (!handler.battleSettled()) {
-            (uint spearTotal, uint shieldTotal, ) = handler.checkBalance();
-            uint total = spearTotal > shieldTotal ? spearTotal : shieldTotal;
-            uint seedCollateral = handler.ghost_seed_collateral();
-            uint collateralIn = handler.ghost_collatealIn();
-            assertGe(seedCollateral+collateralIn, total, "collateral should greater than/equal stoken");
+            (uint256 spearTotal, uint256 shieldTotal,) = handler.checkBalance();
+            uint256 total = spearTotal > shieldTotal ? spearTotal : shieldTotal;
+            uint256 seedCollateral = handler.ghost_seed_collateral();
+            uint256 collateralIn = handler.ghost_collatealIn();
+            assertGe(seedCollateral + collateralIn, total, "collateral should greater than/equal stoken");
         }
     }
-
 }

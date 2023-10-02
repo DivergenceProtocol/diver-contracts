@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import "../../types/common.sol";
+import "core/types/common.sol";
 
 interface IBattleState {
     /// @notice Get slotInfo by slotKey.
@@ -37,5 +37,5 @@ interface IBattleState {
 
     function getInsideLast(int24 tickLower, int24 tickUpper) external view returns (GrowthX128 memory);
 
-    function fee() external view returns(uint, uint , uint);
+    function fee() external view returns (uint256, uint256, uint256);
 }

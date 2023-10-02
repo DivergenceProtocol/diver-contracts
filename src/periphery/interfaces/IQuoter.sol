@@ -3,7 +3,7 @@
 pragma solidity ^0.8.19;
 
 import { PositionState, Position } from "../types/common.sol";
-import { BattleTradeParams } from "../../core/params/BattleTradeParams.sol";
+import { BattleTradeParams } from "core/params/BattleTradeParams.sol";
 
 interface IQuoter {
     function positions(uint256 tokenId) external view returns (Position memory);

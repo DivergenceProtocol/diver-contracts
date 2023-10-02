@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.14;
+pragma solidity ^0.8.0;
 
-import { LiquidityType } from "../types/common.sol";
+import { LiquidityType } from "core/types/common.sol";
 
 struct BattleBurnParams {
     int24 tickLower;

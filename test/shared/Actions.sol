@@ -2,16 +2,15 @@
 
 pragma solidity ^0.8.0;
 
-import { CreateAndInitBattleParams } from "../../src/periphery/params/Params.sol";
 import { IBattleInitializer } from "../../src/periphery/interfaces/IBattleInitializer.sol";
-import { AddLiqParams, TradeParams } from "../../src/periphery/params/Params.sol";
+import { AddLiqParams, TradeParams, CreateAndInitBattleParams } from "periphery/params/peripheryParams.sol";
 import { IManager } from "../../src/periphery/interfaces/IManager.sol";
-import { IBattle } from "../../src/core/interfaces/battle/IBattle.sol";
-import { IBattleBase } from "../../src/core/interfaces/battle/IBattleActions.sol";
-import { BattleKey, LiquidityType, TradeType } from "../../src/core/types/common.sol";
+import { IBattle } from "core/interfaces/battle/IBattle.sol";
+import { IBattleBase } from "core/interfaces/battle/IBattleActions.sol";
+import { BattleKey, LiquidityType, TradeType } from "core/types/common.sol";
 import { Position } from "../../src/periphery/types/common.sol";
 import { IQuoter } from "../../src/periphery/interfaces/IQuoter.sol";
-import {TickMath} from "../../src/core/libs/TickMath.sol";
+import { TickMath } from "core/libs/TickMath.sol";
 import { console2 } from "@std/console2.sol";
 import { ERC721Enumerable } from "@oz/token/ERC721/extensions/ERC721Enumerable.sol";
 
@@ -52,8 +51,8 @@ function getAddLiquidityParams(
     });
 }
 
-function addLiquidity(address sender, address manager, AddLiqParams memory params, address quoter) returns(uint tokenId) {
-    (tokenId, ) = IManager(manager).addLiquidity(params);
+function addLiquidity(address sender, address manager, AddLiqParams memory params, address quoter) returns (uint256 tokenId) {
+    (tokenId,) = IManager(manager).addLiquidity(params);
     console2.log("log@ =====>begin addLiquidity user: %s <======", sender);
     console2.log("log@ battleKey collateral: %s", params.battleKey.collateral);
     console2.log("log@ battleKey underlying: %s", params.battleKey.underlying);
@@ -76,10 +75,9 @@ function removeLiquidity(address sender, address manager, uint256 tokenId) {
     console2.log("log@ =====>end removeLiquidity user: %s <======", sender);
 }
 
-function redeemObligation(address sender, address manager, uint tokenId) {
+function redeemObligation(address sender, address manager, uint256 tokenId) {
     console2.log("redeemObligation %s", sender);
     IManager(manager).redeemObligation(tokenId);
-
 }
 
 function getTradeParams(
@@ -199,8 +197,4 @@ function positionTokenId(uint256 tokenId, address manager, address quoter) view 
     console2.log("log@ inside spearOut: %s", p.insideLast.spearOut);
     console2.log("log@ inside shieldOut: %s", p.insideLast.shieldOut);
     console2.log("log@ =====>end position user: %s <======", sender);
-}
-
-function settle(address battle) {
-    IBattle(battle).settle();
 }

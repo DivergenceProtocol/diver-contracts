@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import { Test } from "@std/Test.sol";
 import { AggregatorV3Interface } from "chainlink/interfaces/AggregatorV3Interface.sol";
 import { console2 } from "@std/console2.sol";
-import { Oracle } from "../../src/core/Oracle.sol";
+import { Oracle } from "core/Oracle.sol";
 import { getTS, Period } from "../shared/utils.sol";
 
 contract OracleChainlinkTest is Test {
@@ -27,7 +27,7 @@ contract OracleChainlinkTest is Test {
         oracle.setExternalOracle(underlyings, oracles);
     }
 
-    function test_chainLink() view public {
+    function test_chainLink() public view {
         // (uint256 start, uint256 expiries) = getTS(Period.BIWEEKLY);
         console2.log("now: %s", block.timestamp);
         (uint256 price_, uint256 actualTs) = oracle.getPriceByExternal(oracles[0], block.timestamp - 1000);
@@ -47,8 +47,7 @@ contract OracleChainlinkTest is Test {
     }
 
     function test_UpdatePhase() public {
-        (uint80 roundId, , , , ) =
-            AggregatorV3Interface(btc_usd).latestRoundData();
+        (uint80 roundId,,,,) = AggregatorV3Interface(btc_usd).latestRoundData();
         console2.log("roundId %s", roundId);
         oracle.updatePhase(roundId, "BTC");
         uint80 phaseId = roundId >> 64;
@@ -59,21 +58,17 @@ contract OracleChainlinkTest is Test {
         assertEq(endRoundId, roundId, "latest round id");
     }
 
-    function test_GtLatestRound() view public {
-        (uint80 roundId, , , , ) =
-            AggregatorV3Interface(btc_usd).latestRoundData();
-        (uint80 roundId1, int256 answer1, uint256 startedAt1, uint256 updatedAt1, ) =
-        AggregatorV3Interface(btc_usd).getRoundData(roundId+1);
+    function test_GtLatestRound() public view {
+        (uint80 roundId,,,,) = AggregatorV3Interface(btc_usd).latestRoundData();
+        (uint80 roundId1, int256 answer1, uint256 startedAt1, uint256 updatedAt1,) = AggregatorV3Interface(btc_usd).getRoundData(roundId + 1);
         console2.log("roundId1 %s", roundId1);
         console2.log("answer1 %s", answer1);
         console2.log("startedAt1 %s", startedAt1);
         console2.log("updateAt1 %s", updatedAt1);
-
     }
 
-    // function getPriceByExternal(address cOracleAddr, uint256 ts) public view returns (uint256 price_, uint256 actualTs) {
-    function test_GetPriceByExternal() view public {
-        (uint p, uint ts) = oracle.getPriceByExternal(oracle.getCOracle("BTC"), 1692954000);
+    function test_GetPriceByExternal() public view {
+        (uint256 p, uint256 ts) = oracle.getPriceByExternal(oracle.getCOracle("BTC"), 1692954000);
         console2.log("p %s", p);
         console2.log("ts %s", ts);
     }

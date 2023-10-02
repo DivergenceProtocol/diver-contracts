@@ -4,10 +4,10 @@ pragma solidity ^0.8.0;
 
 import { ReadyFixture } from "../../fixtures/Ready.sol";
 import { removeLiquidity, getBattleKey, getCreateBattleParams, createBattle, TradeParams, trade, getTradeParams } from "../../shared/Actions.sol";
-import { TickMath } from "../../../src/core/libs/TickMath.sol";
-import { CreateAndInitBattleParams } from "../../../src/periphery/params/Params.sol";
-import "../../../src/core/types/enums.sol";
-import "../../../src/core/types/common.sol";
+import { TickMath } from "core/libs/TickMath.sol";
+import { CreateAndInitBattleParams } from "periphery/params/peripheryParams.sol";
+import "core/types/enums.sol";
+import "core/types/common.sol";
 import { EnumerableSet } from "@oz/utils/structs/EnumerableSet.sol";
 import { getAddLiquidityParams, addLiquidity, AddLiqParams } from "../../shared/Actions.sol";
 import { console2 } from "@std/console2.sol";
@@ -19,8 +19,8 @@ import { TestERC20 } from "../../shared/TestERC20.sol";
 import { IERC721 } from "@oz/token/ERC721/IERC721.sol";
 import { IManager } from "../../../src/periphery/interfaces/IManager.sol";
 import { OracleForTest } from "../../oracle/OracleForTest.sol";
-import { IBattle } from "../../../src/core/interfaces/battle/IBattle.sol";
-import { ISToken } from "../../../src/core/interfaces/ISToken.sol";
+import { IBattle } from "core/interfaces/battle/IBattle.sol";
+import { ISToken } from "core/interfaces/ISToken.sol";
 import { IERC20 } from "@oz/token/ERC20/IERC20.sol";
 import { Multicall } from "@oz/utils/Multicall.sol";
 import { ERC721Enumerable } from "@oz/token/ERC721/extensions/ERC721Enumerable.sol";
@@ -79,8 +79,16 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
         address collateralToken = address(0);
         address wethAddr = address(0);
         address _oracle = address(new OracleForTest());
-        DeployAddrs memory das =
-            DeployAddrs({ owner: owner, arenaAddr: arenaAddr, collateralToken: collateralToken, wethAddr: wethAddr, quoter: quoter, oracle: _oracle, decimal: 18, hasFee: hasFee});
+        DeployAddrs memory das = DeployAddrs({
+            owner: owner,
+            arenaAddr: arenaAddr,
+            collateralToken: collateralToken,
+            wethAddr: wethAddr,
+            quoter: quoter,
+            oracle: _oracle,
+            decimal: 18,
+            hasFee: hasFee
+        });
         (manager, arena, oracle, collateral, quoter) = deploy(das);
 
         cAmount = cAmount * 10 ** TestERC20(collateral).decimals();
@@ -162,9 +170,10 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
 
     // function buySpearExactIn() public virtual { }
 
-    uint public ghost_cAmount;
-    uint public ghost_spearAmount;
-    uint public ghost_shieldAmount;
+    uint256 public ghost_cAmount;
+    uint256 public ghost_spearAmount;
+    uint256 public ghost_shieldAmount;
+
     function buySpear(uint256 actorIndexSeed, int256 amount) public useActor(actorIndexSeed) {
         if (ghost_nft_count == 0) {
             return;
@@ -173,11 +182,11 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
         if (p == TickMath.MIN_SQRT_RATIO + 1) {
             return;
         }
-        amount = bound(amount, -1e6*1e18, 1e6*1e18);
+        amount = bound(amount, -1e6 * 1e18, 1e6 * 1e18);
         // deal(collateral, currentActor, amount);
         // TestERC20(collateral).approve(manager, type(uint256).max);
         TradeParams memory param = getTradeParams(bk, TradeType.BUY_SPEAR, amount, currentActor, 0, 0, 300);
-        (uint cAmount0, uint sAmount0, ) = trade(currentActor, manager, param);
+        (uint256 cAmount0, uint256 sAmount0,) = trade(currentActor, manager, param);
         ghost_cAmount += cAmount0;
         ghost_spearAmount += sAmount0;
         // ghost_tradeAmount += amount;

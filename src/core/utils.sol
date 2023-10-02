@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.19;
 
 // round down to two significant digits.
 /// @param price price of underlying. price has decimal 18, eg. eth price 1500 will be 1500 * 10**18

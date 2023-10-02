@@ -3,18 +3,17 @@
 pragma solidity ^0.8.14;
 
 import "./shared/DeployUtils.sol" as utils;
-import { BaseScript } from "./shared/Base.s.sol";
+import { BaseScript } from "script/shared/Base.s.sol";
 import { deploy, DeployAddrs } from "script/shared/DeployUtils.sol";
-import { IBattleInitializer } from "../src/periphery/interfaces/IBattleInitializer.sol";
-import { CreateAndInitBattleParams } from "../src/periphery/params/Params.sol";
-import { IBattleState } from "../src/core/interfaces/battle/IBattleState.sol";
-import { TickMath } from "../src/core/libs/TickMath.sol";
-import "../src/core/types/common.sol";
-import "../src/core/types/enums.sol";
-import { IBattle } from "../src/core/interfaces/battle/IBattle.sol";
-import { Oracle } from "../src/core/Oracle.sol";
-import { getTS, Period } from "../test/shared/utils.sol";
-import { Quoter } from "../src/periphery/lens/Quoter.sol";
+import { IBattleInitializer } from "periphery/interfaces/IBattleInitializer.sol";
+import { CreateAndInitBattleParams } from "periphery/params/peripheryParams.sol";
+import { IBattleState } from "core/interfaces/battle/IBattleState.sol";
+import { TickMath } from "core/libs/TickMath.sol";
+import "core/types/common.sol";
+import { IBattle } from "core/interfaces/battle/IBattle.sol";
+import { Oracle } from "core/Oracle.sol";
+import { getTS, Period } from "test/shared/utils.sol";
+import { Quoter } from "periphery/lens/Quoter.sol";
 
 contract GoerliManagerDeploy is BaseScript {
     address public manager;
@@ -78,8 +77,7 @@ contract GoerliManagerDeploy is BaseScript {
     function createBattle() public virtual returns (address, address, address) {
         BattleKey memory bk = getBattleKey(25000e18);
         uint160 sqrtPriceX96 = 79_228_162_514_264_337_593_543_950_336;
-        CreateAndInitBattleParams memory params =
-            CreateAndInitBattleParams({ bk: bk, sqrtPriceX96: sqrtPriceX96 });
+        CreateAndInitBattleParams memory params = CreateAndInitBattleParams({ bk: bk, sqrtPriceX96: sqrtPriceX96 });
         address battleAddr = IBattleInitializer(address(0xc35717a122b664Fc784De66cF9C27A2cc8cfb62d)).createAndInitializeBattle(params);
         address spear = IBattle(battleAddr).spear();
         address shield = IBattle(battleAddr).shield();
@@ -87,7 +85,7 @@ contract GoerliManagerDeploy is BaseScript {
         return (battleAddr, spear, shield);
     }
 
-    function deployQuoter() public returns(address) {
+    function deployQuoter() public returns (address) {
         Quoter quoter0 = new Quoter(address(0xC09619865f6EEAB0C87360D3200da0b6FA4034a1), address(0));
         return address(quoter0);
     }

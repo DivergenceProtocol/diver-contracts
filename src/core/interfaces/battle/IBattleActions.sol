@@ -2,10 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-import { BattleMintParams } from "../../params/BattleMintParams.sol";
-import { BattleBurnParams } from "../../params/BattleBurnParams.sol";
-import { BattleTradeParams } from "../../params/BattleTradeParams.sol";
-import { PositionInfo, TradeType, Outcome, LiquidityType } from "../../types/common.sol";
+import { BattleMintParams, BattleBurnParams, BattleTradeParams } from "core/params/coreParams.sol";
+import { PositionInfo, TradeType, Outcome, LiquidityType } from "core/types/common.sol";
 
 interface IBattleMintBurn {
     /// @param sender The address who minted the liquidity
@@ -56,13 +54,11 @@ interface IBattleTrade {
         address indexed recipient, uint128 liquidity, uint256 amountIn, uint256 amountOut, TradeType tradeType, uint160 sqrtPriceX96, int24 tick
     );
 
-
     /// @notice trade spear/shield for collateral
     /// @param tp The params of trade
     /// @return cAmount The amount of collateral user spent
     /// @return sAmount The amount of spear/shield user received
     function trade(BattleTradeParams memory tp) external returns (uint256 cAmount, uint256 sAmount, uint256 fAmount);
-
 }
 
 interface IBattleBase {
@@ -74,6 +70,8 @@ interface IBattleBase {
 
     event Exercised(address indexed sender, bool spearWin, uint256 amount);
     
+    event ProtocolFeeCollected(address recipient, uint256 amount);
+
     event ProtocolFeeCollected(address recipient, uint256 amount);
 
     /// @notice settle the battle

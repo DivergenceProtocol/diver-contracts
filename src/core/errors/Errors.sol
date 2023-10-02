@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.14;
+pragma solidity ^0.8.19;
 
 library Errors {
     error BattleNotEnd();
@@ -8,8 +8,6 @@ library Errors {
     error BattleSettled();
     error BattleNotExist();
     error BattleExisted();
-    error CallerNotManager();
-    error CallerNotBattle();
     error Deadline();
     error InsufficientCollateral();
     error InsufficientSpear();
@@ -23,11 +21,12 @@ library Errors {
     error NotSupportedExpiries();
     error NotWETH9();
     error OnlyOwner();
+    error OnlyBattle();
+    error OnlyManager();
     error OraclePriceError();
     error PriceInvalid();
     error Slippage();
     error TickOrderInvalid();
     error TickInvalid();
-    error ZeroAddress();
-    error ZeroAmount();
+    error ZeroValue();
 }
