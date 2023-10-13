@@ -29,4 +29,5 @@ library Errors {
     error TickOrderInvalid();
     error TickInvalid();
     error ZeroValue();
+    error EmptyTrade();
 }

@@ -134,5 +134,4 @@ contract DiverSqrtPriceMathTest is Test {
         console2.log("next tick  %s", nextTick);
         assert(tickUpper - nextTick <= 1 && tickUpper >= nextTick);
     }
-
 }

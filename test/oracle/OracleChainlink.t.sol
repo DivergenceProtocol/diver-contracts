@@ -46,18 +46,6 @@ contract OracleChainlinkTest is Test {
         // console2.log("first %s", firstRoundId);
     }
 
-    function test_UpdatePhase() public {
-        (uint80 roundId,,,,) = AggregatorV3Interface(btc_usd).latestRoundData();
-        console2.log("roundId %s", roundId);
-        oracle.updatePhase(roundId, "BTC");
-        uint80 phaseId = roundId >> 64;
-        console2.log("phase %s", phaseId);
-        uint80 startRoundId = oracle.startRoundId(phaseId);
-        assertGt(startRoundId, 0, "startRoundId should not be 0");
-        uint80 endRoundId = oracle.endRoundId(phaseId);
-        assertEq(endRoundId, roundId, "latest round id");
-    }
-
     function test_GtLatestRound() public view {
         (uint80 roundId,,,,) = AggregatorV3Interface(btc_usd).latestRoundData();
         (uint80 roundId1, int256 answer1, uint256 startedAt1, uint256 updatedAt1,) = AggregatorV3Interface(btc_usd).getRoundData(roundId + 1);

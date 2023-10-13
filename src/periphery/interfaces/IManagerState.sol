@@ -5,7 +5,6 @@ pragma solidity ^0.8.0;
 import { PositionState, Position } from "../types/common.sol";
 
 interface IManagerState {
-    
     /**
      * @notice Get the position belong to a nft
      */

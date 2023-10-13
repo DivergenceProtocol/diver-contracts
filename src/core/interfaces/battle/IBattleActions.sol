@@ -69,7 +69,7 @@ interface IBattleBase {
     event Settled(address indexed sender, Outcome battleResult);
 
     event Exercised(address indexed sender, bool spearWin, uint256 amount);
-    
+
     event ProtocolFeeCollected(address recipient, uint256 amount);
 
     /// @notice settle the battle

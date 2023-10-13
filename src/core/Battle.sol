@@ -376,6 +376,9 @@ contract Battle is IBattle {
 
         uint256 colBalanceBefore = collateralBalance();
         ITradeCallback(msg.sender).tradeCallback(cAmount, sAmount, params.data);
+        if (cAmount == 0 || sAmount == 0) {
+            revert Errors.EmptyTrade();
+        }
         if (colBalanceBefore + cAmount > collateralBalance()) {
             revert Errors.InsufficientCollateral();
         }
