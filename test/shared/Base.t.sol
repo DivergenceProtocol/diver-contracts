@@ -8,6 +8,7 @@ import { console2 } from "@std/console2.sol";
 abstract contract BaseTest is Test {
     function setUp() public virtual {
         console2.log(">>>Divergence Protocol Solidity Test<<<");
-        vm.createSelectFork("localhost");
+        // vm.createSelectFork("localhost");
+        vm.warp(1_681_978_412);
     }
 }

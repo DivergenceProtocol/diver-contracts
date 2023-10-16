@@ -45,7 +45,7 @@ contract Oracle is Ownable {
         uint256 decimalDiff = 10 ** (18 - cOracle.decimals());
         (uint256 cPrice, uint256 cActualTs) = _getPrice(cOracle, roundID, ts, decimalDiff);
 
-        if (block.timestamp - ts > 1 hours && price == 0) {
+        if (block.timestamp - ts > 1 hours && cPrice == 0) {
             // get price from setting
             require(fixPrices[cOracleAddr][ts] != 0, "setting price");
             price = fixPrices[cOracleAddr][ts];
@@ -87,6 +87,7 @@ contract Oracle is Ownable {
             }
         } catch {
             // If there are any errors encountered, then the correct price will be provided by the 'fixPrices'
+            // just return (0, 0)
         }
     }
 
@@ -125,7 +126,8 @@ contract Oracle is Ownable {
                     actualTs = updatedAt;
                 }
             } catch {
-                // just go to next round
+                // something is wrong
+                return (0, 0);
             }
         }
     }

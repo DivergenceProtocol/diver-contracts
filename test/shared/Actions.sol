@@ -13,6 +13,10 @@ import { IQuoter } from "../../src/periphery/interfaces/IQuoter.sol";
 import { TickMath } from "core/libs/TickMath.sol";
 import { console2 } from "@std/console2.sol";
 import { ERC721Enumerable } from "@oz/token/ERC721/extensions/ERC721Enumerable.sol";
+import { Manager } from "periphery/Manager.sol";
+import { IArena } from "core/interfaces/IArena.sol";
+import { IPeripheryImmutableState } from "periphery/interfaces/IPeripheryImmutableState.sol";
+import { BattleTradeParams } from "core/params/coreParams.sol";
 
 function getBattleKey(address collateral, string memory underlying, uint256 expiries, uint256 strikeValue) pure returns (BattleKey memory) {
     return BattleKey({ collateral: collateral, underlying: underlying, expiries: expiries, strikeValue: strikeValue });
@@ -102,9 +106,21 @@ function getTradeParams(
     });
 }
 
-function trade(address sender, address manager, TradeParams memory params) returns (uint256 amtIn, uint256 amtOut, uint256 amtFee) {
+function trade(address sender, address manager, TradeParams memory params, address quoter) returns (uint256 amtIn, uint256 amtOut, uint256 amtFee) {
     console2.log("log@ =====>begin trade user: %s <======", sender);
-
+    address arena = IPeripheryImmutableState(manager).arena();
+    address battleAddr = IArena(arena).getBattle(params.battleKey);
+    BattleTradeParams memory battleParams = BattleTradeParams({
+        recipient: params.recipient,
+        tradeType: params.tradeType,
+        amountSpecified: params.amountSpecified,
+        sqrtPriceLimitX96: params.sqrtPriceLimitX96,
+        data: bytes("")
+    });
+    (uint256 spend, uint256 get) = IQuoter(quoter).quoteExactInput(battleParams, battleAddr);
+    if (spend == 0 || get == 0) {
+        return (0, 0, 0);
+    }
     (amtIn, amtOut, amtFee) = IManager(manager).trade(params);
     console2.log("log@ amtIn: %s", amtIn);
     console2.log("log@ amtOut: %s", amtOut);

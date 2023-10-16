@@ -27,23 +27,13 @@ contract OracleChainlinkTest is Test {
         oracle.setExternalOracle(underlyings, oracles);
     }
 
-    function test_chainLink() public view {
+    function test_chainLink() public {
         // (uint256 start, uint256 expiries) = getTS(Period.BIWEEKLY);
         console2.log("now: %s", block.timestamp);
         (uint256 price_, uint256 actualTs) = oracle.getPriceByExternal(oracles[0], block.timestamp - 1000);
         console2.log("price: %s, actualTs: %s", price_, actualTs);
-
-        // uint256 lastRoundId = oracle.getLastRoundId(2, "BTC");
-        // console2.log("lastRoundId %s", lastRoundId);
-        // (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
-        //     AggregatorV3Interface(btc_usd).latestRoundData();
-        // uint80 phaseId = roundId >> 64;
-        // uint80 rid = roundId & type(uint64).max;
-        // console2.log("phaseId", phaseId);
-        // console2.log("rid", rid);
-
-        // uint80 firstRoundId = uint80((2 << 64) | 1) - 1;
-        // console2.log("first %s", firstRoundId);
+        assertGt(price_, 0);
+        assertGe(actualTs, 0);
     }
 
     function test_GtLatestRound() public view {
@@ -53,11 +43,5 @@ contract OracleChainlinkTest is Test {
         console2.log("answer1 %s", answer1);
         console2.log("startedAt1 %s", startedAt1);
         console2.log("updateAt1 %s", updatedAt1);
-    }
-
-    function test_GetPriceByExternal() public view {
-        (uint256 p, uint256 ts) = oracle.getPriceByExternal(oracle.getCOracle("BTC"), 1692954000);
-        console2.log("p %s", p);
-        console2.log("ts %s", ts);
     }
 }

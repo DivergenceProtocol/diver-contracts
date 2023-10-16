@@ -186,7 +186,7 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
         // deal(collateral, currentActor, amount);
         // TestERC20(collateral).approve(manager, type(uint256).max);
         TradeParams memory param = getTradeParams(bk, TradeType.BUY_SPEAR, amount, currentActor, 0, 0, 300);
-        (uint256 cAmount0, uint256 sAmount0,) = trade(currentActor, manager, param);
+        (uint256 cAmount0, uint256 sAmount0,) = trade(currentActor, manager, param, quoter);
         ghost_cAmount += cAmount0;
         ghost_spearAmount += sAmount0;
         // ghost_tradeAmount += amount;
