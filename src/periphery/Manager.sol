@@ -3,10 +3,8 @@
 pragma solidity ^0.8.19;
 
 import { ERC721Enumerable, ERC721 } from "@oz/token/ERC721/extensions/ERC721Enumerable.sol";
-import { IERC20 } from "@oz/token/ERC20/IERC20.sol";
 import { ERC20Burnable } from "@oz/token/ERC20/extensions/ERC20Burnable.sol";
 import { Multicall } from "@oz/utils/Multicall.sol";
-import { SafeCast } from "@oz/utils/math/SafeCast.sol";
 import { FullMath } from "@uniswap/v3-core/contracts/libraries/FullMath.sol";
 import { FixedPoint128 } from "@uniswap/v3-core/contracts/libraries/FixedPoint128.sol";
 import { BattleInitializer } from "./base/BattleInitializer.sol";
@@ -29,9 +27,6 @@ import { PositionInfo, BattleKey, GrowthX128, Owed, LiquidityType, Outcome } fro
 
 /// @title Manager
 contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableState, BattleInitializer, LiquidityManagement {
-    using SafeCast for uint256;
-    using SafeCast for int256;
-
     uint256 public override nextId;
     mapping(uint256 => Position) private _positions;
 

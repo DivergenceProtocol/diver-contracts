@@ -14,18 +14,15 @@ import { Errors } from "core/errors/Errors.sol";
 import { IBattle } from "core/interfaces/battle/IBattle.sol";
 import { IOracle } from "core/interfaces/IOracle.sol";
 import { IBattleBase } from "core/interfaces/battle/IBattleActions.sol";
-import { IBattleState } from "core/interfaces/battle/IBattleState.sol";
 import { IBattleInit } from "core/interfaces/battle/IBattleInit.sol";
 import { IMintCallback } from "core/interfaces/callback/IMintCallback.sol";
 import { IBattleMintBurn } from "core/interfaces/battle/IBattleActions.sol";
 import { ISToken } from "core/interfaces/ISToken.sol";
 import { IOwner } from "core/interfaces/IOwner.sol";
 import { ITradeCallback } from "core/interfaces/callback/ITradeCallback.sol";
-import { IArenaState } from "core/interfaces/IArena.sol";
 import { TickMath } from "core/libs/TickMath.sol";
 import { Tick } from "core/libs/Tick.sol";
 import { Position } from "core/libs/Position.sol";
-import { DiverSqrtPriceMath } from "core/libs/DiverSqrtPriceMath.sol";
 import { TradeMath } from "core/libs/TradeMath.sol";
 import { TradeCache, TradeState, StepComputations } from "./types/TradeTypes.sol";
 import { LiquidityType, BattleKey, Outcome, GrowthX128, TickInfo, PositionInfo, Fee, TradeType } from "./types/common.sol";
@@ -402,7 +399,7 @@ contract Battle is IBattle {
         if (battleOutcome != Outcome.ONGOING) {
             revert Errors.BattleSettled();
         }
-        (uint256 price,) = IOracle(oracle).getPriceByExternal(cOracle, _bk.expiries);
+        (uint256 price, uint256 ts) = IOracle(oracle).getPriceByExternal(cOracle, _bk.expiries);
         if (price == 0) {
             revert Errors.OraclePriceError();
         }
@@ -411,7 +408,7 @@ contract Battle is IBattle {
         } else {
             battleOutcome = Outcome.SHIELD_WIN;
         }
-        emit Settled(msg.sender, battleOutcome);
+        emit Settled(msg.sender, battleOutcome, ts, price);
     }
 
     /// @inheritdoc IBattleBase

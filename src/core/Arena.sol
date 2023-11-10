@@ -12,7 +12,6 @@ import { Errors } from "core/errors/Errors.sol";
 import { IArena, Fee, Outcome, BattleKey, CreateAndInitBattleParams } from "core/interfaces/IArena.sol";
 import { IBattleInit } from "core/interfaces/battle/IBattleInit.sol";
 import { IBattleState } from "core/interfaces/battle/IBattleState.sol";
-import { IBattleActions, IBattleMintBurn } from "core/interfaces/battle/IBattleActions.sol";
 import { DeploymentParams } from "core/params/coreParams.sol";
 import { SToken } from "core/token/SToken.sol";
 import { getAdjustPrice } from "core/utils.sol";

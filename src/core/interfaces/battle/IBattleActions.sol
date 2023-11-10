@@ -66,7 +66,7 @@ interface IBattleBase {
 
     event InternalInitialized(address indexed battleInternal, int24 tick, uint160 sqrtPriceX96, uint256 startTS, uint256 endTS);
 
-    event Settled(address indexed sender, Outcome battleResult);
+    event Settled(address indexed sender, Outcome battleResult, uint256 ts, uint256 price);
 
     event Exercised(address indexed sender, bool spearWin, uint256 amount);
 

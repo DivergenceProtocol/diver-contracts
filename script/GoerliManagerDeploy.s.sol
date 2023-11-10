@@ -14,6 +14,7 @@ import { IBattle } from "core/interfaces/battle/IBattle.sol";
 import { Oracle } from "core/Oracle.sol";
 import { getTS, Period } from "test/shared/utils.sol";
 import { Quoter } from "periphery/lens/Quoter.sol";
+import { Ditanic } from "test/shared/Ditanic.sol";
 
 contract GoerliManagerDeploy is BaseScript {
     address public manager;
@@ -31,7 +32,20 @@ contract GoerliManagerDeploy is BaseScript {
 
     function run() public broadcaster {
         // address owner = address(this);
+        // deployNormal();
+        // deployDitanic();
+        setMiner();
+        // doBaseThing();
 
+        // deployQuoter();
+    }
+
+    function setMiner() public {
+        Ditanic ditanic = Ditanic(address(0x120987BB69Ba2c62E8E915Db1B81D25E34AE6e9F));
+        ditanic.grantRole(ditanic.MINER_ROLE(), address(0xbc3FBC55B50c05D3B2cc29b74104cDeEB52426Ef));
+    }
+
+    function deployNormal() public {
         address arenaAddr = address(0);
         address collateralToken = address(0);
         address wethAddr = address(0);
@@ -47,10 +61,26 @@ contract GoerliManagerDeploy is BaseScript {
             hasFee: true
         });
         (manager, arena, oracle, collateral, quoter) = deploy(das);
+    }
 
-        // doBaseThing();
-
-        // deployQuoter();
+    function deployDitanic() public {
+        address arenaAddr = address(0);
+        Ditanic ditanic = new Ditanic();
+        address collateralToken = address(ditanic);
+        address wethAddr = address(0);
+        oracle = _deployOracle();
+        DeployAddrs memory das = DeployAddrs({
+            owner: deployer,
+            arenaAddr: arenaAddr,
+            collateralToken: collateralToken,
+            wethAddr: wethAddr,
+            quoter: quoter,
+            oracle: oracle,
+            decimal: 18,
+            hasFee: true
+        });
+        (manager, arena, oracle, collateral, quoter) = deploy(das);
+        ditanic.setArena(arena);
     }
 
     function getBattleKey(uint256 strikeValue) internal view returns (BattleKey memory) {
@@ -68,8 +98,8 @@ contract GoerliManagerDeploy is BaseScript {
         Oracle oracleInst = new Oracle();
         symbols.push("BTC");
         symbols.push("ETH");
-        oracles.push(address(0x8bdFc91FB3f89F4c211461B06afDe84Dc55bedc2));
-        oracles.push(address(0x1B8e08a5457b12ae3CbC4233e645AEE2fA809e39));
+        oracles.push(address(0x6550bc2301936011c1334555e62A87705A81C12C));
+        oracles.push(address(0x62CAe0FA2da220f43a51F86Db2EDb36DcA9A5A08));
         oracleInst.setExternalOracle(symbols, oracles);
         _oracle = address(oracleInst);
     }
