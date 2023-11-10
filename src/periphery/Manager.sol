@@ -44,8 +44,7 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
         }
         address battleAddr;
         (liquidity, battleAddr) = _addLiquidity(params);
-
-        _safeMint(params.recipient, (tokenId = nextId++));
+        tokenId = nextId;
         bytes32 pk = keccak256(abi.encodePacked(address(this), params.tickLower, params.tickUpper));
         _positions[tokenId] = Position({
             tokenId: tokenId,
@@ -61,7 +60,9 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
             spearObligation: 0,
             shieldObligation: 0
         });
+        nextId++;
         emit LiquidityAdded(battleAddr, params.recipient, tokenId, liquidity, params.liquidityType, params.amount);
+        _safeMint(params.recipient, tokenId);
     }
 
     function updateInsideLast(PositionInfo memory pb, Position storage pm) private {
