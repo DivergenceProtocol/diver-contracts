@@ -84,27 +84,27 @@ contract Arena is IArena, Ownable {
         if (msg.sender != ma) {
             revert Errors.OnlyManager();
         }
-        // collateral address error
+        // checks for collateral address error
         if (params.bk.collateral == address(0)) {
             revert Errors.ZeroValue();
         }
 
-        // not supported
+        // checks whether the collateral is supported
         if (!isPermissionless) {
             if (!collateralWhitelist[params.bk.collateral]) {
                 revert Errors.NotSupported();
             }
         }
-
+        // checks whether the underlying is supported
         if (!underlyingWhitelist[params.bk.underlying]) {
             revert Errors.NotSupported();
         }
 
-        // expiries must be at 8am utc
+        // requires expiries to be at 8am utc
         if ((params.bk.expiries - 28_800) % 86_400 != 0 || block.timestamp >= params.bk.expiries) {
             revert Errors.NotSupportedExpiries();
         }
-
+        // requires strike prices to be non-zero and rounded accordingly
         params.bk.strikeValue = getAdjustPrice(params.bk.strikeValue);
         if (params.bk.strikeValue == 0) {
             revert Errors.ZeroValue();
