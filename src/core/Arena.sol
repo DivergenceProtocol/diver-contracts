@@ -86,7 +86,7 @@ contract Arena is IArena, Ownable {
         if (msg.sender != ma) {
             revert Errors.OnlyManager();
         }
-        // collaterl address error
+        // collateral address error
         if (params.bk.collateral == address(0)) {
             revert Errors.ZeroValue();
         }
