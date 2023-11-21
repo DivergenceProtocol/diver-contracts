@@ -92,7 +92,7 @@ contract Battle is IBattle {
         _;
     }
 
-    /// @notice init storage state variable, only be caled once
+    /// @notice Initiates storage state variables. Only called once for a battle.
     function init(DeploymentParams memory params) external override {
         if (_bk.expiries != 0) {
             revert Errors.InitTwice();
@@ -110,7 +110,7 @@ contract Battle is IBattle {
         shield = params.shield;
         manager = params.manager;
         arena = address(msg.sender);
-        slot0 = Slot0({ sqrtPriceX96: params.sqrtPriceX96, tick: TickMath.getTickAtSqrtRatio(params.sqrtPriceX96), unlocked: true });
+        slot0 = Slot0({sqrtPriceX96: params.sqrtPriceX96, tick: TickMath.getTickAtSqrtRatio(params.sqrtPriceX96), unlocked: true});
         maxLiquidityPerTick = Tick.tickSpacingToMaxLiquidityPerTick(30);
     }
 
@@ -269,7 +269,7 @@ contract Battle is IBattle {
         );
         slot0.unlocked = false;
 
-        TradeCache memory cache = TradeCache({ feeProtocol: fee.protocolFee });
+        TradeCache memory cache = TradeCache({feeProtocol: fee.protocolFee});
         TradeState memory state = TradeState({
             amountSpecifiedRemaining: params.amountSpecified,
             amountCalculated: 0,
@@ -311,7 +311,7 @@ contract Battle is IBattle {
                 state.amountSpecifiedRemaining += (step.amountOut).toInt256();
                 state.amountCalculated += (step.amountIn).toInt256();
             }
-
+            // feeAmount is computed on a notional basis using amountOut
             step.feeAmount = FullMath.mulDiv(step.amountOut, fee.transactionFee, 1e6);
             if (cache.feeProtocol > 0) {
                 uint256 delta = FullMath.mulDiv(step.feeAmount, cache.feeProtocol, 1e6);
@@ -324,15 +324,10 @@ contract Battle is IBattle {
                     state.global.fee += FullMath.mulDiv(step.feeAmount, FixedPoint128.Q128, state.liquidity);
                     state.transactionFee += step.feeAmount;
                     state.global.collateralIn += FullMath.mulDiv(step.amountIn, FixedPoint128.Q128, state.liquidity);
-
+                    // Updates all-time growth of spear or shield deltas in the global state
                     if (params.tradeType == TradeType.BUY_SPEAR) {
-                        // buy spear => spearBought and shieldBankOut need be
-                        // considered
-                        // spear bought
                         state.global.spearOut += FullMath.mulDiv(step.amountOut, FixedPoint128.Q128, state.liquidity);
                     } else {
-                        // buy shield => shieldBought and spearBankOut need be
-                        // considered
                         state.global.shieldOut += FullMath.mulDiv(step.amountOut, FixedPoint128.Q128, state.liquidity);
                     }
                 }
@@ -381,10 +376,10 @@ contract Battle is IBattle {
         }
 
         if (params.tradeType == TradeType.BUY_SPEAR) {
-            // mint spear to user
+            // mints spear tokens to the buyer
             ISToken(spear).mint(params.recipient, sAmount);
         } else {
-            // mint shield to user
+            // mints shield tokens to the buyer
             ISToken(shield).mint(params.recipient, sAmount);
         }
         emit Traded(params.recipient, state.liquidity, cAmount, sAmount, params.tradeType, state.sqrtPriceX96, state.tick);
