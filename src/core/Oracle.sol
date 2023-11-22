@@ -8,7 +8,7 @@ import { AggregatorV3Interface } from "chainlink/interfaces/AggregatorV3Interfac
 import { getAdjustPrice } from "./utils.sol";
 
 /// @title Oracle
-/// @notice Get external price by Oracle
+/// @notice Retrieves underlying asset prices used for settling options.
 contract Oracle is Ownable {
     using SafeCast for int256;
 
@@ -32,7 +32,7 @@ contract Oracle is Ownable {
     }
 
     /// @notice Gets and computes price from external oracles
-    /// @param cOracleAddr chainlink price contract
+    /// @param cOracleAddr the contract address for a chainlink price feed
     /// @param ts Timestamp for the asset price
     /// @return price The retrieved price
     function getPriceByExternal(address cOracleAddr, uint256 ts) external view returns (uint256 price, uint256 actualTs) {
@@ -75,8 +75,7 @@ contract Oracle is Ownable {
         uint80 startRoundId = _getStartRoundId(phaseId);
         try AggregatorV3Interface(cOracle).getRoundData(startRoundId) returns (uint80, int256, uint256, uint256 updatedAt, uint80) {
             //updatedAt == 0, invalid value
-            //The situation where 'startRound' occurs after the 'endTs' of a battle is a special case that will affect corrections.
-            //Therefore, it will simply return a value of 0. The correct price will be provided by fixPrices.
+            //In case the 'startRound' occurs after the 'endTs' of a battle due to external oracle updates, it returns 0. The correct price will be provided by fixPrices.
             if (updatedAt == 0 || updatedAt >= ts) {
                 return (0, 0);
             } else {
@@ -84,8 +83,7 @@ contract Oracle is Ownable {
                 (finalPrice, finalTs) = _getPriceInPhase(cOracle, startRoundId, id, ts, decimalDiff);
             }
         } catch {
-            // If there are any errors encountered, then the correct price will be provided by fixPrices.
-            // just return (0, 0)
+            // If there are any errors encountered, it returns (0, 0). the correct price will be provided by fixPrices.
         }
     }
 
