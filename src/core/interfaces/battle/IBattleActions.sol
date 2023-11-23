@@ -6,7 +6,7 @@ import { BattleMintParams, BattleBurnParams, BattleTradeParams } from "core/para
 import { PositionInfo, TradeType, Outcome, LiquidityType } from "core/types/common.sol";
 
 interface IBattleMintBurn {
-    /// @param sender The address who minted the liquidity
+    /// @param sender The address that minted the liquidity
     /// @param liquidityType The type of liquidity minted
     /// @param tickLower The lower tick of the position
     /// @param tickUpper The upper tick of the position
@@ -42,7 +42,7 @@ interface IBattleMintBurn {
 
 /// @title IBattleTrade
 interface IBattleTrade {
-    /// @notice trade spear/shield for collateral
+    /// @notice trade spear/shield tokens for collateral
     /// @param recipient The address who receive spear/shield
     /// @param liquidity liquity in battle after trade
     /// @param amountIn The amount of spear/shield to be traded
@@ -72,7 +72,7 @@ interface IBattleBase {
 
     event ProtocolFeeCollected(address recipient, uint256 amount);
 
-    /// @notice settle the battle
+    /// @notice Settles the battle and determines the outcome.
     /// battle will fetch the price of underlying asset, and determinate the
     /// battle result.
     /// battle finished after settle function was called
