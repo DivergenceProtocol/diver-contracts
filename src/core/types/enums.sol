@@ -11,9 +11,8 @@ enum LiquidityType
 }
 
 enum Outcome
-// battle is ongoing
 {
-    ONGOING,
+    ONGOING, // battle is ongoing
     SPEAR_WIN,
     SHIELD_WIN
 }
