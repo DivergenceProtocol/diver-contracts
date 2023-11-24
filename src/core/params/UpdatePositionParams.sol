@@ -6,5 +6,5 @@ import { ModifyPositionParams } from "./ModifyPositionParams.sol";
 
 struct UpdatePositionParams {
     ModifyPositionParams mpParams;
-    int24 tick;
+    int24 tick; //the current tick
 }

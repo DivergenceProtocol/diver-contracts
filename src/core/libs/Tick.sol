@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 import { TickMath } from "./TickMath.sol";
 import { GrowthX128, TickInfo } from "core/types/common.sol";
 
+/// @notice Manages tick processes and computes variables stored in the tick state
+
 library Tick {
     function tickSpacingToMaxLiquidityPerTick(int24 tickSpacing) internal pure returns (uint128) {
         unchecked {

@@ -4,6 +4,10 @@ pragma solidity ^0.8.0;
 import { TickMath as UniTickMath } from "@uniswap/v3-core/contracts/libraries/TickMath.sol";
 import { Errors } from "core/errors/Errors.sol";
 
+/// @notice Math library for computing sqrt prices from ticks and vice versa. Sets the minimum and maximum of ticks and sqrt prices.
+/// As digital calls and puts are priced between [0.01, 0.99] per collateral, per put-call parity, the sqrtPrice is the sqrt ratio of shieldPrice/spearPrice is between [sqrt(1/99), sqrt(99)].
+/// Computes sqrtPrice for ticks of size 1.0001, i.e. sqrt(1.0001^tick) as fixed point Q64.96 numbers.
+
 library TickMath {
     int24 internal constant MIN_TICK = -45953;
     int24 internal constant MAX_TICK = 45953;
