@@ -69,6 +69,7 @@ library DiverSqrtPriceMath {
     // @param liquidity The amount of usable liquidity
     // @param amount The amount of Spear token delta to mint for the trade
     // @param unit The token decimal unit, e.g. a token with 18 decimals has a unit of 10**18
+    // @return nextSqrtPrice The next sqrt ratio after minting the given amount of Spear tokens
 
     function getNextSqrtPriceFromSpear(
         uint160 sqrtPrice,
@@ -105,6 +106,12 @@ library DiverSqrtPriceMath {
     // where a = sqrtPriceUpper b=sqrtPriceLower s = shield delta
     // Derived from the getSTokenDelta() formula with adjustments for token decimal units and Q96. For reference:
     // https://wolfreealpha.gitlab.io/input/?i=solve+for+a+in+s+%3D+L*%28a-b%29%281%2BDivide%5B1%2Cab%5D&lang=en
+
+    // @param sqrtPrice The starting price, i.e. before accounting for the Shield token delta
+    // @param liquidity The amount of usable liquidity
+    // @param amount The amount of Shield token delta to mint for the trade
+    // @param unit The token decimal unit, e.g. a token with 18 decimals has a unit of 10**18
+    // @return nextSqrtPrice The next sqrt ratio after minting the given amount of Shield tokens
 
     function getNextSqrtPriceFromShield(
         uint160 sqrtPrice,
