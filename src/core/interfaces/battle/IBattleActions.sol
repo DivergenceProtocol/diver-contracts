@@ -43,7 +43,7 @@ interface IBattleTrade {
     /// @param liquidity liquity in battle after trade
     /// @param amountIn The amount of token input
     /// @param amountOut The amount of token output
-    /// @param tradeType buySpear or buyShield
+    /// @param tradeType BUY_SPEAR or BUY_SHIELD
     /// @param sqrtPriceX96 The sqrt price of the battle after the trade
     /// @param tick The tick of the battle after the trade
     event Traded(
