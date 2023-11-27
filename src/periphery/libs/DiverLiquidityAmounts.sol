@@ -9,9 +9,15 @@ import { LiquidityAmounts } from "@uniswap/v3-periphery/contracts/libraries/Liqu
 
 library DiverLiquidityAmounts {
     using SafeCast for uint256;
+    /// @notice Computes the amount of liquidity to be received by the pool, for a given amount of collateral and price range. The formula is:
+    ///  L = ΔC*sqrtPrice*sqrt(P_h)/(sqrt(P_h) - sqrtPrice +
+    /// sqrt(P_h)*sqrtPrice**2 - sqrtPrice*sqrt(P_h)*sqrt(P_l))
+    /// @param sqrtRatioX96 The current square root ratio|
+    /// @param sqrtRatioAX96 A sqrt ratio
+    /// @param sqrtRatioBX96 Another sqrt ratio
+    /// @param amount The seed collateral amount for minting the liquidity position
+    /// @return liquidity The amount of liquidity to be received by the pool
 
-    //  L = ΔC*sqrtPrice*sqrt(P_h)/(sqrt(P_h) - sqrtPrice +
-    // sqrt(P_h)*sqrtPrice**2 - sqrtPrice*sqrt(P_h)*sqrt(P_l))
     function getLiquidityFromCs(
         uint160 sqrtRatioX96,
         uint160 sqrtRatioAX96,
@@ -37,12 +43,17 @@ library DiverLiquidityAmounts {
         }
     }
 
+    /// @notice Computes the amount of liquidity to be received by the pool, for a given amount of Spear or Shield tokens and price range. The formula is:
     /**
-     *
      * @dev liquidity = (amount * sqrtRatioAX96 * sqrtRatioBX96) / (
      * (sqrtRatioBX96 - sqrtRatioAX96) * (1 +
      * sqrtRatioAX96 * sqrtRatioBX96));
      */
+    /// @param sqrtRatioAX96 A sqrt ratio
+    /// @param sqrtRatioBX96 Another sqrt ratio
+    /// @param amount The seed Spear or Shield amount for minting the liquidity position
+    /// @return liquidity The amount of liquidity to be received by the pool
+
     function getLiquidityFromSToken(uint160 sqrtRatioAX96, uint160 sqrtRatioBX96, uint256 amount) internal pure returns (uint128 liquidity) {
         if (sqrtRatioAX96 > sqrtRatioBX96) {
             (sqrtRatioAX96, sqrtRatioBX96) = (sqrtRatioBX96, sqrtRatioAX96);

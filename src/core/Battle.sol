@@ -37,6 +37,8 @@ import {
 } from "core/params/coreParams.sol";
 
 /// @title Battle
+/// @notice Each options pool is contained in a Battle contract. Battle contracts provide core functionalities including minting and burning liquidity, trading options tokens, settling and exercising options, and withdrawing collateral reserved for settlement.  
+
 contract Battle is IBattle {
     using Tick for mapping(int24 => TickInfo);
     using TickBitmap for mapping(int16 => uint256);

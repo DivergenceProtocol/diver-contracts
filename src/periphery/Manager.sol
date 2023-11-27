@@ -26,6 +26,9 @@ import { CallbackValidation } from "./libs/CallbackValidation.sol";
 import { PositionInfo, BattleKey, GrowthX128, Owed, LiquidityType, Outcome } from "core/types/common.sol";
 
 /// @title Manager
+/// @notice Sets up the necessary state variables, mappings, and inheritance
+/// to handle position NFTs, manage liquidity, and interact with the battle contracts
+
 contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableState, BattleInitializer, LiquidityManagement {
     uint256 public override nextId;
     mapping(uint256 => Position) private _positions;
@@ -37,7 +40,10 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
 
     constructor(address _arena, address _weth) ERC721("Divergence Protocol Positions NFT", "DIVER-POS") PeripheryImmutableState(_arena, _weth) { }
 
-    /// @inheritdoc IManagerLiquidity
+    /// @notice Adds liquidity to a battle contract, mints a new token representing the liquidity position
+    /// records the position information for later reference.
+    /// @return tokenId The ID of the NFT that represents the liquidity position
+    /// @return liquidity The amount of liquidity for this position
     function addLiquidity(AddLiqParams calldata params) external override returns (uint256 tokenId, uint128 liquidity) {
         if (block.timestamp > params.deadline) {
             revert Errors.Deadline();
@@ -65,6 +71,7 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
         _safeMint(params.recipient, tokenId);
     }
 
+    /// @notice Updates the growth of fees and token deltas as of the last action on the individual position
     function updateInsideLast(PositionInfo memory pb, Position storage pm) private {
         unchecked {
             pm.owed.fee += uint128(FullMath.mulDiv(pb.insideLast.fee - pm.insideLast.fee, pm.liquidity, FixedPoint128.Q128));
@@ -76,7 +83,13 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
         }
     }
 
-    /// @inheritdoc IManagerLiquidity
+    /// @notice Removes liquidity from the pool, given the tokenId of a position. Only to be called once by the liquidity provider.
+    /// @param tokenId The ID of the NFT that represents the liquidity position
+    /// @return collateral The amount of collateral to be received by the liqudity provider
+    /// @return spear The amount of Spear to be received by the liquidity provider
+    /// @return shield The amount of Shield to be received by the liquidity provider
+    /// @return spearObligation The obligatory reserve of collateral amount for settling spear tokens sold by the position
+    /// @return shieldObligation The obligatory reserve of collateral amount for settling shield tokens sold by the position
     function removeLiquidity(uint256 tokenId)
         external
         override
@@ -114,6 +127,14 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
         emit LiquidityRemoved(tokenId, collateral, spear > shield ? spear : shield);
     }
 
+    /// @notice Calculates the obligatory reserve of collateral amounts for settling sold spear and shield amounts
+    /// The remaining collateral/spear/shield token amounts receivable for a given position.
+    /// @param pm The position for which to calculate the obligation amounts and receivable token amounts
+    /// @return collateral The amount of collateral that can be received by the liqudity provider
+    /// @return spear The remaining spear amount that can be received by the liqudity provider, after adjusting for obligations
+    /// @return shield The remaining shield amount that can be received by the liqudity provider, after adjusting for obligations
+    /// @return spearObligation The obligatory reserve of collateral amount for settling spear tokens sold by the position
+    /// @return shieldObligation The obligatory reserve of collateral amount for settling shield tokens sold by the position
     function getObligation(Position memory pm)
         private
         pure
@@ -123,15 +144,13 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
             spearObligation = pm.owed.spearOut;
             shieldObligation = pm.owed.shieldOut;
             uint256 obligation = spearObligation > shieldObligation ? spearObligation : shieldObligation;
-            // minus 1 to avoid rounding error, insure the collateral is enough
-            // to pay the obligation
+            // minus 1 to avoid rounding error, ensuring the reserved collateral is enough to pay the obligation
             collateral = pm.owed.collateralIn + pm.seed == obligation ? 0 : pm.owed.collateralIn + pm.seed - obligation - 1;
         } else if (pm.liquidityType == LiquidityType.SPEAR) {
             spearObligation = pm.owed.spearOut > pm.seed ? pm.owed.spearOut - pm.seed : 0;
             shieldObligation = pm.owed.shieldOut;
             uint256 obligation = spearObligation > shieldObligation ? spearObligation : shieldObligation;
-            // minus 1 to avoid rounding error, insure the collateral is enough
-            // to pay the obligation
+            // minus 1 to avoid rounding error, ensuring the reserved collateral is enough to pay the obligation
             collateral = pm.owed.collateralIn == obligation ? 0 : pm.owed.collateralIn - obligation - 1;
             if (pm.seed > pm.owed.spearOut) {
                 spear = pm.seed - pm.owed.spearOut;
@@ -140,8 +159,7 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
             spearObligation = pm.owed.spearOut;
             shieldObligation = pm.owed.shieldOut > pm.seed ? pm.owed.shieldOut - pm.seed : 0;
             uint256 obligation = spearObligation > shieldObligation ? spearObligation : shieldObligation;
-            // minus 1 to avoid rounding error, insure the collateral is enough
-            // to pay the obligation
+            // minus 1 to avoid rounding error, ensuring the reserved collateral is enough to pay the obligation
             collateral = pm.owed.collateralIn == obligation ? 0 : pm.owed.collateralIn - obligation - 1;
             if (pm.seed > pm.owed.shieldOut) {
                 shield = pm.seed - pm.owed.shieldOut;
@@ -149,7 +167,9 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
         }
     }
 
-    /// @inheritdoc IManagerLiquidity
+    /// @notice Returns the amount of collateral reserved for options that settle out-of-money.
+    /// Can be called once after expiry by the liquidity provider and must be called after liquidity has been removed.
+    /// @param tokenId The ID of the NFT that represents the liquidity position
     function withdrawObligation(uint256 tokenId) external override isAuthorizedForToken(tokenId) {
         Position memory pm = _positions[tokenId];
 
@@ -177,6 +197,10 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
         emit ObligationWithdrawn(pm.battleAddr, tokenId, toLp);
     }
 
+    /// @notice Returns the amount of collateral reserved for the liquidity providers' open short interest.
+    /// The LP gets one collateral for sending one spear or shield token back to the pool to close the net amount of short options exposure.
+    /// Can be called once before expiry by the LP and must be called after liquidity has been removed.
+    /// @param tokenId The ID of the NFT that represents the liquidity position
     function redeemObligation(uint256 tokenId) external override isAuthorizedForToken(tokenId) {
         Position memory pm = _positions[tokenId];
         if (pm.state != PositionState.LiquidityRemoved) {
@@ -197,6 +221,10 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
         }
     }
 
+    /// @notice Calls the battle contract to execute a trade
+    /// @return amountIn The collateral amount to be swapped in based on the direction of the swap
+    /// @return amountOut The amount to be received, of either spear or shield token, based on the direction of the swap
+    /// @return amountFee The amount of fee in collateral token to be spent for the trade
     function trade(TradeParams calldata p) external override returns (uint256 amountIn, uint256 amountOut, uint256 amountFee) {
         if (block.timestamp > p.deadline) {
             revert Errors.Deadline();
@@ -211,7 +239,7 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
         tps.recipient = p.recipient;
         tps.tradeType = p.tradeType;
         tps.amountSpecified = p.amountSpecified;
-        tps.data = abi.encode(TradeCallbackData({ battleKey: p.battleKey, payer: msg.sender }));
+        tps.data = abi.encode(TradeCallbackData({battleKey: p.battleKey, payer: msg.sender}));
         if (p.sqrtPriceLimitX96 == 0) {
             if (p.tradeType == TradeType.BUY_SPEAR) {
                 tps.sqrtPriceLimitX96 = TickMath.MIN_SQRT_RATIO + 1;
@@ -230,15 +258,18 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
         emit Traded(p.recipient, p.tradeType, amountIn, amountOut);
     }
 
+    /// @notice Called to msg.sender after executing a swap via Manager.
+    /// @param cAmount The amount of collateral transferred in the trade
+    /// @param sAmount The amount of spear or shield transferred in the trade
+    /// @param _data Data passed through by the caller
     function tradeCallback(uint256 cAmount, uint256 sAmount, bytes calldata _data) external override {
         TradeCallbackData memory data = abi.decode(_data, (TradeCallbackData));
         CallbackValidation.verifyCallback(arena, data.battleKey);
         pay(data.battleKey.collateral, data.payer, msg.sender, cAmount);
     }
 
-    // ====view====
-
-    /// @inheritdoc IManagerState
+    /// @notice Retrieves the position data for the given TokenId
+    /// @param tokenId The ID of the NFT that represents the liquidity position
     function positions(uint256 tokenId) external view override returns (Position memory) {
         return _positions[tokenId];
     }

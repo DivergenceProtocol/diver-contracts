@@ -54,6 +54,7 @@ interface IBattleTrade {
     /// @param tp The params for the trade
     /// @return cAmount The amount of collateral paid by the trader
     /// @return sAmount The amount of spear or shield tokens received by the trader
+    /// @return fAmount The amount of fee in collateral token to be spent for the trade
     function trade(BattleTradeParams memory tp) external returns (uint256 cAmount, uint256 sAmount, uint256 fAmount);
 }
 

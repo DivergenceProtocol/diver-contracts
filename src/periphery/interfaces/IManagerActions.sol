@@ -12,8 +12,8 @@ interface IManagerLiquidity {
     /// @param owner The owner of the position and nft
     /// @param tokenId The id of the nft
     /// @param liquidity The amount of liquidity added to nft
-    /// @param liquidityType The type of liquidity added, collateral, spear, or shield
-    /// @param seedAmount The amount of seed added to nft, seed is the amount of collateral/spear/shield
+    /// @param liquidityType Specifies the type of liquidity seeded to the position is collateral, spear, or shield
+    /// @param seedAmount The token amount provided for the position, of the collateral, spear or shield liquidity type
     event LiquidityAdded(
         address indexed battleAddress, address indexed owner, uint256 tokenId, uint128 liquidity, LiquidityType liquidityType, uint256 seedAmount
     );
@@ -28,36 +28,43 @@ interface IManagerLiquidity {
 
     event ObligationRedeemed(address battle, uint256 tokenId, uint256 amount);
 
-    /// @notice add liquidity
-    /// @param params The params of add liquidity
+    /// @notice Adds liquidity to the protocol.
+    /// @param params The params for adding liquidity
+    /// @return tokenId The id of the nft
+    /// @return liquidity The amount of added liquidity
     function addLiquidity(AddLiqParams calldata params) external returns (uint256 tokenId, uint128 liquidity);
 
-    /// @notice remove liquidity, one nft will call this function once
-    /// @param tokenId The id of the nft
-    /// @return collateral The amount of collateral that lp got
-    /// @return spear The amount of spear that lp got
-    /// @return shield The amount of shield that lp got
-    /// @return spearObligation The amount of spear obligation belong to nft
-    /// @return shieldObligation The amount of shield obligation belong to nft
+    /// @notice Removes liquidity from the pool, given the tokenId of a position. Only to be called once by the liquidity provider.
+    /// @param tokenId The ID of the NFT that represents the liquidity position
+    /// @return collateral The amount of collateral to be received by the liqudity provider
+    /// @return spear The amount of Spear to be received by the liquidity provider
+    /// @return shield The amount of Shield to be received by the liquidity provider
+    /// @return spearObligation The obligatory reserve of collateral amount for settling spear tokens sold by the position
+    /// @return shieldObligation The obligatory reserve of collateral amount for settling shield tokens sold by the position
     function removeLiquidity(uint256 tokenId)
         external
         returns (uint256 collateral, uint256 spear, uint256 shield, uint256 spearObligation, uint256 shieldObligation);
 
-    /// @notice withdraw obligation, it will be call after removeLiquidity
-    /// @notice tokenId The id of the nft
+    /// @notice Returns the amount of collateral reserved for options that settle out-of-money.
+    /// Can be called once after expiry by the liquidity provider and must be called after liquidity has been removed.
+    /// @param tokenId The ID of the NFT that represents the liquidity position
     function withdrawObligation(uint256 tokenId) external;
 
-    /// @notice after removeLiquidity users can call redeemObligation to get their collateral by spending stoken
-    /// @param tokenId The id of the nft
+    /// @notice Returns the amount of collateral reserved for the liquidity providers' open short interest.
+    /// The LP gets one collateral for sending one spear or shield token back to the pool to close the net amount of short options exposure.
+    /// Can be called once before expiry by the LP and must be called after liquidity has been removed.
+    /// @param tokenId The ID of the NFT that represents the liquidity position
     function redeemObligation(uint256 tokenId) external;
 }
 
 interface IManagerTrade is ITradeCallback {
     event Traded(address recipient, TradeType tradeType, uint256 amountIn, uint256 amountOut);
 
-    /// @notice buySpear or buyShield
+    /// @notice Calls the battle contract to execute a trade
     /// @param mtp The params of trade in manager contract
-    /// @return amountOut The amount of spear/shield that user who bought spear/shield got
+    /// @return amountIn The collateral amount to be swapped in based on the direction of the swap
+    /// @return amountOut The amount to be received, of either spear or shield token, based on the direction of the swap
+    /// @return amountFee The amount of fee in collateral token to be spent for the trade
     function trade(TradeParams calldata mtp) external returns (uint256, uint256, uint256);
 }
 

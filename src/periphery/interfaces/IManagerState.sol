@@ -6,7 +6,7 @@ import { PositionState, Position } from "../types/common.sol";
 
 interface IManagerState {
     /**
-     * @notice Get the position belong to a nft
+     * @notice Get the position belonging to an nft
      */
     function positions(uint256 tokenId) external view returns (Position memory);
 

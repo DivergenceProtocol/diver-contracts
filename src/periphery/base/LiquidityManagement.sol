@@ -25,6 +25,9 @@ abstract contract LiquidityManagement is IMintCallback, PeripheryImmutableState,
         address payer;
     }
 
+    /// @notice Called to msg.sender after minting liquidity to a position
+    /// @param amountOwed The amount of tokens owed for the minted liquidity
+    /// @param data Any data passed through by the caller
     function mintCallback(uint256 amountOwed, bytes calldata data) external override {
         MintCallbackData memory decode = abi.decode(data, (MintCallbackData));
         CallbackValidation.verifyCallback(arena, decode.battleKey);
@@ -33,6 +36,9 @@ abstract contract LiquidityManagement is IMintCallback, PeripheryImmutableState,
         }
     }
 
+    /// @notice Add liquidity to an initialized pool
+    /// @return liquidityAmount The amount of liquidity to add
+    /// @return battleAddr The address to which an AMM pool is created
     function _addLiquidity(AddLiqParams memory params) internal returns (uint128 liquidityAmount, address battleAddr) {
         battleAddr = IArenaCreation(arena).getBattle(params.battleKey);
         if (battleAddr == address(0)) {
@@ -71,7 +77,7 @@ abstract contract LiquidityManagement is IMintCallback, PeripheryImmutableState,
                 liquidityType: params.liquidityType,
                 amount: liquidityAmount,
                 seed: params.amount,
-                data: abi.encode(MintCallbackData({ battleKey: params.battleKey, token: token, payer: msg.sender }))
+                data: abi.encode(MintCallbackData({battleKey: params.battleKey, token: token, payer: msg.sender}))
             })
         );
     }

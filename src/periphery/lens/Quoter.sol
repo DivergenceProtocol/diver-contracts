@@ -23,6 +23,8 @@ import { IQuoter, Position, PositionState } from "../interfaces/IQuoter.sol";
 import { IManagerState } from "../interfaces/IManagerState.sol";
 import { PositionInfo, BattleKey, GrowthX128, Owed, LiquidityType, Outcome } from "core/types/common.sol";
 
+/// @notice Gets the expected amountOut or amountIn for a given swap without executing the swap
+
 contract Quoter is Multicall, ITradeCallback, IQuoter {
     using SafeCast for int256;
     using SafeCast for uint256;
@@ -35,6 +37,10 @@ contract Quoter is Multicall, ITradeCallback, IQuoter {
         manager = _manager;
     }
 
+    /// @notice Callback function that handles the result of a trade. It reverts with the trade amounts.
+    /// @param cAmount Amount of collateral token input spent to be spent for the trade
+    /// @param sAmount Amount of spear or shield token output to be received for the trade
+
     function tradeCallback(uint256 cAmount, uint256 sAmount, bytes calldata data) external pure override {
         uint256 spend = cAmount;
         uint256 get = sAmount;
@@ -45,6 +51,11 @@ contract Quoter is Multicall, ITradeCallback, IQuoter {
             revert(ptr, 64)
         }
     }
+
+    /// @notice Parses a revert reason that should contain the numeric quote
+    /// @param reason The revert reason bytes
+    /// @return The first parsed value
+    /// @return The second parsed value
 
     function parseRevertReason(bytes memory reason) private pure returns (uint256, uint256) {
         if (reason.length != 64) {
@@ -58,6 +69,10 @@ contract Quoter is Multicall, ITradeCallback, IQuoter {
         }
         return abi.decode(reason, (uint256, uint256));
     }
+
+    /// @notice Returns the amount of collateral input and options token output for the given parameters
+    /// @return spend The amount of collateral to spend|
+    /// @return get The amount of Spear or shield to receive |
 
     function quoteExactInput(BattleTradeParams memory params, address battleAddr) public override returns (uint256 spend, uint256 get) {
         (uint160 p,,) = IBattleState(battleAddr).slot0();
@@ -81,6 +96,9 @@ contract Quoter is Multicall, ITradeCallback, IQuoter {
         }
     }
 
+    /// @notice Calculates the amount of Spear or shield tokens based on the given liquidity
+    /// @param params required for adding liquidity
+    /// @return The amount of spear or shield token calculated based on the given liquidity
     function getSTokenByLiquidity(AddLiqParams calldata params) external view returns (uint256) {
         address battleAddr = IArenaCreation(arena).getBattle(params.battleKey);
         if (battleAddr == address(0)) {
@@ -94,6 +112,13 @@ contract Quoter is Multicall, ITradeCallback, IQuoter {
         }
     }
 
+    /// @notice Calculates the amount of Spear or shield tokens based on the given amount of seed collateral when a liquidity position is created
+    /// @param sqrtPriceX96 The current sqrt price
+    /// @param tickLower The lower tick boundary of the position
+    /// @param tickUpper The upper tick boundary of the position 
+    /// @param amount The seed collateral amount for minting the liquidity position
+    /// @return The amount of spear or shield token calculated based on the given liquidity
+
     function getSTokenByLiquidityWhenCreate(uint160 sqrtPriceX96, int24 tickLower, int24 tickUpper, uint256 amount) public pure returns (uint256) {
         uint160 priceLower = TickMath.getSqrtRatioAtTick(tickLower);
         uint160 priceUpper = TickMath.getSqrtRatioAtTick(tickUpper);
@@ -101,10 +126,12 @@ contract Quoter is Multicall, ITradeCallback, IQuoter {
         return DiverSqrtPriceMath.getSTokenDelta(priceLower, priceUpper, liquidityAmount, false);
     }
 
+    /// @notice Gets the position information for the given token ID
     function positions(uint256 tokenId) external view override returns (Position memory) {
         return handlePosition(tokenId);
     }
 
+    /// @notice Gets the position information for the given token ID
     function handlePosition(uint256 tokenId) private view returns (Position memory p) {
         p = IManagerState(manager).positions(tokenId);
         // p = _positions[tokenId];
@@ -119,6 +146,8 @@ contract Quoter is Multicall, ITradeCallback, IQuoter {
             }
         }
     }
+
+    /// @notice Gets the positions for the given account
 
     function accountPositions(address account) external view override returns (Position[] memory) {
         uint256 balance = IERC721Enumerable(manager).balanceOf(account);
