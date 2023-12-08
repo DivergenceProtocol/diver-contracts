@@ -2,20 +2,16 @@
 
 pragma solidity ^0.8.0;
 
-enum LiquidityType
-// eg. usdt\usdc
-{
+enum LiquidityType {
     COLLATERAL,
     SPEAR,
     SHIELD
 }
 
-enum Outcome
-// battle is ongoing
-{
-    ONGOING,
-    SPEAR_WIN,
-    SHIELD_WIN
+enum Outcome {
+    ONGOING, // battle is ongoing
+    SPEAR_WIN, // calls expire in-the-money
+    SHIELD_WIN // puts expire in-the-money
 }
 
 enum TradeType {

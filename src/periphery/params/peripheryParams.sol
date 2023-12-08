@@ -14,9 +14,9 @@ struct CreateAndInitBattleParams {
 /// @notice Parameters for adding liquidity
 /// @param battleKey The battle key
 /// @param recipient The address that receives nft
-/// @param tickLower The lower tick of the position
-/// @param tickUpper The upper tick of the position
-/// @param liquidityType The liquidity type of the position, collateral, spear, shield
+/// @param tickLower The lower tick boundary of the position
+/// @param tickUpper The upper tick boundary of the position
+/// @param liquidityType Specifies the type of liquidity added to the position is collateral, spear, or shield
 /// @param amount The amount of collateral/spear/shield to add
 /// @param deadline The deadline of the transaction
 struct AddLiqParams {
@@ -32,22 +32,12 @@ struct AddLiqParams {
 }
 
 /// @param battleKey The battle key
-/// @param tradeType The trade type, buySpear or buyShield
-/// @param amountSpecified The amount of collateral to spend
-/// @param recipient The address that receives spear/shield
-/// @param amountOutMin The minimum amount of spear/shield to receive
-/// @param sqrtPriceLimitX96 The max/min  price when trading end
+/// @param tradeType The trade type, BUY_SPEAR or BUY_SHIELD
+/// @param amountSpecified How much collateral input or SToken output amount to be swapped in/out
+/// @param recipient The address that receives spear or shield tokens
+/// @param amountOutMin The minimum amount of spear or shield tokens to receive
+/// @param sqrtPriceLimitX96 The max/min price when trading ends
 /// @param deadline The deadline of the transaction
-// struct TradeParams {
-//     BattleKey battleKey;
-//     TradeType tradeType;
-//     uint256 amountSpecified;
-//     address recipient;
-//     uint256 amountOutMin;
-//     uint160 sqrtPriceLimitX96;
-//     uint256 deadline;
-// }
-
 struct TradeParams {
     BattleKey battleKey;
     TradeType tradeType;

@@ -6,34 +6,30 @@ import { BattleMintParams, BattleBurnParams, BattleTradeParams } from "core/para
 import { PositionInfo, TradeType, Outcome, LiquidityType } from "core/types/common.sol";
 
 interface IBattleMintBurn {
-    /// @param sender The address who minted the liquidity
-    /// @param liquidityType The type of liquidity minted
+    /// @param sender The address used for minting liquidity
+    /// @param liquidityType The type of token used as liquidity
     /// @param tickLower The lower tick of the position
     /// @param tickUpper The upper tick of the position
     /// @param liquidity The amount of liquidity minted
-    /// @param seedAmount The amount of collateral/spear/shield(according to liquidityType) spent
+    /// @param seedAmount The amount of tokens used for minting liquidity, per collateral, spear or shield liquidityType
     event Minted(address indexed sender, LiquidityType liquidityType, int24 tickLower, int24 tickUpper, uint128 liquidity, uint256 seedAmount);
 
     /// @param tickLower The lower tick of the position
     /// @param tickUpper The upper tick of the position
-    /// @param liquidityType The type of liquidity burned
+    /// @param liquidityType The type of token used as liquidity
     /// @param liquidityAmount The amount of liquidity burned
     event Burned(int24 tickLower, int24 tickUpper, LiquidityType liquidityType, uint128 liquidityAmount);
 
     /// @notice Mint liquidity
-    /// @param mp The params of mint
+    /// @param mp The params for minting liquidity
     function mint(BattleMintParams memory mp) external;
 
-    // / @notice Burn liquidity for a slot
-    // / @dev
-    // / @return spearAmount The amount of spear tokens to be removed from curve
-    // / @return shieldAmount The amount of shield tokens to be removed from
-    // curve
+    /// @notice Burn liquidity
+    /// @param BurnParams The params for burning liquidity
     function burn(BattleBurnParams memory BurnParams) external;
 
-    /// @notice transfer collateral/spear/shield to lp
-    /// @dev only called by Manager contract
-    /// @param recipient The address who receive collateral/spear/shield
+    /// @notice Transfers collateral/spear/shield tokens to the liquidity provider. Only called by the manager contract
+    /// @param recipient The address who receive collateral/spear/shield tokens
     /// @param cAmount The amount of collateral to be transfered
     /// @param spAmount The amount of spear to be transfered
     /// @param shAmount The amount of shield to be transfered
@@ -42,22 +38,23 @@ interface IBattleMintBurn {
 
 /// @title IBattleTrade
 interface IBattleTrade {
-    /// @notice trade spear/shield for collateral
-    /// @param recipient The address who receive spear/shield
+    /// @notice Swap collateral for spear or shield tokens
+    /// @param recipient The address who receive spear or shield tokens
     /// @param liquidity liquity in battle after trade
-    /// @param amountIn The amount of spear/shield to be traded
-    /// @param amountOut The amount of collateral to be traded
-    /// @param tradeType buySpard or buyShield
-    /// @param sqrtPriceX96 The sqrt price of the battle after trade
-    /// @param tick The tick of the battle after trade
+    /// @param amountIn The amount of token input
+    /// @param amountOut The amount of token output
+    /// @param tradeType BUY_SPEAR or BUY_SHIELD
+    /// @param sqrtPriceX96 The sqrt price of the battle after the trade
+    /// @param tick The tick of the battle after the trade
     event Traded(
         address indexed recipient, uint128 liquidity, uint256 amountIn, uint256 amountOut, TradeType tradeType, uint160 sqrtPriceX96, int24 tick
     );
 
-    /// @notice trade spear/shield for collateral
-    /// @param tp The params of trade
-    /// @return cAmount The amount of collateral user spent
-    /// @return sAmount The amount of spear/shield user received
+    /// @notice Swap collateral for spear or shield tokens
+    /// @param tp The params for the trade
+    /// @return cAmount The amount of collateral paid by the trader
+    /// @return sAmount The amount of spear or shield tokens received by the trader
+    /// @return fAmount The amount of fee in collateral token to be spent for the trade
     function trade(BattleTradeParams memory tp) external returns (uint256 cAmount, uint256 sAmount, uint256 fAmount);
 }
 
@@ -72,30 +69,22 @@ interface IBattleBase {
 
     event ProtocolFeeCollected(address recipient, uint256 amount);
 
-    /// @notice settle the battle
-    /// battle will fetch the price of underlying asset, and determinate the
-    /// battle result.
-    /// battle finished after settle function was called
+    /// @notice Settles the battle and determines the outcome.
+    /// The Battle contract will fetch the price of underlying asset, and determines the outcome.
+    /// Once settled, a pool's address is not reused for new battles
     function settle() external;
 
-    /// @notice If a user bought some spear/shield and won, he can switch
-    /// spear/shield to collateral by 1:1 ratio.
-    /// eg. Alice bought 100 spear and the battle result was spear_win, she can
-    /// switch 100 collateral by call this
-    /// function
+    /// @notice After settlement, an in-the-money spear or shield token is exercised for one collateral.
+    /// eg. Alice bought 100 spear. If the outcome is spear_win, she can
+    /// claim 100 collateral minus an exercise fee by calling this function.
     function exercise() external;
 
-    /// @notice Returns the amount of unused collateral to the options seller
-    /// after settlement. For options that expire
-    /// out-of-money, the amount of collateral obligation reserved prior to
-    /// settlement becomes exercisable. Only called
-    /// by
-    /// the Manager.
-    /// @param recipient address which receive collateral
-    /// @param amount the amount of collateral will receive
+    /// @notice Enables the liquidity provider to withdraw the collateral amount reserved for settlement. Only called by the manager contract.
+    /// @param recipient The liquidity provider address to receive collateral
+    /// @param amount the amount of collateral to be received
     function withdrawObligation(address recipient, uint256 amount) external;
 
-    /// @notice collect protocol fee
+    /// @notice Allows the accumulated protocol fee to be collected. Can only be called by the owner.
     function collectProtocolFee(address recipient) external;
 }
 

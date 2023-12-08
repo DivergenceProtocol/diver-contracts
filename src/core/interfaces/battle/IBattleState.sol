@@ -5,16 +5,16 @@ pragma solidity ^0.8.0;
 import "core/types/common.sol";
 
 interface IBattleState {
-    /// @notice Get slotInfo by slotKey.
-    /// @param pk positon key check how slotKey is generated in Position.sol
-    /// @param info check PositionInfo in PositionTypes.sol
+    /// @notice Retrieves position info for a given position key
+    /// @param pk positon key
+    /// @param info Information about the position
     function positions(bytes32 pk) external view returns (PositionInfo memory info);
 
     /// @notice The result of battle.
-    /// @return result check different battle result type in Outcome.sol
+    /// @return result check different battle result type in enums.sol
     function battleOutcome() external view returns (Outcome);
 
-    /// @notice A battleKey can uniquely identify a battle
+    /// @notice Returns the BattleKey that uniquely identifies a battle
     function battleKey() external view returns (BattleKey memory key);
 
     /// @notice Get Manager address in this battle

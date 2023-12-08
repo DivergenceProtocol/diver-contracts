@@ -9,7 +9,7 @@ interface IQuoter {
     function positions(uint256 tokenId) external view returns (Position memory);
 
     /**
-     * @notice Get all positions belong to an account
+     * @notice Returns all the position details belonging to an account
      */
     function accountPositions(address account) external view returns (Position[] memory);
 

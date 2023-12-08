@@ -25,13 +25,12 @@ interface IArenaAdmin {
 interface IArenaCreation {
     event BattleCreated(BattleKey bk, address battleAddr, address spear, address shield, Fee fee);
 
-    /// @notice create new battle
-    /// @param params Params for creating new battle
+    /// @notice Create a new battle
+    /// @param params Params for creating a new battle
     /// @return battleAddr new battle address
     function createBattle(CreateAndInitBattleParams memory params) external returns (address battleAddr);
 
-    /// @notice Get existed battle address by battleKey. If not exist, will
-    /// return address(0)
+    /// @notice Get the address of the existing battle or address(0) if not found
     function getBattle(BattleKey memory battleKey) external view returns (address battleAddr);
 }
 

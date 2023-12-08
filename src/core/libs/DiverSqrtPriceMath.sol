@@ -12,12 +12,18 @@ library DiverSqrtPriceMath {
     using SafeCast for uint256;
     using SafeCast for int128;
 
-    /**
-     * formula
-     * amount = liquidity * (sqrtRatioBX96 - sqrtRatioAX96) * (1 + 1 /
-     * (sqrtRatioAX96 * sqrtRatioBX96));
-     *
-     */
+    // @notice Gets the delta amount of Spear or Shield tokens based on the given sqrt ratios and liquidity.
+    // Computes for Spear token delta when the sqrtPrice moves from upper to lower; or Shield token delta when the sqrtPrice moves from lower to
+    // upper.
+    // For the same sqrt ratio range and liquidity, the computed delta amounts of Spear and Shield are equal.
+    // Formula for this is:
+    // stoken delta amount = liquidity * (sqrtRatioBX96 - sqrtRatioAX96) * (1 + 1 /(sqrtRatioAX96 * sqrtRatioBX96));
+
+    // @param sqrtRatioAX96 A sqrt ratio
+    // @param sqrtRatioBX96 Another sqrt ratio
+    // @param liquidity The change in liquidity for which to compute the Spear or Shield token delta
+    // @param roundUp Whether to round the amount up or down
+    // @return amount The amount of Spear or Shield token corresponding to the passed liquidityDelta between the two prices
     function getSTokenDelta(uint160 sqrtRatioAX96, uint160 sqrtRatioBX96, uint128 liquidity, bool roundUp) internal pure returns (uint256 amount) {
         if (sqrtRatioAX96 > sqrtRatioBX96) {
             (sqrtRatioAX96, sqrtRatioBX96) = (sqrtRatioBX96, sqrtRatioAX96);
@@ -37,6 +43,11 @@ library DiverSqrtPriceMath {
         }
     }
 
+    // @notice Helper that gets signed spear or shield token delta
+    // @param sqrtRatioAX96 A sqrt ratio
+    // @param sqrtRatioBX96 Another sqrt ratio
+    // @param liquidity The change in liquidity for which to compute the Spear or Shield token delta
+    // @return amount The amount of Spear or Shield token corresponding to the passed liquidityDelta between the two prices
     function getSTokenDelta(uint160 sqrtPriceAX96, uint160 sqrtPriceBX96, int128 liquidity) internal pure returns (int256 amount) {
         if (sqrtPriceAX96 > sqrtPriceBX96) {
             (sqrtPriceAX96, sqrtPriceBX96) = (sqrtPriceBX96, sqrtPriceAX96);
@@ -47,6 +58,19 @@ library DiverSqrtPriceMath {
             amount = getSTokenDelta(sqrtPriceAX96, sqrtPriceBX96, uint128(liquidity), true).toInt256();
         }
     }
+
+    // @notice Gets the next sqrt ratio based on the given the Spear token delta and liquidity.
+    // The formula for this is:
+    // a = (sqrt(4 b^2 L^2 + (b^2 (-L) + b s + L)^2) + b^2 L - b s - L)/(2 b L)
+    // where a = sqrtPriceLower b=sqrtPriceUpper s = spear delta
+    // Derived from the getSTokenDelta() formula with adjustments for token decimal units and Q96. For reference:
+    // https://wolfreealpha.gitlab.io/input/?i=solve+for+a+in+s+%3D+L*%28b-a%29%281%2BDivide%5B1%2Cab%5D&lang=en
+
+    // @param sqrtPrice The starting price, i.e. before accounting for the spear token delta
+    // @param liquidity The amount of usable liquidity
+    // @param amount The amount of Spear token delta to mint for the trade
+    // @param unit The token decimal unit, e.g. a token with 18 decimals has a unit of 10**18
+    // @return nextSqrtPrice The next sqrt ratio after minting the given amount of Spear tokens
 
     function getNextSqrtPriceFromSpear(
         uint160 sqrtPrice,
@@ -76,6 +100,19 @@ library DiverSqrtPriceMath {
         }
         nextSqrtPrice = FullMath.mulDiv(numerator, FixedPoint96.Q96, 2 * bl).toUint160();
     }
+
+    // @notice Gets the next sqrt ratio based on the given the Shield token delta and liquidity.
+    // The formula for this is:
+    // a = (sqrt(4 b^2 L^2 + ((b^2 - 1) L + b s)^2) + b^2 L + b s - L)/(2 b L)
+    // where a = sqrtPriceUpper b=sqrtPriceLower s = shield delta
+    // Derived from the getSTokenDelta() formula with adjustments for token decimal units and Q96. For reference:
+    // https://wolfreealpha.gitlab.io/input/?i=solve+for+a+in+s+%3D+L*%28a-b%29%281%2BDivide%5B1%2Cab%5D&lang=en
+
+    // @param sqrtPrice The starting price, i.e. before accounting for the Shield token delta
+    // @param liquidity The amount of usable liquidity
+    // @param amount The amount of Shield token delta to mint for the trade
+    // @param unit The token decimal unit, e.g. a token with 18 decimals has a unit of 10**18
+    // @return nextSqrtPrice The next sqrt ratio after minting the given amount of Shield tokens
 
     function getNextSqrtPriceFromShield(
         uint160 sqrtPrice,

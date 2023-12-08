@@ -2,10 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-/// @title Get external price by oracle
-/// @notice Collects and updates underlying asset prices used for settling
-/// options.
-/// It retrieves asset prices and supplies them to all contracts that use them.
+/// @title Get price from external oracle
+/// @notice Retrieves underlying asset prices used for settling options.
 interface IOracle {
     function getPriceByExternal(address cOracleAddr, uint256 ts) external view returns (uint256 price_, uint256 actualTs);
 

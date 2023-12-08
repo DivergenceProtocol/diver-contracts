@@ -8,16 +8,15 @@ import { AggregatorV3Interface } from "chainlink/interfaces/AggregatorV3Interfac
 import { getAdjustPrice } from "./utils.sol";
 
 /// @title Oracle
-/// @notice Get external price by Oracle
+/// @notice Retrieves underlying asset prices used for settling options.
 contract Oracle is Ownable {
     using SafeCast for int256;
 
     mapping(string => address) private _externalOracleOf;
     mapping(address => mapping(uint256 => uint256)) public fixPrices;
 
-    /// @notice Defines the underlying asset symbol and oracle address for a
-    /// pool.  Only called by the owner.
-    /// @param symbols The asset symbol for which to retrieve price feed
+    /// @notice Defines the underlying asset symbol and oracle address for a pool. Only called by the owner.
+    /// @param symbols The asset symbol for which to retrieve a price feed
     /// @param oracles_ The external oracle address
     function setExternalOracle(string[] calldata symbols, address[] calldata oracles_) external onlyOwner {
         require(symbols.length == oracles_.length, "symbols not match oracles");
@@ -33,7 +32,7 @@ contract Oracle is Ownable {
     }
 
     /// @notice Gets and computes price from external oracles
-    /// @param cOracleAddr chainlink price contract
+    /// @param cOracleAddr the contract address for a chainlink price feed
     /// @param ts Timestamp for the asset price
     /// @return price The retrieved price
     function getPriceByExternal(address cOracleAddr, uint256 ts) external view returns (uint256 price, uint256 actualTs) {
@@ -45,8 +44,9 @@ contract Oracle is Ownable {
         uint256 decimalDiff = 10 ** (18 - cOracle.decimals());
         (uint256 cPrice, uint256 cActualTs) = _getPrice(cOracle, roundID, ts, decimalDiff);
 
+        // If the price remains unreported or inaccessible an hour post expiry, the closest available price will be fixed based on the external oracle
+        // data.
         if (block.timestamp - ts > 1 hours && cPrice == 0) {
-            // get price from setting
             require(fixPrices[cOracleAddr][ts] != 0, "setting price");
             price = fixPrices[cOracleAddr][ts];
             actualTs = ts;
@@ -60,8 +60,7 @@ contract Oracle is Ownable {
     /// @param cOracle Oracle interface for retrieving price feed
     /// @param id The roundId using which price is retrieved
     /// @param ts Timestamp for the asset price
-    /// @param decimalDiff Precision differences for the number of decimal
-    /// places of retrieved data
+    /// @param decimalDiff Precision differences for the number of decimal places of retrieved data
     function _getPrice(
         AggregatorV3Interface cOracle,
         uint80 id,
@@ -72,13 +71,13 @@ contract Oracle is Ownable {
         view
         returns (uint256 finalPrice, uint256 finalTs)
     {
-        // get next price after 8am utc
+        // get the next price after 8am utc
         uint80 phaseId = _getPhaseIdFromRoundId(id);
         uint80 startRoundId = _getStartRoundId(phaseId);
         try AggregatorV3Interface(cOracle).getRoundData(startRoundId) returns (uint80, int256, uint256, uint256 updatedAt, uint80) {
             //updatedAt == 0, invalid value
-            //The situation where 'startRound' occurs after the 'endTs' of a battle is a special case that will affect corrections.
-            //Therefore, it will simply return a value of 0. The correct price will be provided by 'fixPrices'.
+            //In case the 'startRound' occurs after the 'endTs' of a battle due to external oracle updates, it returns 0. The correct price will be
+            // provided by fixPrices.
             if (updatedAt == 0 || updatedAt >= ts) {
                 return (0, 0);
             } else {
@@ -86,8 +85,7 @@ contract Oracle is Ownable {
                 (finalPrice, finalTs) = _getPriceInPhase(cOracle, startRoundId, id, ts, decimalDiff);
             }
         } catch {
-            // If there are any errors encountered, then the correct price will be provided by the 'fixPrices'
-            // just return (0, 0)
+            // If there are any errors encountered, it returns (0, 0). the correct price will be provided by fixPrices.
         }
     }
 
@@ -126,7 +124,7 @@ contract Oracle is Ownable {
                     actualTs = updatedAt;
                 }
             } catch {
-                // something is wrong
+                // in case of errors
                 return (0, 0);
             }
         }

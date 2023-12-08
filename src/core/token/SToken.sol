@@ -8,8 +8,8 @@ import { Ownable } from "@oz/access/Ownable.sol";
 import { ISToken } from "core/interfaces/ISToken.sol";
 
 /**
- * @notice Spear or Shield
- *     @dev only battle contract(aka.owner) can mint or burn SToken
+ * @notice Implements digital call (Spear) and put (Shield) options as ERC-20 tokens (STokens).
+ *     @dev Only the battle contract (owner) can mint or burn SToken
  */
 contract SToken is ERC20Burnable, Ownable, ISToken {
     uint8 private immutable _decimals;

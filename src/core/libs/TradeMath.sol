@@ -10,6 +10,9 @@ import { ComputeTradeStepParams } from "core/params/ComputeTradeStepParams.sol";
 import { TickMath } from "./TickMath.sol";
 import { TradeType } from "core/types/enums.sol";
 
+/// @notice  Computes the result of a swap within ticks. Contains methods for computing the result of a swap within a single tick price range, i.e., a
+/// single tick.
+
 library TradeMath {
     using SafeCast for int256;
 
@@ -21,7 +24,7 @@ library TradeMath {
         bool isSpear = params.tradeType == TradeType.BUY_SPEAR;
         bool exactIn = params.amountRemaining >= 0;
 
-        // calculate next price
+        // calculate the next price, given an amount of collateral input or sToken output
         if (exactIn) {
             amountIn = isSpear
                 ? SqrtPriceMath.getAmount0Delta(params.sqrtRatioCurrentX96, params.sqrtRatioTargetX96, params.liquidity, true)

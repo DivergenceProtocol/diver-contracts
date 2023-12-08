@@ -16,9 +16,7 @@ import { DeploymentParams } from "core/params/coreParams.sol";
 import { SToken } from "core/token/SToken.sol";
 import { getAdjustPrice } from "core/utils.sol";
 
-/// @notice Deploys battles. Sets pool underlying, collateral, fees and other
-/// deployment
-/// parameters.
+/// @notice Deploys battles. Sets pool underlying, collateral, fees, expiries and other deployment parameters.
 contract Arena is IArena, Ownable {
     address public oracleAddr;
     address public managerAddr;
@@ -86,27 +84,27 @@ contract Arena is IArena, Ownable {
         if (msg.sender != ma) {
             revert Errors.OnlyManager();
         }
-        // collaterl address error
+        // checks for collateral address error
         if (params.bk.collateral == address(0)) {
             revert Errors.ZeroValue();
         }
 
-        // not supported
+        // checks whether the collateral is supported
         if (!isPermissionless) {
             if (!collateralWhitelist[params.bk.collateral]) {
                 revert Errors.NotSupported();
             }
         }
-
+        // checks whether the underlying is supported
         if (!underlyingWhitelist[params.bk.underlying]) {
             revert Errors.NotSupported();
         }
 
-        // expiries must at 8am utc
+        // requires expiries to be at 8am utc
         if ((params.bk.expiries - 28_800) % 86_400 != 0 || block.timestamp >= params.bk.expiries) {
             revert Errors.NotSupportedExpiries();
         }
-
+        // requires strike prices to be non-zero and rounded accordingly
         params.bk.strikeValue = getAdjustPrice(params.bk.strikeValue);
         if (params.bk.strikeValue == 0) {
             revert Errors.ZeroValue();
