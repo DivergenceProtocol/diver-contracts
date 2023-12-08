@@ -10,7 +10,8 @@ import { ComputeTradeStepParams } from "core/params/ComputeTradeStepParams.sol";
 import { TickMath } from "./TickMath.sol";
 import { TradeType } from "core/types/enums.sol";
 
-/// @notice  Computes the result of a swap within ticks. Contains methods for computing the result of a swap within a single tick price range, i.e., a single tick.
+/// @notice  Computes the result of a swap within ticks. Contains methods for computing the result of a swap within a single tick price range, i.e., a
+/// single tick.
 
 library TradeMath {
     using SafeCast for int256;

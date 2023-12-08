@@ -7,7 +7,7 @@ import { FullMath } from "@uniswap/v3-core/contracts/libraries/FullMath.sol";
 import { FixedPoint128 } from "@uniswap/v3-core/contracts/libraries/FixedPoint128.sol";
 import { PositionInfo, GrowthX128, Owed } from "core/types/common.sol";
 
-/// @notice Manages and updates the position information 
+/// @notice Manages and updates the position information
 
 library Position {
     using SafeCast for uint256;

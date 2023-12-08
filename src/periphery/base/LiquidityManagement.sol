@@ -77,7 +77,7 @@ abstract contract LiquidityManagement is IMintCallback, PeripheryImmutableState,
                 liquidityType: params.liquidityType,
                 amount: liquidityAmount,
                 seed: params.amount,
-                data: abi.encode(MintCallbackData({battleKey: params.battleKey, token: token, payer: msg.sender}))
+                data: abi.encode(MintCallbackData({ battleKey: params.battleKey, token: token, payer: msg.sender }))
             })
         );
     }

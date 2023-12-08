@@ -43,7 +43,8 @@ library DiverLiquidityAmounts {
         }
     }
 
-    /// @notice Computes the amount of liquidity to be received by the pool, for a given amount of Spear or Shield tokens and price range. The formula is:
+    /// @notice Computes the amount of liquidity to be received by the pool, for a given amount of Spear or Shield tokens and price range. The formula
+    /// is:
     /**
      * @dev liquidity = (amount * sqrtRatioAX96 * sqrtRatioBX96) / (
      * (sqrtRatioBX96 - sqrtRatioAX96) * (1 +

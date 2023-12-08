@@ -239,7 +239,7 @@ contract Manager is IManager, Multicall, ERC721Enumerable, PeripheryImmutableSta
         tps.recipient = p.recipient;
         tps.tradeType = p.tradeType;
         tps.amountSpecified = p.amountSpecified;
-        tps.data = abi.encode(TradeCallbackData({battleKey: p.battleKey, payer: msg.sender}));
+        tps.data = abi.encode(TradeCallbackData({ battleKey: p.battleKey, payer: msg.sender }));
         if (p.sqrtPriceLimitX96 == 0) {
             if (p.tradeType == TradeType.BUY_SPEAR) {
                 tps.sqrtPriceLimitX96 = TickMath.MIN_SQRT_RATIO + 1;

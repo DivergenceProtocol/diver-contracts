@@ -37,7 +37,8 @@ import {
 } from "core/params/coreParams.sol";
 
 /// @title Battle
-/// @notice Each options pool is contained in a Battle contract. Battle contracts provide core functionalities including minting and burning liquidity, trading options tokens, settling and exercising options, and withdrawing collateral reserved for settlement.  
+/// @notice Each options pool is contained in a Battle contract. Battle contracts provide core functionalities including minting and burning
+/// liquidity, trading options tokens, settling and exercising options, and withdrawing collateral reserved for settlement.
 
 contract Battle is IBattle {
     using Tick for mapping(int24 => TickInfo);
@@ -112,7 +113,7 @@ contract Battle is IBattle {
         shield = params.shield;
         manager = params.manager;
         arena = address(msg.sender);
-        slot0 = Slot0({sqrtPriceX96: params.sqrtPriceX96, tick: TickMath.getTickAtSqrtRatio(params.sqrtPriceX96), unlocked: true});
+        slot0 = Slot0({ sqrtPriceX96: params.sqrtPriceX96, tick: TickMath.getTickAtSqrtRatio(params.sqrtPriceX96), unlocked: true });
         maxLiquidityPerTick = Tick.tickSpacingToMaxLiquidityPerTick(30);
     }
 
@@ -271,7 +272,7 @@ contract Battle is IBattle {
         );
         slot0.unlocked = false;
 
-        TradeCache memory cache = TradeCache({feeProtocol: fee.protocolFee});
+        TradeCache memory cache = TradeCache({ feeProtocol: fee.protocolFee });
         TradeState memory state = TradeState({
             amountSpecifiedRemaining: params.amountSpecified,
             amountCalculated: 0,

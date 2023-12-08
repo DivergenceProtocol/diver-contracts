@@ -44,7 +44,8 @@ contract Oracle is Ownable {
         uint256 decimalDiff = 10 ** (18 - cOracle.decimals());
         (uint256 cPrice, uint256 cActualTs) = _getPrice(cOracle, roundID, ts, decimalDiff);
 
-        // If the price remains unreported or inaccessible an hour post expiry, the closest available price will be fixed based on the external oracle data.
+        // If the price remains unreported or inaccessible an hour post expiry, the closest available price will be fixed based on the external oracle
+        // data.
         if (block.timestamp - ts > 1 hours && cPrice == 0) {
             require(fixPrices[cOracleAddr][ts] != 0, "setting price");
             price = fixPrices[cOracleAddr][ts];
@@ -75,7 +76,8 @@ contract Oracle is Ownable {
         uint80 startRoundId = _getStartRoundId(phaseId);
         try AggregatorV3Interface(cOracle).getRoundData(startRoundId) returns (uint80, int256, uint256, uint256 updatedAt, uint80) {
             //updatedAt == 0, invalid value
-            //In case the 'startRound' occurs after the 'endTs' of a battle due to external oracle updates, it returns 0. The correct price will be provided by fixPrices.
+            //In case the 'startRound' occurs after the 'endTs' of a battle due to external oracle updates, it returns 0. The correct price will be
+            // provided by fixPrices.
             if (updatedAt == 0 || updatedAt >= ts) {
                 return (0, 0);
             } else {

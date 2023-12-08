@@ -115,7 +115,7 @@ contract Quoter is Multicall, ITradeCallback, IQuoter {
     /// @notice Calculates the amount of Spear or shield tokens based on the given amount of seed collateral when a liquidity position is created
     /// @param sqrtPriceX96 The current sqrt price
     /// @param tickLower The lower tick boundary of the position
-    /// @param tickUpper The upper tick boundary of the position 
+    /// @param tickUpper The upper tick boundary of the position
     /// @param amount The seed collateral amount for minting the liquidity position
     /// @return The amount of spear or shield token calculated based on the given liquidity
 

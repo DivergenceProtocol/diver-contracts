@@ -22,7 +22,7 @@ abstract contract PeripheryPayments is PeripheryImmutableState {
     /// @param value The amount to pay
     function pay(address tokenAddr, address payer, address recipient, uint256 value) internal {
         if (tokenAddr == WETH9 && address(this).balance >= value) {
-            IWETH9(WETH9).deposit{value: value}();
+            IWETH9(WETH9).deposit{ value: value }();
             IWETH9(WETH9).transfer(recipient, value);
         } else {
             TransferHelper.safeTransferFrom(tokenAddr, payer, recipient, value);

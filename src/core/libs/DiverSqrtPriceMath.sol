@@ -13,7 +13,8 @@ library DiverSqrtPriceMath {
     using SafeCast for int128;
 
     // @notice Gets the delta amount of Spear or Shield tokens based on the given sqrt ratios and liquidity.
-    // Computes for Spear token delta when the sqrtPrice moves from upper to lower; or Shield token delta when the sqrtPrice moves from lower to upper.
+    // Computes for Spear token delta when the sqrtPrice moves from upper to lower; or Shield token delta when the sqrtPrice moves from lower to
+    // upper.
     // For the same sqrt ratio range and liquidity, the computed delta amounts of Spear and Shield are equal.
     // Formula for this is:
     // stoken delta amount = liquidity * (sqrtRatioBX96 - sqrtRatioAX96) * (1 + 1 /(sqrtRatioAX96 * sqrtRatioBX96));

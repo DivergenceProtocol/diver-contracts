@@ -14,7 +14,7 @@ interface IBattleState {
     /// @return result check different battle result type in enums.sol
     function battleOutcome() external view returns (Outcome);
 
-    /// @notice Returns the BattleKey that uniquely identifies a battle 
+    /// @notice Returns the BattleKey that uniquely identifies a battle
     function battleKey() external view returns (BattleKey memory key);
 
     /// @notice Get Manager address in this battle
