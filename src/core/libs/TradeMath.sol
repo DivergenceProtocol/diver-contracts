@@ -9,6 +9,7 @@ import { DiverSqrtPriceMath } from "./DiverSqrtPriceMath.sol";
 import { ComputeTradeStepParams } from "core/params/ComputeTradeStepParams.sol";
 import { TickMath } from "./TickMath.sol";
 import { TradeType } from "core/types/enums.sol";
+import { Errors } from "../errors/Errors.sol";
 
 /// @notice  Computes the result of a swap within ticks. Contains methods for computing the result of a swap within a single tick price range, i.e., a
 /// single tick.
@@ -56,6 +57,15 @@ library TradeMath {
                 amountIn = SqrtPriceMath.getAmount0Delta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, true);
             } else {
                 amountIn = SqrtPriceMath.getAmount1Delta(params.sqrtRatioCurrentX96, sqrtRatioNextX96, params.liquidity, true);
+            }
+        }
+        if (isSpear) {
+            if (sqrtRatioNextX96 < params.sqrtRatioTargetX96) {
+                revert Errors.TradeError();
+            }
+        } else {
+            if (sqrtRatioNextX96 > params.sqrtRatioTargetX96) {
+                revert Errors.TradeError();
             }
         }
     }

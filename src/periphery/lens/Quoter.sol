@@ -118,7 +118,6 @@ contract Quoter is Multicall, ITradeCallback, IQuoter {
     /// @param tickUpper The upper tick boundary of the position
     /// @param amount The seed collateral amount for minting the liquidity position
     /// @return The amount of spear or shield token calculated based on the given liquidity
-
     function getSTokenByLiquidityWhenCreate(uint160 sqrtPriceX96, int24 tickLower, int24 tickUpper, uint256 amount) public pure returns (uint256) {
         uint160 priceLower = TickMath.getSqrtRatioAtTick(tickLower);
         uint160 priceUpper = TickMath.getSqrtRatioAtTick(tickUpper);

@@ -28,6 +28,7 @@ library Errors {
     error Slippage();
     error TickOrderInvalid();
     error TickInvalid();
+    error TradeError();
     error ZeroValue();
     error EmptyTrade();
 }
