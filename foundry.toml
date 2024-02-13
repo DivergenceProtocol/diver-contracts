@@ -2,8 +2,6 @@
 
 [profile.default]
   auto_detect_solc = false
-  bytecode_hash = "none"
-  cbor_metadata = false
   fuzz = { runs = 1_000 }
   gas_reports = ["*"]
   libs = ["lib"]
@@ -19,8 +17,9 @@
   fuzz = { runs = 10_000 }
   verbosity = 4
 
-# [etherscan]
-#   arbitrum = { key = "${API_KEY_ARBISCAN}" }
+[etherscan]
+  arbitrum = { key = "${ETHERSCAN_API_KEY}", url = "https://api.arbiscan.io/api"}
+  # arbitrum = { key = "${ETHERSCAN_API_KEY}"}
 #   avalanche = { key = "${API_KEY_SNOWTRACE" }
 #   bsc = { key = "${API_KEY_BSCSCAN}" }
 #   ethereum = { key = "${API_KEY_ETHERSCAN}" }
