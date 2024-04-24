@@ -53,10 +53,7 @@ function deploy(DeployAddrs memory das) returns (address managerAddr, address ar
 }
 
 function deployArena(address token, address oracle, address battleImpl, bool hasFee) returns (address) {
-    Arena arena = new Arena(
-        oracle,
-        battleImpl
-    );
+    Arena arena = new Arena(oracle, battleImpl);
     _initArena(arena, address(token), hasFee);
     return address(arena);
 }

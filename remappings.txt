@@ -11,3 +11,4 @@ core/=src/core/
 periphery/=src/periphery/
 test/=test/
 script/=script/
+@pyth/=node_modules/@pythnetwork/pyth-sdk-solidity

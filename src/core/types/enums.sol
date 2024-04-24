@@ -12,6 +12,7 @@ enum Outcome {
     ONGOING, // battle is ongoing
     SPEAR_WIN, // calls expire in-the-money
     SHIELD_WIN // puts expire in-the-money
+
 }
 
 enum TradeType {

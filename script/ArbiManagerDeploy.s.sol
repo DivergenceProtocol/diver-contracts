@@ -21,8 +21,7 @@ import { Manager } from "periphery/Manager.sol";
 import { CreateAndInitBattleParams } from "periphery/params/peripheryParams.sol";
 import { OracleCustom } from "core/OracleCustom.sol";
 import { TickMath } from "core/libs/TickMath.sol";
-import {New} from "core/New.sol";
-import {console2} from "@std/console2.sol";
+import { console2 } from "@std/console2.sol";
 
 contract ArbiManagerDeploy is BaseScript {
     address public manager;
@@ -58,7 +57,7 @@ contract ArbiManagerDeploy is BaseScript {
 
         // setCollateral(address(0x0031c9dC88baFa6DA825e5d2E9CCFa8dC2ced755), DITANIC_NAIVE_ADDR, true);
         address _oracle = address(0x07C8C1e84C3814bfE2870Dfed24635Ef715aCB7c);
-        uint expires = 1703836800;
+        uint256 expires = 1703836800;
         setFixPrice(_oracle, "BTC", expires, 42863e18);
         // setFixPrice(_oracle, "BTCETF", expires, 200e18);
         // setFixPrice(_oracle, "ETHETF", expires, 50e18);
@@ -67,17 +66,11 @@ contract ArbiManagerDeploy is BaseScript {
         // deployPredictionMarket(address(0xA0D812cAe2376b90951192319477eF5Fe3Ac56D5), address(0x55A14661d94C2cE307Ab918bb9564545282C2454));
     }
 
-
-
     function setCollateral(address _arena, address _collateral, bool isSupported) public {
         Arena(_arena).setCollateralWhitelist(_collateral, isSupported);
     }
 
-    function deploy_new() public {
-        New n = new New();
-    }
-
-    function setFixPrice(address _oracle, string memory symbol, uint ts, uint price) public {
+    function setFixPrice(address _oracle, string memory symbol, uint256 ts, uint256 price) public {
         Oracle(_oracle).setFixPrice(symbol, ts, price);
     }
 
