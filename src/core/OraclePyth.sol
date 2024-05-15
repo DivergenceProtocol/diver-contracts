@@ -3,12 +3,13 @@ pragma solidity ^0.8.0;
 
 import "@pyth/IPyth.sol";
 import { Ownable } from "@oz/access/Ownable.sol";
+import { ICOracle } from "./interfaces/ICOracle.sol";
 
-contract OraclePyth is Ownable {
+contract OraclePyth is Ownable, ICOracle {
     IPyth public pyth;
     mapping(string sybmol => bytes32 id) public symbolToId;
     mapping(bytes32 id => string sybmol) public idToSymbol;
-    mapping(string symbol => mapping(uint256 ts => uint256 price)) public priceOf;
+    mapping(string symbol => mapping(uint256 ts => uint256 price)) public override priceOf;
 
     constructor(address _pyth, string[] memory symbols, bytes32[] memory ids) {
         pyth = IPyth(_pyth);
