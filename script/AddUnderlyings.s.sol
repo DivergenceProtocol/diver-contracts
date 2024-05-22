@@ -41,13 +41,10 @@ contract AddUnerlyings is BaseScript {
     string public constant UNDERLYING_ETHETF = "ETHETF";
     string public constant UNDERLYING_FEDRATECUT = "FEDRATECUT";
 
-
-
     address public constant ARENA = address(0xA0D812cAe2376b90951192319477eF5Fe3Ac56D5);
     address public pyth = address(0xff1a0f4744e8582DF1aE09D5611b887B6a12925C);
     address public constant ORACLE_V2 = address(0x8A17F83FF5000C8ef09B98278956FfE6B2ba4009);
     address public constant ORACLE_PYTH = address(0xB07BfB22c938FBEC9BC9E63F57c760E291f42f4C);
-
 
     // string[] public symbols = ["BTC", "ETH", "DOGE"];
     // string[] public symbols = ["DOGE"];
@@ -55,7 +52,7 @@ contract AddUnerlyings is BaseScript {
     // address[] public cOracles = [ORACLE_PYTH];
 
     string[] public symbols = ["GME"];
-    bytes32[] public ids = [ bytes32(0x6f9cd89ef1b7fd39f667101a91ad578b6c6ace4579d5f7f285a4b06aa4504be6)];
+    bytes32[] public ids = [bytes32(0x6f9cd89ef1b7fd39f667101a91ad578b6c6ace4579d5f7f285a4b06aa4504be6)];
     address[] public cOracles = [ORACLE_PYTH];
 
     function setUp() public override {
@@ -63,11 +60,8 @@ contract AddUnerlyings is BaseScript {
     }
 
     function run() public broadcaster {
-
         OraclePyth(ORACLE_PYTH).addSymbolIds(symbols, ids);
         OracleV2(ORACLE_V2).setExternalOracle(symbols, cOracles);
         Arena(ARENA).setUnderlyingWhitelist(UNDERLYING_GME, true, Fee(0.003e6, 0.3e6, 0.0015e6));
-
     }
-
 }

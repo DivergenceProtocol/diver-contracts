@@ -13,7 +13,7 @@ import "core/types/common.sol";
 import { IBattle } from "core/interfaces/battle/IBattle.sol";
 import { Oracle } from "core/Oracle.sol";
 import { OracleV2 } from "core/OracleV2.sol";
-import {OraclePyth} from "core/OraclePyth.sol";
+import { OraclePyth } from "core/OraclePyth.sol";
 import { getTS, Period } from "test/shared/utils.sol";
 import { Quoter } from "periphery/lens/Quoter.sol";
 import { Ditanic } from "test/shared/Ditanic.sol";
@@ -44,19 +44,22 @@ contract OracleChanger is BaseScript {
     address pyth = address(0xff1a0f4744e8582DF1aE09D5611b887B6a12925C);
     // string[] public symbols = ["BTC", "ETH", "DOGE"];
     string[] public symbols = ["BTC", "ETH"];
-    // bytes32[] public ids = [0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43, 0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace, 0xdcef50dd0a4cd2dcc17e45df1676dcb336a11a61c69df7a0299b0150c672d25c];
-    bytes32[] public ids = [bytes32(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43), bytes32(0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace)];
+    // bytes32[] public ids = [0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43,
+    // 0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace, 0xdcef50dd0a4cd2dcc17e45df1676dcb336a11a61c69df7a0299b0150c672d25c];
+    bytes32[] public ids = [
+        bytes32(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43),
+        bytes32(0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace)
+    ];
     address[] public cOracles;
 
     function setUp() public override {
         super.setUp();
-
     }
 
     function run() public broadcaster {
         // deploy OraclePyth
         OraclePyth oraclePyth = new OraclePyth(pyth, symbols, ids);
-        for (uint i; i < symbols.length; i++) {
+        for (uint256 i; i < symbols.length; i++) {
             cOracles.push(address(oraclePyth));
         }
 
@@ -69,5 +72,4 @@ contract OracleChanger is BaseScript {
         // change oracle in arean
         Arena(ARENA).setOracle(address(oracleV2));
     }
-
 }
