@@ -13,7 +13,7 @@ import { ICOracle } from "./interfaces/ICOracle.sol";
 contract OracleV2 is Ownable, IOracle {
     mapping(string symbol => address oraclePyth) private _externalOracleOf;
     mapping(address => mapping(uint256 => uint256)) public fixPrices;
-    uint256 public MAX_PRICE_DELAY = 1 hours;
+    uint256 public maxPriceDelay = 1 hours;
 
     event MaxPriceDelayChanged(uint256 oldValue, uint256 newValue);
     event ExternalOracleSet(string[] symbol, address[] oracle);
@@ -36,9 +36,9 @@ contract OracleV2 is Ownable, IOracle {
     }
 
     function setMaxPriceDelay(uint256 delay) external onlyOwner {
-        require(MAX_PRICE_DELAY != delay, "same value");
-        emit MaxPriceDelayChanged(MAX_PRICE_DELAY, delay);
-        MAX_PRICE_DELAY = delay;
+        require(maxPriceDelay != delay, "same value");
+        emit MaxPriceDelayChanged(maxPriceDelay, delay);
+        maxPriceDelay = delay;
     }
 
     /// @notice Gets and computes price from external oracles
@@ -52,7 +52,7 @@ contract OracleV2 is Ownable, IOracle {
         // data.
         BattleKey memory key = IBattleState(msg.sender).battleKey();
         uint256 cPrice = ICOracle(cOracleAddr).priceOf(key.underlying, ts);
-        if (block.timestamp - ts > MAX_PRICE_DELAY && cPrice == 0) {
+        if (block.timestamp - ts > maxPriceDelay && cPrice == 0) {
             require(fixPrices[cOracleAddr][ts] != 0, "setting price");
             price = fixPrices[cOracleAddr][ts];
             actualTs = ts;
