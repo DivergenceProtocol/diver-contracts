@@ -301,7 +301,7 @@ contract Battle is IBattle {
                     sqrtRatioCurrentX96: state.sqrtPriceX96,
                     sqrtRatioTargetX96: (
                         isPriceDown ? step.sqrtPriceNextX96 < params.sqrtPriceLimitX96 : step.sqrtPriceNextX96 > params.sqrtPriceLimitX96
-                        ) ? params.sqrtPriceLimitX96 : step.sqrtPriceNextX96,
+                    ) ? params.sqrtPriceLimitX96 : step.sqrtPriceNextX96,
                     liquidity: state.liquidity,
                     amountRemaining: state.amountSpecifiedRemaining,
                     unit: unit
