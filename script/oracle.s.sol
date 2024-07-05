@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import { BaseScript } from "script/shared/Base.s.sol";
 import { Oracle } from "core/Oracle.sol";
+import { OracleCustomV2 } from "core/OracleCustomV2.sol";
 import { TestERC20 } from "test/shared/TestERC20.sol";
 
 contract OracleSet is BaseScript {
@@ -16,7 +17,8 @@ contract OracleSet is BaseScript {
 
     function run() public broadcaster {
         // mintToken();
-        setPriceForTest();
+        // setPriceForTest();
+        OracleCustomV2 oracle = new OracleCustomV2();
     }
 
     function setPriceForTest() public {
