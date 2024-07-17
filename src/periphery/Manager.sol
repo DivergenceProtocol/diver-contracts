@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 
 import { ERC721Enumerable, ERC721 } from "@oz/token/ERC721/extensions/ERC721Enumerable.sol";
 import { ERC20Burnable } from "@oz/token/ERC20/extensions/ERC20Burnable.sol";
-import { Multicall } from "@oz/utils/Multicall.sol";
+import { Multicall } from "./base/Multicall.sol";
 import { FullMath } from "@uniswap/v3-core/contracts/libraries/FullMath.sol";
 import { FixedPoint128 } from "@uniswap/v3-core/contracts/libraries/FixedPoint128.sol";
 import { BattleInitializer } from "./base/BattleInitializer.sol";

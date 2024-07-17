@@ -49,7 +49,7 @@ contract ArbiManagerDeploy is BaseScript {
 
     function run() public broadcaster {
         // address owner = address(this);
-        // deployNormal();
+        deployNormal();
         // deployDitanic();
         // deployDitanicNaive();
         // setMiner();
@@ -59,14 +59,14 @@ contract ArbiManagerDeploy is BaseScript {
         // deploy_new();
 
         // setCollateral(address(0x0031c9dC88baFa6DA825e5d2E9CCFa8dC2ced755), DITANIC_NAIVE_ADDR, true);
-        address _oracle = address(0x07C8C1e84C3814bfE2870Dfed24635Ef715aCB7c);
-        uint256 expires = 1717142400;
+        // address _oracle = address(0x07C8C1e84C3814bfE2870Dfed24635Ef715aCB7c);
+        // uint256 expires = 1717142400;
         // setFixPrice(_oracle, "BTC", expires, 42863e18);
         // setFixPrice(_oracle, "BTCETF", expires, 200e18);
         // setFixPrice(_oracle, "ETHETF", expires, 101e18);
         // setFixPrice(_oracle, UNDERLYING_FEDRATECUT, expires, 50e18);
 
-        deployPredictionMarket(address(0xA0D812cAe2376b90951192319477eF5Fe3Ac56D5), address(0x55A14661d94C2cE307Ab918bb9564545282C2454));
+        // deployPredictionMarket(address(0xA0D812cAe2376b90951192319477eF5Fe3Ac56D5), address(0x55A14661d94C2cE307Ab918bb9564545282C2454));
     }
 
     function setCollateral(address _arena, address _collateral, bool isSupported) public {
@@ -85,9 +85,10 @@ contract ArbiManagerDeploy is BaseScript {
     function deployNormal() public {
         address arenaAddr = address(0);
         address collateralToken = USDT_ADDR;
-        // address wethAddr = WETH_ADDR;
-        address wethAddr = address(1);
-        oracle = _deployOracle();
+        address wethAddr = WETH_ADDR;
+        // address wethAddr = address(1);
+        // oracle = _deployOracle();
+        oracle = address(0x8A17F83FF5000C8ef09B98278956FfE6B2ba4009);
         DeployAddrs memory das = DeployAddrs({
             owner: deployer,
             arenaAddr: arenaAddr,
@@ -102,7 +103,7 @@ contract ArbiManagerDeploy is BaseScript {
         Arena(arena).setCollateralWhitelist(WETH_ADDR, true);
         Arena(arena).setCollateralWhitelist(DIVER_ADDR, true);
         Arena(arena).setCollateralWhitelist(DITANIC_NAIVE_ADDR, true);
-        deployPredictionMarket(arena, manager);
+        // deployPredictionMarket(arena, manager);
     }
 
     function deployPredictionMarket(address _arena, address _manager) public {

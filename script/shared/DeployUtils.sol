@@ -25,7 +25,7 @@ struct DeployAddrs {
 }
 
 interface IMulticall {
-    function multicall(bytes[] calldata data) external returns (bytes[] memory results);
+    function multicall(bytes[] calldata data) external payable returns (bytes[] memory results);
 }
 
 function deploy(DeployAddrs memory das) returns (address managerAddr, address arena, address oracle, address collateral, address quoter) {
@@ -63,8 +63,10 @@ function _initArena(Arena arena, address token, bool hasFee) {
     if (hasFee) {
         arena.setUnderlyingWhitelist("BTC", true, Fee(0.003e6, 0.3e6, 0.0015e6));
         arena.setUnderlyingWhitelist("ETH", true, Fee(0.003e6, 0.3e6, 0.0015e6));
+        arena.setUnderlyingWhitelist("DOGE", true, Fee(0.003e6, 0.3e6, 0.0015e6));
     } else {
         arena.setUnderlyingWhitelist("BTC", true, Fee(0, 0, 0));
         arena.setUnderlyingWhitelist("ETH", true, Fee(0, 0, 0));
+        arena.setUnderlyingWhitelist("DOGE", true, Fee(0, 0, 0));
     }
 }
