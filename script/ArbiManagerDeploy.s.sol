@@ -36,6 +36,9 @@ contract ArbiManagerDeploy is BaseScript {
     string public constant UNDERLYING_BTCETF = "BTCETF";
     string public constant UNDERLYING_ETHETF = "ETHETF";
     string public constant UNDERLYING_FEDRATECUT = "FEDRATECUT";
+    string public constant UEFA_1 = "UEFA 24 semi final France vs Spain";
+    string public constant UEFA_2 = "UEFA 24 semi final Netherlands vs England";
+    string public constant UEFA_3 = "UEFA 24 Final Spain vs England";
 
     string[] public symbols;
     address[] public oracles;
@@ -60,10 +63,10 @@ contract ArbiManagerDeploy is BaseScript {
         uint256 expires = 1717142400;
         // setFixPrice(_oracle, "BTC", expires, 42863e18);
         // setFixPrice(_oracle, "BTCETF", expires, 200e18);
-        setFixPrice(_oracle, "ETHETF", expires, 101e18);
+        // setFixPrice(_oracle, "ETHETF", expires, 101e18);
         // setFixPrice(_oracle, UNDERLYING_FEDRATECUT, expires, 50e18);
 
-        // deployPredictionMarket(address(0xA0D812cAe2376b90951192319477eF5Fe3Ac56D5), address(0x55A14661d94C2cE307Ab918bb9564545282C2454));
+        deployPredictionMarket(address(0xA0D812cAe2376b90951192319477eF5Fe3Ac56D5), address(0x55A14661d94C2cE307Ab918bb9564545282C2454));
     }
 
     function setCollateral(address _arena, address _collateral, bool isSupported) public {
@@ -105,34 +108,67 @@ contract ArbiManagerDeploy is BaseScript {
     function deployPredictionMarket(address _arena, address _manager) public {
         // Arena(_arena).setUnderlyingWhitelist(UNDERLYING_BTCETF, true, Fee(0.003e6, 0.3e6, 0.0015e6));
         // Arena(_arena).setUnderlyingWhitelist(UNDERLYING_ETHETF, true, Fee(0.003e6, 0.3e6, 0.0015e6));
-        Arena(_arena).setUnderlyingWhitelist(UNDERLYING_FEDRATECUT, true, Fee(0.003e6, 0.3e6, 0.0015e6));
+        // Arena(_arena).setUnderlyingWhitelist(UNDERLYING_FEDRATECUT, true, Fee(0.003e6, 0.3e6, 0.0015e6));
+        // Arena(_arena).setUnderlyingWhitelist(UEFA_1, true, Fee(0.003e6, 0.3e6, 0.0015e6));
+        // Arena(_arena).setUnderlyingWhitelist(UEFA_2, true, Fee(0.003e6, 0.3e6, 0.0015e6));
+        Arena(_arena).setUnderlyingWhitelist(UEFA_3, true, Fee(0.003e6, 0.3e6, 0.0015e6));
         // open prediction market
         // uint btcETFExpiries = 1705305600;
         // uint ethETFExpiries = 1706688000;
         // uint fedRateCutExpiries = 1711872000;
         // uint256 btcETFExpiries = 1705305600;
         // uint256 ethETFExpiries = 1706688000;
-        uint256 fedRateCutExpiries = 1727683200;
+        // uint256 fedRateCutExpiries = 1727683200;
+        // uint256 fedRateCutExpiries = 1727683200;
+        // uint256 fedRateCutExpiries = 1727683200;
+        // uint256 uefa1Expires = 1720598400;
+        // uint256 uefa2Expires = 1720684800;
+        uint256 uefa3Expires = 1721030400;
+
+
         uint256 strikeValue = 100e18;
         // BattleKey memory bkBTCETF =
         //     BattleKey({ collateral: USDT_ADDR, underlying: UNDERLYING_BTCETF, expiries: btcETFExpiries, strikeValue: strikeValue });
         // BattleKey memory bkETHETF =
         //     BattleKey({ collateral: USDT_ADDR, underlying: UNDERLYING_ETHETF, expiries: ethETFExpiries, strikeValue: strikeValue });
-        BattleKey memory bkRate =
-            BattleKey({ collateral: USDT_ADDR, underlying: UNDERLYING_FEDRATECUT, expiries: fedRateCutExpiries, strikeValue: strikeValue });
+        // BattleKey memory bkRate =
+        //     BattleKey({ collateral: USDT_ADDR, underlying: UNDERLYING_FEDRATECUT, expiries: fedRateCutExpiries, strikeValue: strikeValue });
+        // BattleKey memory bkUEFA1 =
+        //     BattleKey({ collateral: USDT_ADDR, underlying: UEFA_1, expiries: uefa1Expires, strikeValue: strikeValue });
+        // BattleKey memory bkUEFA2 =
+        //     BattleKey({ collateral: USDT_ADDR, underlying: UEFA_2, expiries: uefa2Expires, strikeValue: strikeValue });
+        BattleKey memory bkUEFA3 =
+            BattleKey({ collateral: USDT_ADDR, underlying: UEFA_3, expiries: uefa3Expires, strikeValue: strikeValue });
+
+
         uint160 sqrtPriceX96 = TickMath.getSqrtRatioAtTick(0);
         // CreateAndInitBattleParams memory paramsBTCETF = CreateAndInitBattleParams({ bk: bkBTCETF, sqrtPriceX96: sqrtPriceX96 });
         // CreateAndInitBattleParams memory paramsETHETF = CreateAndInitBattleParams({ bk: bkETHETF, sqrtPriceX96: sqrtPriceX96 });
-        CreateAndInitBattleParams memory paramsRate = CreateAndInitBattleParams({ bk: bkRate, sqrtPriceX96: sqrtPriceX96 });
+        // CreateAndInitBattleParams memory paramsRate = CreateAndInitBattleParams({ bk: bkRate, sqrtPriceX96: sqrtPriceX96 });
+        // CreateAndInitBattleParams memory paramsUEFA1 = CreateAndInitBattleParams({ bk: bkUEFA1, sqrtPriceX96: sqrtPriceX96 });
+        // CreateAndInitBattleParams memory paramsUEFA2 = CreateAndInitBattleParams({ bk: bkUEFA2, sqrtPriceX96: sqrtPriceX96 });
+        CreateAndInitBattleParams memory paramsUEFA3 = CreateAndInitBattleParams({ bk: bkUEFA3, sqrtPriceX96: sqrtPriceX96 });
+
         // address battleBTCETF = Manager(payable(_manager)).createAndInitializeBattle(paramsBTCETF);
         // address battleETHETF = Manager(payable(_manager)).createAndInitializeBattle(paramsETHETF);
-        address battleFedETF = Manager(payable(_manager)).createAndInitializeBattle(paramsRate);
+        // address battleFedETF = Manager(payable(_manager)).createAndInitializeBattle(paramsRate);
+        // address battleUEFA1 = Manager(payable(_manager)).createAndInitializeBattle(paramsUEFA1);
+        // address battleUEFA2 = Manager(payable(_manager)).createAndInitializeBattle(paramsUEFA2);
+        address battleUEFA3 = Manager(payable(_manager)).createAndInitializeBattle(paramsUEFA3);
+
+
         // Arena(_arena).setUnderlyingWhitelist(UNDERLYING_BTCETF, false, Fee(0.003e6, 0.3e6, 0.0015e6));
         // Arena(_arena).setUnderlyingWhitelist(UNDERLYING_ETHETF, false, Fee(0.003e6, 0.3e6, 0.0015e6));
-        Arena(_arena).setUnderlyingWhitelist(UNDERLYING_FEDRATECUT, false, Fee(0.003e6, 0.3e6, 0.0015e6));
+        // Arena(_arena).setUnderlyingWhitelist(UNDERLYING_FEDRATECUT, false, Fee(0.003e6, 0.3e6, 0.0015e6));
+        // Arena(_arena).setUnderlyingWhitelist(UEFA_1, false, Fee(0.003e6, 0.3e6, 0.0015e6));
+        // Arena(_arena).setUnderlyingWhitelist(UEFA_2, false, Fee(0.003e6, 0.3e6, 0.0015e6));
+        Arena(_arena).setUnderlyingWhitelist(UEFA_3, false, Fee(0.003e6, 0.3e6, 0.0015e6));
         // console2.log("BTCETF ", battleBTCETF);
         // console2.log("ETHETF ", battleETHETF);
-        console2.log("FedRateCutETF ", battleFedETF);
+        // console2.log("FedRateCutETF ", battleFedETF);
+        // console2.log("UEFA1", battleUEFA1);
+        // console2.log("UEFA2", battleUEFA2);
+        console2.log("UEFA3", battleUEFA3);
     }
 
     function deployDitanicNaive() public {

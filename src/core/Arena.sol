@@ -101,7 +101,8 @@ contract Arena is IArena, Ownable {
         }
 
         // requires expiries to be at 8am utc
-        if ((params.bk.expiries - 28_800) % 86_400 != 0 || block.timestamp >= params.bk.expiries) {
+        // if ((params.bk.expiries - 28_800) % 86_400 != 0 || block.timestamp >= params.bk.expiries) {
+        if (block.timestamp >= params.bk.expiries) {
             revert Errors.NotSupportedExpiries();
         }
         // requires strike prices to be non-zero and rounded accordingly

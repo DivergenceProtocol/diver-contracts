@@ -45,23 +45,35 @@ contract AddUnerlyings is BaseScript {
     address public pyth = address(0xff1a0f4744e8582DF1aE09D5611b887B6a12925C);
     address public constant ORACLE_V2 = address(0x8A17F83FF5000C8ef09B98278956FfE6B2ba4009);
     address public constant ORACLE_PYTH = address(0xB07BfB22c938FBEC9BC9E63F57c760E291f42f4C);
+    address public constant ORACLE_CUSTOMER_V2 = address(0xfe612f57F3eae1Eb8830FC4C70Ff928bA0683991);
 
     // string[] public symbols = ["BTC", "ETH", "DOGE"];
     // string[] public symbols = ["DOGE"];
     // bytes32[] public ids = [ bytes32(0xdcef50dd0a4cd2dcc17e45df1676dcb336a11a61c69df7a0299b0150c672d25c)];
     // address[] public cOracles = [ORACLE_PYTH];
 
-    string[] public symbols = ["GME"];
-    bytes32[] public ids = [bytes32(0x6f9cd89ef1b7fd39f667101a91ad578b6c6ace4579d5f7f285a4b06aa4504be6)];
-    address[] public cOracles = [ORACLE_PYTH];
+    // string[] public symbols = ["GME"];
+    // bytes32[] public ids = [bytes32(0x6f9cd89ef1b7fd39f667101a91ad578b6c6ace4579d5f7f285a4b06aa4504be6)];
+    // address[] public cOracles = [ORACLE_PYTH];
+
+    
+    string[] public symbols = [
+    // "UEFA 24 semi final France vs Spain",
+    // "UEFA 24 semi final Netherlands vs England"
+    "UEFA 24 Final Spain vs England"
+    ];
+
+    // bytes32[] public ids = [bytes32(0x6f9cd89ef1b7fd39f667101a91ad578b6c6ace4579d5f7f285a4b06aa4504be6)];
+    // address[] public cOracles = [ORACLE_CUSTOMER_V2, ORACLE_CUSTOMER_V2];
+    address[] public cOracles = [ORACLE_CUSTOMER_V2];
 
     function setUp() public override {
         super.setUp();
     }
 
     function run() public broadcaster {
-        OraclePyth(ORACLE_PYTH).addSymbolIds(symbols, ids);
+        // OraclePyth(ORACLE_PYTH).addSymbolIds(symbols, ids);
         OracleV2(ORACLE_V2).setExternalOracle(symbols, cOracles);
-        Arena(ARENA).setUnderlyingWhitelist(UNDERLYING_GME, true, Fee(0.003e6, 0.3e6, 0.0015e6));
+        // Arena(ARENA).setUnderlyingWhitelist(UNDERLYING_GME, true, Fee(0.003e6, 0.3e6, 0.0015e6));
     }
 }
