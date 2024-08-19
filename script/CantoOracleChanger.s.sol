@@ -25,7 +25,7 @@ import { OracleCustom } from "core/OracleCustom.sol";
 import { TickMath } from "core/libs/TickMath.sol";
 import { console2 } from "@std/console2.sol";
 
-contract AddUnerlyings is BaseScript {
+contract OracleChanger is BaseScript {
     address public manager;
     address public arena;
     address public oracle;
@@ -35,50 +35,41 @@ contract AddUnerlyings is BaseScript {
     address public constant WETH_ADDR = address(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1);
     address public constant DIVER_ADDR = address(0x5aCAB15Fe93127f550b17eacdF529bc7d3b57e2E);
     address public constant DITANIC_NAIVE_ADDR = address(0x8C2F032c62A59743aAE9B4925f72Ad06ffc4B498);
-    string public constant UNDERLYING_DOGE = "DOGE";
-    string public constant UNDERLYING_GME = "GME";
     string public constant UNDERLYING_BTCETF = "BTCETF";
     string public constant UNDERLYING_ETHETF = "ETHETF";
     string public constant UNDERLYING_FEDRATECUT = "FEDRATECUT";
 
     address public constant ARENA = address(0xA0D812cAe2376b90951192319477eF5Fe3Ac56D5);
-    address public pyth = address(0xff1a0f4744e8582DF1aE09D5611b887B6a12925C);
-    address public constant ORACLE_V2 = address(0x8A17F83FF5000C8ef09B98278956FfE6B2ba4009);
-    address public constant ORACLE_PYTH = address(0xB07BfB22c938FBEC9BC9E63F57c760E291f42f4C);
-    address public constant ORACLE_CUSTOMER_V2 = address(0xfe612f57F3eae1Eb8830FC4C70Ff928bA0683991);
 
+    address pyth = address();
     // string[] public symbols = ["BTC", "ETH", "DOGE"];
-    // string[] public symbols = ["DOGE"];
-    // bytes32[] public ids = [ bytes32(0xdcef50dd0a4cd2dcc17e45df1676dcb336a11a61c69df7a0299b0150c672d25c)];
-    // address[] public cOracles = [ORACLE_PYTH];
-
-    // string[] public symbols = ["GME"];
-    // bytes32[] public ids = [bytes32(0x6f9cd89ef1b7fd39f667101a91ad578b6c6ace4579d5f7f285a4b06aa4504be6)];
-    // address[] public cOracles = [ORACLE_PYTH];
-
-    
-    string[] public symbols = [
-    // "UEFA 24 semi final France vs Spain",
-    // "UEFA 24 semi final Netherlands vs England"
-    // "UEFA 24 Final Spain vs England"
-    // "BTC Price All Time High",
-    // "ETH Price All Time High"
-    // "Can France rank in the top 3 in the number of gold medals?",
-    // "Can the USA men's basketball team win a fifth straight championship?",
-    UNDERLYING_FEDRATECUT
+    string[] public symbols = ["BTC", "ETH"];
+    // bytes32[] public ids = [0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43,
+    // 0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace, 0xdcef50dd0a4cd2dcc17e45df1676dcb336a11a61c69df7a0299b0150c672d25c];
+    bytes32[] public ids = [
+        bytes32(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43),
+        bytes32(0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace)
     ];
-
-    // bytes32[] public ids = [bytes32(0x6f9cd89ef1b7fd39f667101a91ad578b6c6ace4579d5f7f285a4b06aa4504be6)];
-    // address[] public cOracles = [ORACLE_CUSTOMER_V2, ORACLE_CUSTOMER_V2];
-    address[] public cOracles = [ORACLE_CUSTOMER_V2];
+    address[] public cOracles;
 
     function setUp() public override {
         super.setUp();
     }
 
     function run() public broadcaster {
-        // OraclePyth(ORACLE_PYTH).addSymbolIds(symbols, ids);
-        OracleV2(ORACLE_V2).setExternalOracle(symbols, cOracles);
-        // Arena(ARENA).setUnderlyingWhitelist(UNDERLYING_GME, true, Fee(0.003e6, 0.3e6, 0.0015e6));
+        // deploy OraclePyth
+        OraclePyth oraclePyth = new OraclePyth(pyth, symbols, ids);
+        for (uint256 i; i < symbols.length; i++) {
+            cOracles.push(address(oraclePyth));
+        }
+
+        // deploy oracleV2
+        OracleV2 oracleV2 = new OracleV2();
+
+        // deploy OraclePyth
+        oracleV2.setExternalOracle(symbols, cOracles);
+
+        // change oracle in arean
+        Arena(ARENA).setOracle(address(oracleV2));
     }
 }

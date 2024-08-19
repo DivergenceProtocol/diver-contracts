@@ -11,7 +11,8 @@ import { IBattleState } from "core/interfaces/battle/IBattleState.sol";
 import { TickMath } from "core/libs/TickMath.sol";
 import "core/types/common.sol";
 import { IBattle } from "core/interfaces/battle/IBattle.sol";
-import { Oracle } from "core/Oracle.sol";
+import { OracleV2 } from "core/OracleV2.sol";
+import { OraclePyth } from "core/OraclePyth.sol";
 import { getTS, Period } from "test/shared/utils.sol";
 import { Quoter } from "periphery/lens/Quoter.sol";
 import { Ditanic } from "test/shared/Ditanic.sol";
@@ -29,10 +30,11 @@ contract ArbiManagerDeploy is BaseScript {
     address public oracle;
     address public collateral;
     address public quoter;
-    address public constant USDT_ADDR = address(0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9);
-    address public constant WETH_ADDR = address(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1);
-    address public constant DIVER_ADDR = address(0x5aCAB15Fe93127f550b17eacdF529bc7d3b57e2E);
-    address public constant DITANIC_NAIVE_ADDR = address(0x8C2F032c62A59743aAE9B4925f72Ad06ffc4B498);
+    address public constant USDT_ADDR = address(0xd567B3d7B8FE3C79a1AD8dA978812cfC4Fa05e75);
+    // actual wcanto
+    address public constant WETH_ADDR = address(0x826551890Dc65655a0Aceca109aB11AbDbD7a07B);
+    // address public constant DIVER_ADDR = address(0x5aCAB15Fe93127f550b17eacdF529bc7d3b57e2E);
+    address public constant DITANIC_NAIVE_ADDR = address(0);
     string public constant UNDERLYING_BTCETF = "BTCETF";
     string public constant UNDERLYING_ETHETF = "ETHETF";
     string public constant UNDERLYING_FEDRATECUT = "FEDRATECUT";
@@ -53,7 +55,7 @@ contract ArbiManagerDeploy is BaseScript {
 
     function run() public broadcaster {
         // address owner = address(this);
-        // deployNormal();
+        deployNormal();
         // deployDitanic();
         // deployDitanicNaive();
         // setMiner();
@@ -70,7 +72,7 @@ contract ArbiManagerDeploy is BaseScript {
         // setFixPrice(_oracle, "ETHETF", expires, 101e18);
         // setFixPrice(_oracle, UNDERLYING_FEDRATECUT, expires, 50e18);
 
-        deployPredictionMarket(address(0x46E7481453D0C39587507Df6e40C5904ba80E5F4), address(0xf4a20C2B2D4a699C0A095692A8501b19e3609263));
+        // deployPredictionMarket(address(0x46E7481453D0C39587507Df6e40C5904ba80E5F4), address(0xf4a20C2B2D4a699C0A095692A8501b19e3609263));
     }
 
     function setCollateral(address _arena, address _collateral, bool isSupported) public {
@@ -78,7 +80,7 @@ contract ArbiManagerDeploy is BaseScript {
     }
 
     function setFixPrice(address _oracle, string memory symbol, uint256 ts, uint256 price) public {
-        Oracle(_oracle).setFixPrice(symbol, ts, price);
+        OracleV2(_oracle).setFixPrice(symbol, ts, price);
     }
 
     function setMiner() public {
@@ -91,8 +93,8 @@ contract ArbiManagerDeploy is BaseScript {
         address collateralToken = USDT_ADDR;
         address wethAddr = WETH_ADDR;
         // address wethAddr = address(1);
-        // oracle = _deployOracle();
-        oracle = address(0x8A17F83FF5000C8ef09B98278956FfE6B2ba4009);
+        oracle = _deployOracle();
+        // oracle = address(0x8A17F83FF5000C8ef09B98278956FfE6B2ba4009);
         DeployAddrs memory das = DeployAddrs({
             owner: deployer,
             arenaAddr: arenaAddr,
@@ -104,23 +106,31 @@ contract ArbiManagerDeploy is BaseScript {
             hasFee: true
         });
         (manager, arena, oracle, collateral, quoter) = deploy(das);
-        Arena(arena).setCollateralWhitelist(WETH_ADDR, true);
-        Arena(arena).setCollateralWhitelist(DIVER_ADDR, true);
-        Arena(arena).setCollateralWhitelist(DITANIC_NAIVE_ADDR, true);
+        console2.log("Manager: %s", manager);
+        console2.log("Arena: %s", arena);
+        console2.log("Oracle: %s", oracle);
+        console2.log("Quoter:", quoter);
+        // Arena(arena).setCollateralWhitelist(WETH_ADDR, true);
+        // Arena(arena).setCollateralWhitelist(DIVER_ADDR, true);
+        if (DITANIC_NAIVE_ADDR == address(0)) {
+            DitanicNaive dn = new DitanicNaive();
+            console2.log("DitanicNaive %s", address(dn));
+        }
+        // Arena(arena).setCollateralWhitelist(DITANIC_NAIVE_ADDR, true);
         // deployPredictionMarket(arena, manager);
     }
 
     function deployPredictionMarket(address _arena, address _manager) public {
         // Arena(_arena).setUnderlyingWhitelist(UNDERLYING_BTCETF, true, Fee(0.003e6, 0.3e6, 0.0015e6));
         // Arena(_arena).setUnderlyingWhitelist(UNDERLYING_ETHETF, true, Fee(0.003e6, 0.3e6, 0.0015e6));
-        Arena(_arena).setUnderlyingWhitelist(UNDERLYING_FEDRATECUT, true, Fee(0.003e6, 0.3e6, 0.0015e6));
+        // Arena(_arena).setUnderlyingWhitelist(UNDERLYING_FEDRATECUT, true, Fee(0.003e6, 0.3e6, 0.0015e6));
         // Arena(_arena).setUnderlyingWhitelist(UEFA_1, true, Fee(0.003e6, 0.3e6, 0.0015e6));
         // Arena(_arena).setUnderlyingWhitelist(UEFA_2, true, Fee(0.003e6, 0.3e6, 0.0015e6));
         // Arena(_arena).setUnderlyingWhitelist(UEFA_3, true, Fee(0.003e6, 0.3e6, 0.0015e6));
         // Arena(_arena).setUnderlyingWhitelist(BTC_ATH, true, Fee(0.003e6, 0.3e6, 0.0015e6));
         // Arena(_arena).setUnderlyingWhitelist(ETH_ATH, true, Fee(0.003e6, 0.3e6, 0.0015e6));
-        // Arena(_arena).setUnderlyingWhitelist(UNDERLYING_F3, true, Fee(0.003e6, 0.3e6, 0.0015e6));
-        // Arena(_arena).setUnderlyingWhitelist(UNDERLYING_UB, true, Fee(0.003e6, 0.3e6, 0.0015e6));
+        Arena(_arena).setUnderlyingWhitelist(UNDERLYING_F3, true, Fee(0.003e6, 0.3e6, 0.0015e6));
+        Arena(_arena).setUnderlyingWhitelist(UNDERLYING_UB, true, Fee(0.003e6, 0.3e6, 0.0015e6));
         // open prediction market
         // uint btcETFExpiries = 1705305600;
         // uint ethETFExpiries = 1706688000;
@@ -129,14 +139,14 @@ contract ArbiManagerDeploy is BaseScript {
         // uint256 ethETFExpiries = 1706688000;
         // uint256 fedRateCutExpiries = 1727683200;
         // uint256 fedRateCutExpiries = 1727683200;
-        uint256 fedRateCutExpiries = 1727683200;
+        // uint256 fedRateCutExpiries = 1727683200;
         // uint256 uefa1Expires = 1720598400;
         // uint256 uefa2Expires = 1720684800;
         // uint256 uefa3Expires = 1721030400;
         // uint256 btcAthExpires = 1725004800;
         // uint256 ethAthExpires = 1725004800;
-        // uint256 f3Expires = 1723449600;
-        // uint256 ubExpires = 1723363200;
+        uint256 f3Expires = 1723449600;
+        uint256 ubExpires = 1723363200;
 
 
         uint256 strikeValue = 100e18;
@@ -144,8 +154,8 @@ contract ArbiManagerDeploy is BaseScript {
         //     BattleKey({ collateral: USDT_ADDR, underlying: UNDERLYING_BTCETF, expiries: btcETFExpiries, strikeValue: strikeValue });
         // BattleKey memory bkETHETF =
         //     BattleKey({ collateral: USDT_ADDR, underlying: UNDERLYING_ETHETF, expiries: ethETFExpiries, strikeValue: strikeValue });
-        BattleKey memory bkRate =
-            BattleKey({ collateral: USDT_ADDR, underlying: UNDERLYING_FEDRATECUT, expiries: fedRateCutExpiries, strikeValue: strikeValue });
+        // BattleKey memory bkRate =
+        //     BattleKey({ collateral: USDT_ADDR, underlying: UNDERLYING_FEDRATECUT, expiries: fedRateCutExpiries, strikeValue: strikeValue });
         // BattleKey memory bkUEFA1 =
         //     BattleKey({ collateral: USDT_ADDR, underlying: UEFA_1, expiries: uefa1Expires, strikeValue: strikeValue });
         // BattleKey memory bkUEFA2 =
@@ -156,56 +166,56 @@ contract ArbiManagerDeploy is BaseScript {
         //     BattleKey({ collateral: USDT_ADDR, underlying: BTC_ATH, expiries: btcAthExpires, strikeValue: strikeValue });
         // BattleKey memory bkEthAth =
         //     BattleKey({ collateral: USDT_ADDR, underlying: ETH_ATH, expiries: ethAthExpires, strikeValue: strikeValue });
-        // BattleKey memory bkF3 =
-        //     BattleKey({ collateral: USDT_ADDR, underlying: UNDERLYING_F3, expiries: f3Expires, strikeValue: strikeValue });
-        // BattleKey memory bkUb =
-        //     BattleKey({ collateral: USDT_ADDR, underlying: UNDERLYING_UB, expiries: ubExpires, strikeValue: strikeValue });
+        BattleKey memory bkF3 =
+            BattleKey({ collateral: USDT_ADDR, underlying: UNDERLYING_F3, expiries: f3Expires, strikeValue: strikeValue });
+        BattleKey memory bkUb =
+            BattleKey({ collateral: USDT_ADDR, underlying: UNDERLYING_UB, expiries: ubExpires, strikeValue: strikeValue });
 
 
         uint160 sqrtPriceX96 = TickMath.getSqrtRatioAtTick(0);
         // CreateAndInitBattleParams memory paramsBTCETF = CreateAndInitBattleParams({ bk: bkBTCETF, sqrtPriceX96: sqrtPriceX96 });
         // CreateAndInitBattleParams memory paramsETHETF = CreateAndInitBattleParams({ bk: bkETHETF, sqrtPriceX96: sqrtPriceX96 });
-        CreateAndInitBattleParams memory paramsRate = CreateAndInitBattleParams({ bk: bkRate, sqrtPriceX96: sqrtPriceX96 });
+        // CreateAndInitBattleParams memory paramsRate = CreateAndInitBattleParams({ bk: bkRate, sqrtPriceX96: sqrtPriceX96 });
         // CreateAndInitBattleParams memory paramsUEFA1 = CreateAndInitBattleParams({ bk: bkUEFA1, sqrtPriceX96: sqrtPriceX96 });
         // CreateAndInitBattleParams memory paramsUEFA2 = CreateAndInitBattleParams({ bk: bkUEFA2, sqrtPriceX96: sqrtPriceX96 });
         // CreateAndInitBattleParams memory paramsUEFA3 = CreateAndInitBattleParams({ bk: bkUEFA3, sqrtPriceX96: sqrtPriceX96 });
         // CreateAndInitBattleParams memory paramsBtcAth = CreateAndInitBattleParams({ bk: bkBtcAth, sqrtPriceX96: sqrtPriceX96 });
         // CreateAndInitBattleParams memory paramsEthAth = CreateAndInitBattleParams({ bk: bkEthAth, sqrtPriceX96: sqrtPriceX96 });
-        // CreateAndInitBattleParams memory paramsF3 = CreateAndInitBattleParams({ bk: bkF3, sqrtPriceX96: sqrtPriceX96 });
-        // CreateAndInitBattleParams memory paramsUb = CreateAndInitBattleParams({ bk: bkUb, sqrtPriceX96: sqrtPriceX96 });
+        CreateAndInitBattleParams memory paramsF3 = CreateAndInitBattleParams({ bk: bkF3, sqrtPriceX96: sqrtPriceX96 });
+        CreateAndInitBattleParams memory paramsUb = CreateAndInitBattleParams({ bk: bkUb, sqrtPriceX96: sqrtPriceX96 });
 
 
         // address battleBTCETF = Manager(payable(_manager)).createAndInitializeBattle(paramsBTCETF);
         // address battleETHETF = Manager(payable(_manager)).createAndInitializeBattle(paramsETHETF);
-        address battleFedETF = Manager(payable(_manager)).createAndInitializeBattle(paramsRate);
+        // address battleFedETF = Manager(payable(_manager)).createAndInitializeBattle(paramsRate);
         // address battleUEFA1 = Manager(payable(_manager)).createAndInitializeBattle(paramsUEFA1);
         // address battleUEFA2 = Manager(payable(_manager)).createAndInitializeBattle(paramsUEFA2);
         // address battleUEFA3 = Manager(payable(_manager)).createAndInitializeBattle(paramsUEFA3);
         // address battleBtcAth = Manager(payable(_manager)).createAndInitializeBattle(paramsBtcAth);
         // address battleEthAth = Manager(payable(_manager)).createAndInitializeBattle(paramsEthAth);
-        // address battleF3 = Manager(payable(_manager)).createAndInitializeBattle(paramsF3);
-        // address battleUb = Manager(payable(_manager)).createAndInitializeBattle(paramsUb);
+        address battleF3 = Manager(payable(_manager)).createAndInitializeBattle(paramsF3);
+        address battleUb = Manager(payable(_manager)).createAndInitializeBattle(paramsUb);
 
 
         // Arena(_arena).setUnderlyingWhitelist(UNDERLYING_BTCETF, false, Fee(0.003e6, 0.3e6, 0.0015e6));
         // Arena(_arena).setUnderlyingWhitelist(UNDERLYING_ETHETF, false, Fee(0.003e6, 0.3e6, 0.0015e6));
-        Arena(_arena).setUnderlyingWhitelist(UNDERLYING_FEDRATECUT, false, Fee(0.003e6, 0.3e6, 0.0015e6));
+        // Arena(_arena).setUnderlyingWhitelist(UNDERLYING_FEDRATECUT, false, Fee(0.003e6, 0.3e6, 0.0015e6));
         // Arena(_arena).setUnderlyingWhitelist(UEFA_1, false, Fee(0.003e6, 0.3e6, 0.0015e6));
         // Arena(_arena).setUnderlyingWhitelist(UEFA_2, false, Fee(0.003e6, 0.3e6, 0.0015e6));
         // Arena(_arena).setUnderlyingWhitelist(UEFA_3, false, Fee(0.003e6, 0.3e6, 0.0015e6));
-        // Arena(_arena).setUnderlyingWhitelist(UNDERLYING_F3, false, Fee(0.003e6, 0.3e6, 0.0015e6));
-        // Arena(_arena).setUnderlyingWhitelist(UNDERLYING_UB, false, Fee(0.003e6, 0.3e6, 0.0015e6));
+        Arena(_arena).setUnderlyingWhitelist(UNDERLYING_F3, false, Fee(0.003e6, 0.3e6, 0.0015e6));
+        Arena(_arena).setUnderlyingWhitelist(UNDERLYING_UB, false, Fee(0.003e6, 0.3e6, 0.0015e6));
         // console2.log("BTCETF ", battleBTCETF);
         // console2.log("ETHETF ", battleETHETF);
-        console2.log("FedRateCutETF ", battleFedETF);
+        // console2.log("FedRateCutETF ", battleFedETF);
         // console2.log("UEFA1", battleUEFA1);
         // console2.log("UEFA2", battleUEFA2);
         // console2.log("UEFA3", battleUEFA3);
         // console2.log("UEFA3", battleUEFA3);
         // console2.log("btcAth", battleBtcAth);
         // console2.log("ethAth", battleEthAth);
-        // console2.log("f3", battleF3);
-        // console2.log("ub", battleUb);
+        console2.log("f3", battleF3);
+        console2.log("ub", battleUb);
     }
 
     function deployDitanicNaive() public {
@@ -243,29 +253,60 @@ contract ArbiManagerDeploy is BaseScript {
         return bk;
     }
 
+     address pyth = address(0x98046Bd286715D3B0BC227Dd7a956b83D8978603);
+    // string[] public symbols = ["BTC", "ETH", "DOGE"];
+    // string[] public symbols = ["BTC", "ETH"];
+    // bytes32[] public ids = [0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43,
+    // 0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace, 0xdcef50dd0a4cd2dcc17e45df1676dcb336a11a61c69df7a0299b0150c672d25c];
+    bytes32[] public ids = [
+        bytes32(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43),
+        bytes32(0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace),
+        bytes32(0xdcef50dd0a4cd2dcc17e45df1676dcb336a11a61c69df7a0299b0150c672d25c)
+    ];
+    address[] public cOracles;
+
     function _deployOracle() private returns (address _oracle) {
         delete symbols;
         delete oracles;
-        Oracle oracleInst = new Oracle();
         symbols.push("BTC");
         symbols.push("ETH");
-        // symbols.push("ARB");
-        oracles.push(address(0x6ce185860a4963106506C203335A2910413708e9));
-        oracles.push(address(0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612));
-        // oracles.push(address(0xb2A824043730FE05F3DA2efaFa1CBbe83fa548D6));
-        // set prediction
-        address pOracle = address(new OracleCustom());
-        // address ethETFOracle = address(new OracleCustom());
-        // address fedRateCutOracle = address(new OracleCustom());
-        symbols.push(UNDERLYING_BTCETF);
-        oracles.push(pOracle);
-        symbols.push(UNDERLYING_ETHETF);
-        oracles.push(pOracle);
-        symbols.push(UNDERLYING_FEDRATECUT);
-        oracles.push(pOracle);
-        require(symbols.length == oracles.length, "not match");
-        oracleInst.setExternalOracle(symbols, oracles);
-        _oracle = address(oracleInst);
+        symbols.push("DOGE");
+        require(symbols.length == ids.length, "not match");
+        OraclePyth oraclePyth = new OraclePyth(pyth, symbols, ids);
+        console2.log("OraclePyth: %s", address(oraclePyth));
+        for (uint256 i; i < symbols.length; i++) {
+            cOracles.push(address(oraclePyth));
+        }
+
+        // deploy oracleV2
+        OracleV2 oracleV2 = new OracleV2();
+        console2.log("OracleV2: %s", address(oracleV2));
+
+        // deploy OraclePyth
+        oracleV2.setExternalOracle(symbols, cOracles);
+        _oracle = address(oracleV2);
+
+
+
+        // OracleV2 oracleInst = new OracleV2();
+        // symbols.push("BTC");
+        // symbols.push("ETH");
+        // // symbols.push("ARB");
+        // oracles.push(address(0x6ce185860a4963106506C203335A2910413708e9));
+        // oracles.push(address(0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612));
+        // // oracles.push(address(0xb2A824043730FE05F3DA2efaFa1CBbe83fa548D6));
+        // // set prediction
+        // address pOracle = address(new OracleCustom());
+        // // address ethETFOracle = address(new OracleCustom());
+        // // address fedRateCutOracle = address(new OracleCustom());
+        // symbols.push(UNDERLYING_BTCETF);
+        // oracles.push(pOracle);
+        // symbols.push(UNDERLYING_ETHETF);
+        // oracles.push(pOracle);
+        // symbols.push(UNDERLYING_FEDRATECUT);
+        // oracles.push(pOracle);
+        // require(symbols.length == oracles.length, "not match");
+        // oracleInst.setExternalOracle(symbols, oracles);
     }
 
     function createBattle() public virtual returns (address, address, address) {
